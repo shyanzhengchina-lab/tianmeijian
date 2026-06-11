@@ -192,6 +192,15 @@ const Error500 = () => (
   </div>
 );
 
+// ── 版本缓存清除：当APP_VERSION变更时自动清空旧缓存 ────────────────────
+const APP_VERSION = 'tmj-mes-v2.1';
+if (localStorage.getItem('app_version') !== APP_VERSION) {
+  // 清除旧版本token和用户信息，强制重新登录
+  const keysToRemove = ['mes_token', 'mes_refresh_token', 'mes_user', 'mes_permissions', 'mes_roles', 'token'];
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+  localStorage.setItem('app_version', APP_VERSION);
+}
+
 /**
  * 主应用组件 - 支持新旧两种架构模式
  */
