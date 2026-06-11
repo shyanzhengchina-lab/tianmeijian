@@ -222,4 +222,185 @@ router.put('/execution/deviations/:id/close', authMiddleware, async (req, res) =
   } catch (e) { fail(res, e.message, 500); }
 });
 
+// =====================================================================
+// compat 兼容路由层 — /production-orders/* 和 /work-orders/* 别名
+// 都指向 mes_work_order 表（生产计划和工单是同一概念）
+// =====================================================================
+
+// wo_status: 1=DRAFT/OPEN, 2=IN_PROGRESS, 3=PAUSED, 4=COMPLETED, 5=CLOSED, 6=CANCELLED
+const WO_STATUS_LABEL = { 1:'OPEN', 2:'IN_PROGRESS', 3:'PAUSED', 4:'COMPLETED', 5:'CLOSED', 6:'CANCELLED' };
+const PRIORITY_LABEL  = { 1:'URGENT', 2:'HIGH', 3:'NORMAL', 4:'LOW' };
+
+// 满足 ProductionOrderPage.loadFromApi 的字段需求
+// item.orderNo, item.customerCode, item.customerName, item.totalQuantity,
+// item.completedQuantity, item.deliveryDate, item.priority, item.status, item.createTime, item.createBy
+const mapWorkOrderAsPO = (row) => ({
+  id:                 row.id,
+  orderNo:            row.wo_code,          // ProductionOrderPage uses orderNo
+  woCode:             row.wo_code,
+  wo_code:            row.wo_code,
+  factoryCode:        row.factory_code ?? '',
+  workshopCode:       row.workshop_code ?? '',
+  customerCode:       row.product_code,     // no customer table; reuse product_code
+  customerName:       row.product_name ?? '',
+  productCode:        row.product_code,
+  productName:        row.product_name ?? '',
+  batchNo:            row.batch_no,
+  bomId:              row.bom_id,
+  bomVersion:         row.bom_version ?? '',
+  routeId:            row.route_id,
+  routeCode:          row.route_code ?? '',
+  planQty:            row.plan_qty ?? 0,
+  totalQuantity:      row.plan_qty ?? 0,    // ProductionOrderPage uses totalQuantity
+  actualQty:          row.actual_qty ?? 0,
+  completedQuantity:  row.actual_qty ?? 0,  // ProductionOrderPage uses completedQuantity
+  unitName:           row.unit_name ?? '',
+  orderType:          row.order_type ?? 'NORMAL',
+  channelType:        row.channel_type ?? '',
+  priority:           row.priority ?? 3,
+  priorityLabel:      PRIORITY_LABEL[row.priority ?? 3] ?? 'NORMAL',
+  woStatus:           row.wo_status ?? 1,
+  wo_status:          row.wo_status ?? 1,
+  status:             WO_STATUS_LABEL[row.wo_status ?? 1] ?? 'OPEN',
+  planStart:          row.plan_start,
+  planEnd:            row.plan_end,
+  deliveryDate:       row.plan_end,         // map to deliveryDate
+  actualStart:        row.actual_start,
+  actualEnd:          row.actual_end,
+  remark:             row.remark ?? '',
+  createTime:         row.create_time,
+  updateTime:         row.update_time ?? row.create_time,
+  createBy:           row.create_by ?? '',
+  updateBy:           row.update_by ?? '',
+});
+
+// 满足 ProductionOrderPage workOrders mapping 的字段需求
+// item.workOrderNo, item.orderId, item.orderNo, item.materialCode, item.materialName,
+// item.spec, item.bomVersion, item.planQuantity, item.completedQuantity, item.progress
+const mapWorkOrderAsWO = (row) => ({
+  id:                 row.id,
+  workOrderNo:        row.wo_code,          // WorkOrder uses workOrderNo
+  woCode:             row.wo_code,
+  orderId:            row.id,               // self-reference (no separate PO table)
+  orderNo:            row.wo_code,
+  materialCode:       row.product_code,
+  materialName:       row.product_name ?? '',
+  spec:               row.bom_version ?? '',
+  bomVersion:         row.bom_version ?? '',
+  routeCode:          row.route_code ?? '',
+  planQuantity:       row.plan_qty ?? 0,
+  planQty:            row.plan_qty ?? 0,
+  completedQuantity:  row.actual_qty ?? 0,
+  actualQty:          row.actual_qty ?? 0,
+  unqualifiedQuantity:0,
+  batchNo:            row.batch_no,
+  factoryCode:        row.factory_code ?? '',
+  workshopCode:       row.workshop_code ?? '',
+  priority:           row.priority ?? 3,
+  woStatus:           row.wo_status ?? 1,
+  status:             WO_STATUS_LABEL[row.wo_status ?? 1] ?? 'OPEN',
+  progress:           row.plan_qty > 0 ? Math.round((row.actual_qty / row.plan_qty) * 100) : 0,
+  planStart:          row.plan_start,
+  planEnd:            row.plan_end,
+  remark:             row.remark ?? '',
+  createTime:         row.create_time,
+  createBy:           row.create_by ?? '',
+});
+
+// ── /production-orders/* ─────────────────────────────────────────────
+router.get('/production-orders/list', authMiddleware, async (req, res) => {
+  try {
+    const { status, woCode, productName, factoryCode } = req.query;
+    let sql = 'SELECT * FROM mes_work_order WHERE deleted=0';
+    const params = [];
+    // status can be string label (OPEN/IN_PROGRESS) or numeric
+    if (status && WO_STATUS_LABEL[status]) {
+      sql += ' AND wo_status=?'; params.push(status);
+    } else if (status) {
+      // reverse lookup: string → number
+      const numStatus = Object.entries(WO_STATUS_LABEL).find(([,v]) => v === status.toUpperCase())?.[0];
+      if (numStatus) { sql += ' AND wo_status=?'; params.push(numStatus); }
+    }
+    if (woCode)      { sql += ' AND wo_code LIKE ?';     params.push(`%${woCode}%`); }
+    if (productName) { sql += ' AND product_name LIKE ?';params.push(`%${productName}%`); }
+    if (factoryCode) { sql += ' AND factory_code=?';     params.push(factoryCode); }
+    sql += ' ORDER BY priority ASC, plan_start ASC';
+    const [rows] = await db.execute(sql, params);
+    ok(res, rows.map(mapWorkOrderAsPO));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/production-orders/page', authMiddleware, async (req, res) => {
+  try {
+    const { pageNum = 1, pageSize = 20, status, woCode, productName, factoryCode } = req.query;
+    let sql = 'SELECT * FROM mes_work_order WHERE deleted=0';
+    const params = [];
+    if (woCode)      { sql += ' AND wo_code LIKE ?';      params.push(`%${woCode}%`); }
+    if (productName) { sql += ' AND product_name LIKE ?'; params.push(`%${productName}%`); }
+    if (factoryCode) { sql += ' AND factory_code=?';      params.push(factoryCode); }
+    if (status) {
+      const numStatus = Object.entries(WO_STATUS_LABEL).find(([,v]) => v === status.toUpperCase())?.[0];
+      if (numStatus) { sql += ' AND wo_status=?'; params.push(numStatus); }
+    }
+    const [cntRows] = await db.execute(sql.replace('SELECT *', 'SELECT COUNT(*) as cnt'), params);
+    sql += ` ORDER BY priority ASC, plan_start ASC LIMIT ${pageSize} OFFSET ${(pageNum - 1) * pageSize}`;
+    const [rows] = await db.execute(sql, params);
+    page(res, rows.map(mapWorkOrderAsPO), cntRows[0].cnt, +pageNum, +pageSize);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/production-orders/:id', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM mes_work_order WHERE id=? AND deleted=0', [req.params.id]);
+    if (!rows.length) return fail(res, '生产订单不存在');
+    ok(res, mapWorkOrderAsPO(rows[0]));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// ── /work-orders/* ─────────────────────────────────────────────────
+router.get('/work-orders/list', authMiddleware, async (req, res) => {
+  try {
+    const { orderId, status, woCode, productName } = req.query;
+    let sql = 'SELECT * FROM mes_work_order WHERE deleted=0';
+    const params = [];
+    if (orderId)     { sql += ' AND id=?';                params.push(orderId); }
+    if (woCode)      { sql += ' AND wo_code LIKE ?';      params.push(`%${woCode}%`); }
+    if (productName) { sql += ' AND product_name LIKE ?'; params.push(`%${productName}%`); }
+    if (status) {
+      const numStatus = Object.entries(WO_STATUS_LABEL).find(([,v]) => v === status.toUpperCase())?.[0];
+      if (numStatus) { sql += ' AND wo_status=?'; params.push(numStatus); }
+    }
+    sql += ' ORDER BY priority ASC, plan_start ASC';
+    const [rows] = await db.execute(sql, params);
+    ok(res, rows.map(mapWorkOrderAsWO));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/work-orders/page', authMiddleware, async (req, res) => {
+  try {
+    const { pageNum = 1, pageSize = 20, orderId, status, woCode, productName } = req.query;
+    let sql = 'SELECT * FROM mes_work_order WHERE deleted=0';
+    const params = [];
+    if (orderId)     { sql += ' AND id=?';                params.push(orderId); }
+    if (woCode)      { sql += ' AND wo_code LIKE ?';      params.push(`%${woCode}%`); }
+    if (productName) { sql += ' AND product_name LIKE ?'; params.push(`%${productName}%`); }
+    if (status) {
+      const numStatus = Object.entries(WO_STATUS_LABEL).find(([,v]) => v === status.toUpperCase())?.[0];
+      if (numStatus) { sql += ' AND wo_status=?'; params.push(numStatus); }
+    }
+    const [cntRows] = await db.execute(sql.replace('SELECT *', 'SELECT COUNT(*) as cnt'), params);
+    sql += ` ORDER BY priority ASC, plan_start ASC LIMIT ${pageSize} OFFSET ${(pageNum - 1) * pageSize}`;
+    const [rows] = await db.execute(sql, params);
+    page(res, rows.map(mapWorkOrderAsWO), cntRows[0].cnt, +pageNum, +pageSize);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/work-orders/:id', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM mes_work_order WHERE id=? AND deleted=0', [req.params.id]);
+    if (!rows.length) return fail(res, '工单不存在');
+    ok(res, mapWorkOrderAsWO(rows[0]));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
 module.exports = router;

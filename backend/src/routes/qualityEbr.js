@@ -272,4 +272,301 @@ router.post('/ebr/material-balances', authMiddleware, async (req, res) => {
   } catch (e) { fail(res, e.message, 500); }
 });
 
+// =====================================================================
+// compat 兼容路由层 — 前端旧路径 → 真实业务表
+// =====================================================================
+
+// ── /inspection-items/* ──────────────────────────────────────────────
+// 前端 src/api/inspectionItems.ts 调用 /inspection-items/list
+// 映射：item_code→code, item_name→name, item_type→category,
+//        spec_text→standard, spec_min→specMin, spec_max→specMax,
+//        unit_name→unit, test_method→method
+const mapInspectionItem = (row) => ({
+  id:          row.id,
+  code:        row.item_code,
+  itemCode:    row.item_code,
+  name:        row.item_name,
+  itemName:    row.item_name,
+  category:    row.item_type ?? '',
+  itemType:    row.item_type ?? '',
+  standard:    row.spec_text ?? '',
+  specText:    row.spec_text ?? '',
+  specMin:     row.spec_min ?? null,
+  specMax:     row.spec_max ?? null,
+  minValue:    row.spec_min ?? null,
+  maxValue:    row.spec_max ?? null,
+  unit:        row.unit_name ?? '',
+  unitName:    row.unit_name ?? '',
+  method:      row.test_method ?? '',
+  testMethod:  row.test_method ?? '',
+  isKeyItem:   0,
+  status:      row.status ?? 1,
+  createTime:  row.create_time,
+  updateTime:  row.update_time ?? row.create_time,
+});
+
+router.get('/inspection-items/list', authMiddleware, async (req, res) => {
+  try {
+    const { category, status, itemName } = req.query;
+    let sql = 'SELECT * FROM qms_inspection_item WHERE deleted=0';
+    const params = [];
+    if (category)  { sql += ' AND item_type=?';           params.push(category); }
+    if (itemName)  { sql += ' AND item_name LIKE ?';      params.push(`%${itemName}%`); }
+    if (status !== undefined) { sql += ' AND status=?';   params.push(status); }
+    sql += ' ORDER BY id';
+    const [rows] = await db.execute(sql, params);
+    ok(res, rows.map(mapInspectionItem));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/inspection-items/page', authMiddleware, async (req, res) => {
+  try {
+    const { pageNum = 1, pageSize = 20, code, category, itemName, status } = req.query;
+    let sql = 'SELECT * FROM qms_inspection_item WHERE deleted=0';
+    const params = [];
+    if (code)      { sql += ' AND item_code LIKE ?';      params.push(`%${code}%`); }
+    if (category)  { sql += ' AND item_type=?';           params.push(category); }
+    if (itemName)  { sql += ' AND item_name LIKE ?';      params.push(`%${itemName}%`); }
+    if (status !== undefined) { sql += ' AND status=?';   params.push(status); }
+    const cntSql = sql.replace('SELECT *', 'SELECT COUNT(*) as cnt');
+    const [cntRows] = await db.execute(cntSql, params);
+    sql += ` ORDER BY id LIMIT ${pageSize} OFFSET ${(pageNum - 1) * pageSize}`;
+    const [rows] = await db.execute(sql, params);
+    page(res, rows.map(mapInspectionItem), cntRows[0].cnt, +pageNum, +pageSize);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/inspection-items/:id', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM qms_inspection_item WHERE id=? AND deleted=0', [req.params.id]);
+    if (!rows.length) return fail(res, '质检项目不存在');
+    ok(res, mapInspectionItem(rows[0]));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.post('/inspection-items', authMiddleware, async (req, res) => {
+  try {
+    const { code, itemCode, name, itemName, category, itemType, standard, specText,
+            unit, unitName, minValue, specMin, maxValue, specMax, method, testMethod, status } = req.body;
+    const [r] = await db.execute(
+      'INSERT INTO qms_inspection_item (item_code,item_name,item_type,unit_name,spec_min,spec_max,spec_text,test_method,status) VALUES (?,?,?,?,?,?,?,?,?)',
+      [
+        code ?? itemCode,
+        name ?? itemName,
+        category ?? itemType ?? '',
+        unit ?? unitName ?? '',
+        minValue ?? specMin ?? null,
+        maxValue ?? specMax ?? null,
+        standard ?? specText ?? '',
+        method ?? testMethod ?? '',
+        status ?? 1,
+      ]
+    );
+    const [rows] = await db.execute('SELECT * FROM qms_inspection_item WHERE id=?', [r.insertId]);
+    ok(res, mapInspectionItem(rows[0]));
+  } catch (e) { fail(res, e.message.includes('Duplicate') ? '编码已存在' : e.message, 400); }
+});
+
+router.put('/inspection-items/:id', authMiddleware, async (req, res) => {
+  try {
+    const { code, itemCode, name, itemName, category, itemType, standard, specText,
+            unit, unitName, minValue, specMin, maxValue, specMax, method, testMethod, status } = req.body;
+    await db.execute(
+      `UPDATE qms_inspection_item SET
+        item_code=COALESCE(?,item_code), item_name=COALESCE(?,item_name),
+        item_type=COALESCE(?,item_type), unit_name=COALESCE(?,unit_name),
+        spec_min=COALESCE(?,spec_min), spec_max=COALESCE(?,spec_max),
+        spec_text=COALESCE(?,spec_text), test_method=COALESCE(?,test_method),
+        status=COALESCE(?,status)
+       WHERE id=? AND deleted=0`,
+      [
+        code ?? itemCode ?? null,
+        name ?? itemName ?? null,
+        category ?? itemType ?? null,
+        unit ?? unitName ?? null,
+        minValue ?? specMin ?? null,
+        maxValue ?? specMax ?? null,
+        standard ?? specText ?? null,
+        method ?? testMethod ?? null,
+        status ?? null,
+        req.params.id,
+      ]
+    );
+    const [rows] = await db.execute('SELECT * FROM qms_inspection_item WHERE id=?', [req.params.id]);
+    ok(res, rows.length ? mapInspectionItem(rows[0]) : {});
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.delete('/inspection-items/:id', authMiddleware, async (req, res) => {
+  try {
+    await db.execute('UPDATE qms_inspection_item SET deleted=1 WHERE id=?', [req.params.id]);
+    ok(res);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// ── /inspection-tasks/* ──────────────────────────────────────────────
+// 前端 src/api/inspectionTasks.ts 调用 /inspection-tasks/list
+// io_type: 1=IQC,2=IPQC,3=FQC  io_status: 1=PENDING,2=ASSIGNED,3=DOING,4=COMPLETED
+const IO_TYPE_MAP  = { 1:'IQC', 2:'IPQC', 3:'FQC', IQC:'IQC', IPQC:'IPQC', FQC:'FQC' };
+const IO_STATUS_MAP = { 1:'PENDING', 2:'ASSIGNED', 3:'DOING', 4:'COMPLETED' };
+
+const mapInspectionTask = (row) => ({
+  id:             row.id,
+  taskNo:         row.io_code,
+  ioCode:         row.io_code,
+  taskType:       IO_TYPE_MAP[row.io_type] ?? String(row.io_type ?? 'IQC'),
+  schemeType:     IO_TYPE_MAP[row.io_type] ?? 'IQC',
+  ioType:         row.io_type,
+  sourceNo:       row.wo_code ?? '',
+  woCode:         row.wo_code ?? '',
+  batchNo:        row.batch_no ?? '',
+  materialCode:   row.material_code ?? '',
+  materialName:   row.material_name ?? '',
+  sampleQuantity: row.sample_qty ?? 0,
+  quantity:       row.sample_qty ?? 0,
+  status:         IO_STATUS_MAP[row.io_status] ?? 'PENDING',
+  ioStatus:       row.io_status,
+  result:         row.overall_result ?? '',
+  overallResult:  row.overall_result ?? '',
+  inspectorId:    row.inspector_id,
+  inspectorName:  row.inspector_name ?? '',
+  reviewerName:   row.reviewer_name ?? '',
+  completeTime:   row.inspect_time,
+  remark:         row.remark ?? '',
+  createTime:     row.create_time,
+  updateTime:     row.update_time ?? row.create_time,
+});
+
+router.get('/inspection-tasks/list', authMiddleware, async (req, res) => {
+  try {
+    const { ioType, ioStatus, woCode, batchNo } = req.query;
+    let sql = 'SELECT * FROM qms_inspection_order WHERE deleted=0';
+    const params = [];
+    if (ioType)   { sql += ' AND io_type=?';          params.push(ioType); }
+    if (ioStatus) { sql += ' AND io_status=?';        params.push(ioStatus); }
+    if (woCode)   { sql += ' AND wo_code LIKE ?';     params.push(`%${woCode}%`); }
+    if (batchNo)  { sql += ' AND batch_no LIKE ?';    params.push(`%${batchNo}%`); }
+    sql += ' ORDER BY create_time DESC';
+    const [rows] = await db.execute(sql, params);
+    ok(res, rows.map(mapInspectionTask));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/inspection-tasks/page', authMiddleware, async (req, res) => {
+  try {
+    const { pageNum = 1, pageSize = 20, ioType, ioStatus, woCode, batchNo } = req.query;
+    let sql = 'SELECT * FROM qms_inspection_order WHERE deleted=0';
+    const params = [];
+    if (ioType)   { sql += ' AND io_type=?';          params.push(ioType); }
+    if (ioStatus) { sql += ' AND io_status=?';        params.push(ioStatus); }
+    if (woCode)   { sql += ' AND wo_code LIKE ?';     params.push(`%${woCode}%`); }
+    if (batchNo)  { sql += ' AND batch_no LIKE ?';    params.push(`%${batchNo}%`); }
+    const [cntRows] = await db.execute(sql.replace('SELECT *', 'SELECT COUNT(*) as cnt'), params);
+    sql += ` ORDER BY create_time DESC LIMIT ${pageSize} OFFSET ${(pageNum - 1) * pageSize}`;
+    const [rows] = await db.execute(sql, params);
+    page(res, rows.map(mapInspectionTask), cntRows[0].cnt, +pageNum, +pageSize);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/inspection-tasks/:id', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM qms_inspection_order WHERE id=? AND deleted=0', [req.params.id]);
+    if (!rows.length) return fail(res, '检验任务不存在');
+    ok(res, mapInspectionTask(rows[0]));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.put('/inspection-tasks/:id', authMiddleware, async (req, res) => {
+  try {
+    const { inspectorId, inspectorName, status, ioStatus } = req.body;
+    const newStatus = ioStatus ?? (status === 'ASSIGNED' ? 2 : status === 'DOING' ? 3 : status === 'COMPLETED' ? 4 : null);
+    await db.execute(
+      `UPDATE qms_inspection_order SET
+         inspector_id=COALESCE(?,inspector_id),
+         inspector_name=COALESCE(?,inspector_name),
+         io_status=COALESCE(?,io_status),
+         update_time=NOW()
+       WHERE id=? AND deleted=0`,
+      [inspectorId ?? null, inspectorName ?? null, newStatus, req.params.id]
+    );
+    ok(res);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// ── /quality-releases/* ──────────────────────────────────────────────
+// 没有独立放行表；从检验单中拉取 overall_result 有值的记录作为"放行"数据
+const mapQualityRelease = (row) => ({
+  id:           row.id,
+  releaseNo:    `REL-${row.io_code}`,
+  releaseType:  IO_TYPE_MAP[row.io_type] === 'FQC' ? 'FINISHED' :
+                IO_TYPE_MAP[row.io_type] === 'IQC' ? 'MATERIAL' : 'SEMI_FINISHED',
+  taskId:       row.id,
+  batchNo:      row.batch_no ?? '',
+  materialCode: row.material_code ?? '',
+  materialName: row.material_name ?? '',
+  conclusion:   row.overall_result === 'PASS' ? 'RELEASED' :
+                row.overall_result === 'FAIL' ? 'REJECTED' : 'HOLD',
+  status:       row.overall_result === 'PASS' ? 'RELEASED' :
+                row.overall_result === 'FAIL' ? 'REJECTED' : 'HOLD',
+  approverName: row.reviewer_name ?? '',
+  qaName:       row.reviewer_name ?? '',
+  approveTime:  row.inspect_time ?? '',
+  releaseTime:  row.inspect_time ?? '',
+  remark:       row.remark ?? '',
+  createTime:   row.create_time,
+});
+
+router.get('/quality-releases/list', authMiddleware, async (req, res) => {
+  try {
+    const { releaseType, conclusion } = req.query;
+    let sql = 'SELECT * FROM qms_inspection_order WHERE deleted=0 AND io_status >= 3';
+    const params = [];
+    if (releaseType === 'FINISHED')     { sql += ' AND io_type=3'; }
+    else if (releaseType === 'MATERIAL') { sql += ' AND io_type=1'; }
+    else if (releaseType === 'SEMI_FINISHED') { sql += ' AND io_type=2'; }
+    if (conclusion === 'RELEASED')      { sql += " AND overall_result='PASS'"; }
+    else if (conclusion === 'REJECTED') { sql += " AND overall_result='FAIL'"; }
+    else if (conclusion === 'HOLD')     { sql += ' AND overall_result IS NULL'; }
+    sql += ' ORDER BY create_time DESC';
+    const [rows] = await db.execute(sql, params);
+    ok(res, rows.map(mapQualityRelease));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+router.get('/quality-releases/page', authMiddleware, async (req, res) => {
+  try {
+    const { pageNum = 1, pageSize = 20, releaseType, conclusion } = req.query;
+    let sql = 'SELECT * FROM qms_inspection_order WHERE deleted=0 AND io_status >= 3';
+    const params = [];
+    if (releaseType === 'FINISHED')      { sql += ' AND io_type=3'; }
+    else if (releaseType === 'MATERIAL') { sql += ' AND io_type=1'; }
+    else if (releaseType === 'SEMI_FINISHED') { sql += ' AND io_type=2'; }
+    if (conclusion === 'RELEASED')       { sql += " AND overall_result='PASS'"; }
+    else if (conclusion === 'REJECTED')  { sql += " AND overall_result='FAIL'"; }
+    else if (conclusion === 'HOLD')      { sql += ' AND overall_result IS NULL'; }
+    const [cntRows] = await db.execute(sql.replace('SELECT *', 'SELECT COUNT(*) as cnt'), params);
+    sql += ` ORDER BY create_time DESC LIMIT ${pageSize} OFFSET ${(pageNum - 1) * pageSize}`;
+    const [rows] = await db.execute(sql, params);
+    page(res, rows.map(mapQualityRelease), cntRows[0].cnt, +pageNum, +pageSize);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// ── /qms/* 前端旧路径兼容 ────────────────────────────────────────────
+// /qms/inspection-orders → /quality/inspections 逻辑
+router.get('/qms/inspection-orders', authMiddleware, async (req, res) => {
+  try {
+    const { pageNum = 1, pageSize = 20, ioType, ioStatus, woCode, batchNo } = req.query;
+    let sql = 'SELECT * FROM qms_inspection_order WHERE deleted=0';
+    const params = [];
+    if (ioType)   { sql += ' AND io_type=?';      params.push(ioType); }
+    if (ioStatus) { sql += ' AND io_status=?';    params.push(ioStatus); }
+    if (woCode)   { sql += ' AND wo_code LIKE ?'; params.push(`%${woCode}%`); }
+    if (batchNo)  { sql += ' AND batch_no LIKE ?';params.push(`%${batchNo}%`); }
+    const [cntRows] = await db.execute(sql.replace('SELECT *', 'SELECT COUNT(*) as cnt'), params);
+    sql += ` ORDER BY create_time DESC LIMIT ${pageSize} OFFSET ${(pageNum - 1) * pageSize}`;
+    const [rows] = await db.execute(sql, params);
+    page(res, rows.map(mapInspectionTask), cntRows[0].cnt, +pageNum, +pageSize);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
 module.exports = router;
