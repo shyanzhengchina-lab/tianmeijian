@@ -112,71 +112,53 @@ export interface UserContext {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 工厂数据（三个示例工厂：济宁/印尼/苏州）
+// 工厂数据（天美健大自然生物工程有限公司 — 南京+溧水两厂）
 // ═══════════════════════════════════════════════════════════════════
 export const FACTORIES: FactoryConfig[] = [
   {
-    id: 'F001', code: 'JN', name: '济宁工厂', nameEn: 'Jining Factory',
+    id: 'F001', code: 'NJ', name: '南京工厂', nameEn: 'Nanjing Factory',
     country: '中国', timezone: 'Asia/Shanghai', currency: 'CNY', language: 'zh-CN',
     status: 'ACTIVE', sortOrder: 1,
   },
   {
-    id: 'F002', code: 'ID', name: '印尼工厂', nameEn: 'Indonesia Factory',
-    country: '印度尼西亚', timezone: 'Asia/Jakarta', currency: 'IDR', language: 'id-ID',
-    status: 'ACTIVE', sortOrder: 2,
-  },
-  {
-    id: 'F003', code: 'SZ', name: '苏州工厂', nameEn: 'Suzhou Factory',
+    id: 'F002', code: 'LS', name: '溧水工厂', nameEn: 'Lishui Factory',
     country: '中国', timezone: 'Asia/Shanghai', currency: 'CNY', language: 'zh-CN',
-    status: 'ACTIVE', sortOrder: 3,
+    status: 'ACTIVE', sortOrder: 2,
   },
 ];
 
 // ── 组织节点数据 ─────────────────────────────────────────────────
 export const ORG_NODES: OrgNode[] = [
-  // ── 济宁工厂 (F001) ───────────────────────────────────────────
-  { id: 'W001', code: 'JN-WS01', name: '冲裁车间',   parentId: null,   factoryId: 'F001', level: 'WORKSHOP', sortOrder: 1, status: 'ACTIVE' },
-  { id: 'W002', code: 'JN-WS02', name: '研磨车间',   parentId: null,   factoryId: 'F001', level: 'WORKSHOP', sortOrder: 2, status: 'ACTIVE' },
-  { id: 'W003', code: 'JN-WS03', name: '焊接车间',   parentId: null,   factoryId: 'F001', level: 'WORKSHOP', sortOrder: 3, status: 'ACTIVE' },
-  { id: 'L001', code: 'JN-L01',  name: '冲裁产线A', parentId: 'W001', factoryId: 'F001', level: 'LINE',     sortOrder: 1, status: 'ACTIVE' },
-  { id: 'L002', code: 'JN-L02',  name: '冲裁产线B', parentId: 'W001', factoryId: 'F001', level: 'LINE',     sortOrder: 2, status: 'ACTIVE' },
-  { id: 'L003', code: 'JN-L03',  name: '研磨产线A', parentId: 'W002', factoryId: 'F001', level: 'LINE',     sortOrder: 1, status: 'ACTIVE' },
-  { id: 'T001', code: 'JN-T01',  name: '白班组',    parentId: 'L001', factoryId: 'F001', level: 'TEAM',     sortOrder: 1, status: 'ACTIVE' },
-  { id: 'T002', code: 'JN-T02',  name: '夜班组',    parentId: 'L001', factoryId: 'F001', level: 'TEAM',     sortOrder: 2, status: 'ACTIVE' },
-  { id: 'T003', code: 'JN-T03',  name: '研磨A班',   parentId: 'L003', factoryId: 'F001', level: 'TEAM',     sortOrder: 1, status: 'ACTIVE' },
-  // ── 苏州工厂 (F003) ───────────────────────────────────────────
-  { id: 'W011', code: 'SZ-WS01', name: '装配车间',   parentId: null,   factoryId: 'F003', level: 'WORKSHOP', sortOrder: 1, status: 'ACTIVE' },
-  { id: 'W012', code: 'SZ-WS02', name: '测试车间',   parentId: null,   factoryId: 'F003', level: 'WORKSHOP', sortOrder: 2, status: 'ACTIVE' },
-  { id: 'L011', code: 'SZ-L01',  name: '装配产线1', parentId: 'W011', factoryId: 'F003', level: 'LINE',     sortOrder: 1, status: 'ACTIVE' },
-  { id: 'T011', code: 'SZ-T01',  name: '装配白班',   parentId: 'L011', factoryId: 'F003', level: 'TEAM',     sortOrder: 1, status: 'ACTIVE' },
-  // ── 印尼工厂 (F002) ───────────────────────────────────────────
-  { id: 'W021', code: 'ID-WS01', name: 'Workshop A', parentId: null,   factoryId: 'F002', level: 'WORKSHOP', sortOrder: 1, status: 'ACTIVE' },
-  { id: 'L021', code: 'ID-L01',  name: 'Line 1',     parentId: 'W021', factoryId: 'F002', level: 'LINE',     sortOrder: 1, status: 'ACTIVE' },
+  // ── 南京工厂 (F001) ───────────────────────────────────────────
+  { id: 'W001', code: 'NJ-WS01', name: '提取车间',   parentId: null,   factoryId: 'F001', level: 'WORKSHOP', sortOrder: 1, status: 'ACTIVE' },
+  { id: 'W002', code: 'NJ-WS02', name: '制剂车间',   parentId: null,   factoryId: 'F001', level: 'WORKSHOP', sortOrder: 2, status: 'ACTIVE' },
+  { id: 'W003', code: 'NJ-WS03', name: '包装车间',   parentId: null,   factoryId: 'F001', level: 'WORKSHOP', sortOrder: 3, status: 'ACTIVE' },
+  { id: 'L001', code: 'NJ-L01',  name: '提取产线A', parentId: 'W001', factoryId: 'F001', level: 'LINE',     sortOrder: 1, status: 'ACTIVE' },
+  { id: 'L002', code: 'NJ-L02',  name: '提取产线B', parentId: 'W001', factoryId: 'F001', level: 'LINE',     sortOrder: 2, status: 'ACTIVE' },
+  { id: 'L003', code: 'NJ-L03',  name: '制剂产线A', parentId: 'W002', factoryId: 'F001', level: 'LINE',     sortOrder: 1, status: 'ACTIVE' },
+  { id: 'T001', code: 'NJ-T01',  name: '白班组',    parentId: 'L001', factoryId: 'F001', level: 'TEAM',     sortOrder: 1, status: 'ACTIVE' },
+  { id: 'T002', code: 'NJ-T02',  name: '夜班组',    parentId: 'L001', factoryId: 'F001', level: 'TEAM',     sortOrder: 2, status: 'ACTIVE' },
+  { id: 'T003', code: 'NJ-T03',  name: '制剂A班',   parentId: 'L003', factoryId: 'F001', level: 'TEAM',     sortOrder: 1, status: 'ACTIVE' },
+  // ── 溧水工厂 (F002) ───────────────────────────────────────────
+  { id: 'W011', code: 'LS-WS01', name: '发酵车间',   parentId: null,   factoryId: 'F002', level: 'WORKSHOP', sortOrder: 1, status: 'ACTIVE' },
+  { id: 'W012', code: 'LS-WS02', name: '精制车间',   parentId: null,   factoryId: 'F002', level: 'WORKSHOP', sortOrder: 2, status: 'ACTIVE' },
+  { id: 'L011', code: 'LS-L01',  name: '发酵产线1', parentId: 'W011', factoryId: 'F002', level: 'LINE',     sortOrder: 1, status: 'ACTIVE' },
+  { id: 'T011', code: 'LS-T01',  name: '发酵白班',   parentId: 'L011', factoryId: 'F002', level: 'TEAM',     sortOrder: 1, status: 'ACTIVE' },
 ];
 
 // ── 用户-工厂授权 ─────────────────────────────────────────────────
-// admin/OP006 -> 集团管理员，可访问所有工厂
+// admin -> 集团管理员，可访问所有工厂
 // 其余员工默认南京工厂
 export const DEFAULT_USER_FACTORIES: UserFactory[] = [
-  { userId: 'admin',  factoryIds: ['F001','F002','F003'], defaultFactoryId: 'F001' },
-  { userId: 'OP006',  factoryIds: ['F001','F002','F003'], defaultFactoryId: 'F001' },
-  { userId: 'OP005',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP001',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP002',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP003',  factoryIds: ['F001','F003'],        defaultFactoryId: 'F001' },
-  { userId: 'OP004',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP007',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP008',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP009',  factoryIds: ['F003'],               defaultFactoryId: 'F003' },
-  { userId: 'OP010',  factoryIds: ['F002'],               defaultFactoryId: 'F002' },
-  { userId: 'OP011',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP012',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP013',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP014',  factoryIds: ['F001','F003'],        defaultFactoryId: 'F001' },
-  { userId: 'OP015',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
-  { userId: 'OP016',  factoryIds: ['F002'],               defaultFactoryId: 'F002' },
-  { userId: 'OP017',  factoryIds: ['F001','F002','F003'], defaultFactoryId: 'F001' },
-  { userId: 'OP018',  factoryIds: ['F001'],               defaultFactoryId: 'F001' },
+  { userId: 'admin',  factoryIds: ['F001','F002'], defaultFactoryId: 'F001' },
+  { userId: 'OP006',  factoryIds: ['F001','F002'], defaultFactoryId: 'F001' },
+  { userId: 'OP005',  factoryIds: ['F001'],        defaultFactoryId: 'F001' },
+  { userId: 'OP001',  factoryIds: ['F001'],        defaultFactoryId: 'F001' },
+  { userId: 'OP002',  factoryIds: ['F001'],        defaultFactoryId: 'F001' },
+  { userId: 'OP003',  factoryIds: ['F001','F002'], defaultFactoryId: 'F001' },
+  { userId: 'OP004',  factoryIds: ['F001'],        defaultFactoryId: 'F001' },
+  { userId: 'OP007',  factoryIds: ['F002'],        defaultFactoryId: 'F002' },
+  { userId: 'OP008',  factoryIds: ['F002'],        defaultFactoryId: 'F002' },
 ];
 
 // ── 空权限（无任何操作） ─────────────────────────────────────────

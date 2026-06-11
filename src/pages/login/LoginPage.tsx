@@ -31,9 +31,9 @@ interface LoginPageProps {
 }
 
 const DEMO_USERS = [
-  { id: 'admin',  label: '系统管理员', role: '全集团 · admin123', badge: '#f5222d',  password: 'admin123'  },
-  { id: 'op001',  label: '操作员',     role: '操作员 · op123456', badge: '#1677ff',  password: 'op123456'  },
-  { id: 'qc001',  label: '质检员',     role: '质检员 · qc123456', badge: '#722ed1',  password: 'qc123456'  },
+  { id: 'admin',  label: '系统管理员', role: '全集团 · admin123', badge: '#C8000A',  password: 'admin123'  },
+  { id: 'op001',  label: '生产操作员', role: '操作员 · op123456', badge: '#1677ff',  password: 'op123456'  },
+  { id: 'qc001',  label: '质量检验员', role: '质检员 · qc123456', badge: '#722ed1',  password: 'qc123456'  },
 ];
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
@@ -161,7 +161,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="login-bg">
         <div className="login-main-card" style={{ maxWidth: 520 }}>
           <div className="login-card-header">
-            <div className="login-card-title">YonBIP/SY 医疗器械 · 选择工厂</div>
+            <div className="login-card-title">天美健 保健品MES · 选择工厂</div>
             <div className="login-card-subtitle">
               欢迎，{pendingUser?.name}｜您有 {availableFactories.length} 个工厂权限
             </div>
@@ -234,7 +234,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
 
         <div className="login-footer-bar">
-          <span>版本：v2.2.0（多工厂）</span>
+          <span>天美健大自然生物工程有限公司 · v2.2.0</span>
           <span className="footer-sep">|</span>
           <span>最后更新：{formatTime(currentTime)}</span>
         </div>
@@ -249,8 +249,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="login-main-card">
         {/* 红色标题栏 */}
         <div className="login-card-header">
-          <div className="login-card-title">YonBIP/SY 医疗器械 · 生产执行系统</div>
-          <div className="login-card-subtitle">医疗器械GMP合规生产管理系统 · 多工厂版</div>
+          <div className="login-card-title">天美健 保健品MES · 生产执行系统</div>
+          <div className="login-card-subtitle">天美健大自然生物工程有限公司 · 保健品GMP生产管理系统</div>
         </div>
 
         {/* 双栏内容区 */}
@@ -318,7 +318,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     }
                   />
                 </Form.Item>
-                <div className="demo-users-hint">Demo 密码：admin→admin123，op001→op123456，qc001→qc123456</div>
+                <div className="demo-users-hint">演示账号：admin/admin123，op001/op123456，qc001/qc123456</div>
 
                 <Form.Item style={{ marginTop: 14, marginBottom: 12 }}>
                   <Checkbox
@@ -416,7 +416,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
       {/* 底部版本信息 */}
       <div className="login-footer-bar">
-        <span>版本：v2.2.0（多工厂权限）</span>
+        <span>天美健大自然生物工程有限公司 · v2.2.0</span>
         <span className="footer-sep">|</span>
         <span>最后更新：{formatTime(currentTime)}</span>
       </div>

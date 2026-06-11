@@ -39,7 +39,6 @@ import {
   SendOutlined,
   InboxOutlined,
   QrcodeOutlined,
-  MedicineBoxOutlined,
 } from '@ant-design/icons';
 import { FACTORIES, getFactoryById } from '../../store/rbacData';
 import './MainLayout.css';
@@ -127,7 +126,6 @@ const menuItems = [
     group: '质量管理',
     children: [
       { key: 'inspection', label: '质检工作台', icon: <SolutionOutlined /> },
-      { key: 'mrb',        label: 'MRB评审',    icon: <FileTextOutlined /> },
       { key: 'release',    label: '质量放行',   icon: <SettingOutlined /> },
     ],
   },
@@ -147,29 +145,41 @@ const menuItems = [
     label: '电子批记录',
     group: '电子批记录',
     children: [
-      { key: 'ebr-list',        label: '批记录管理',   icon: <FileTextOutlined /> },
-      { key: 'equip-usage',     label: '设备使用批记录', icon: <HddOutlined /> },
+      { key: 'ebr-list',         label: '批记录管理',   icon: <FileTextOutlined /> },
+      { key: 'equip-usage',      label: '设备使用批记录', icon: <HddOutlined /> },
       { key: 'material-balance', label: '物料平衡表',   icon: <FileTextOutlined /> },
     ],
   },
   {
-    key: 'udi',
-    icon: <QrcodeOutlined />,
-    label: 'UDI管理',
-    group: 'UDI管理',
+    key: 'trace',
+    icon: <NodeIndexOutlined />,
+    label: '追溯管理',
+    group: '追溯管理',
     children: [
-      { key: 'udi-manage',   label: 'UDI码管理', icon: <QrcodeOutlined /> },
-      { key: 'udi-settings', label: 'UDI设置',    icon: <SettingOutlined /> },
+      { key: 'trace-forward',  label: '正向追溯', icon: <NodeIndexOutlined /> },
+      { key: 'trace-backward', label: '逆向追溯', icon: <ApartmentOutlined /> },
+      { key: 'trace-barcode',  label: '追溯码查询', icon: <QrcodeOutlined /> },
+    ],
+  },
+  {
+    key: 'gmp',
+    icon: <SafetyCertificateOutlined />,
+    label: 'GMP合规',
+    group: 'GMP合规',
+    children: [
+      { key: 'gmp-hygiene',    label: '卫生管理记录', icon: <ExperimentOutlined /> },
+      { key: 'gmp-deviation',  label: '偏差处理',     icon: <WarningOutlined /> },
+      { key: 'gmp-capa',       label: 'CAPA管理',     icon: <AuditOutlined /> },
     ],
   },
   {
     key: 'inventory',
     icon: <InboxOutlined />,
-    label: '库存管理',
-    group: '库存管理',
+    label: '仓储管理',
+    group: '仓储管理',
     children: [
-      { key: 'fg-receipt',      label: '成品入库', icon: <MedicineBoxOutlined /> },
-      { key: 'sales-shipment',  label: '销售出库', icon: <SendOutlined /> },
+      { key: 'fg-receipt',     label: '成品入库',  icon: <InboxOutlined /> },
+      { key: 'sales-shipment', label: '成品出库',  icon: <SendOutlined /> },
     ],
   },
   {
@@ -270,7 +280,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     floatticket:        '生产浮票',
     workshop:           '车间看板',
     inspection:         '质检工作台',
-    mrb:                'MRB评审',
     release:            '质量放行',
     'ebr-list':         '批记录管理',
     'equip-usage':        '设备使用批记录',
@@ -281,13 +290,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'material-issuance':  '领料单管理',
     'pad-issuance':       'PDA拣货执行',
     'backflush-monitor':  '倒扣监控',
-    'udi-manage':         'UDI码管理',
-    'udi-settings':       'UDI设置',
+    'trace-forward':      '正向追溯',
+    'trace-backward':     '逆向追溯',
+    'trace-barcode':      '追溯码查询',
+    'gmp-hygiene':        '卫生管理记录',
+    'gmp-deviation':      '偏差处理',
+    'gmp-capa':           'CAPA管理',
     'fg-receipt':         '成品入库',
-    'sales-shipment':     '销售出库',
+    'sales-shipment':     '成品出库',
   };
 
-  const getHeaderTitle = () => PAGE_TITLE_MAP[currentPage] ?? 'YonBIP/SY 医疗器械';
+  const getHeaderTitle = () => PAGE_TITLE_MAP[currentPage] ?? '天美健 保健品MES';
 
   return (
     <Layout className="main-layout">
@@ -304,7 +317,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
         <div className="header-center">
           <div className="header-title-block">
-            <span className="header-sys-name">YonBIP/SY 医疗器械</span>
+            <span className="header-sys-name">天美健 保健品MES</span>
             <span className="header-page-name">{getHeaderTitle()}</span>
           </div>
         </div>
@@ -460,9 +473,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           { key: 'dashboard',        icon: <HomeOutlined />,        label: '首页' },
           { key: 'production-order', icon: <FileDoneOutlined />,    label: '订单' },
           { key: 'work-order',       icon: <OrderedListOutlined />, label: '工单' },
-          { key: 'task-order',       icon: <ScheduleOutlined />,    label: '任务单' },
-          { key: 'workshop',         icon: <MonitorOutlined />,     label: '看板' },
+          { key: 'ebr-list',         icon: <FileDoneOutlined />,    label: '批记录' },
           { key: 'inspection',       icon: <SolutionOutlined />,    label: '质检' },
+          { key: 'trace-forward',    icon: <NodeIndexOutlined />,   label: '追溯' },
           { key: 'pad-execution',    icon: <TabletOutlined />,      label: '生产执行' },
         ].map(tab => (
           <div

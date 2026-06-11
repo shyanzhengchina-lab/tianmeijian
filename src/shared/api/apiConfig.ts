@@ -113,16 +113,11 @@ export const API_CONFIG = {
  * 获取API基础URL
  */
 function getBaseUrl(): string {
-  switch (NODE_ENV) {
-    case Environment.DEVELOPMENT:
-      return process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
-    case Environment.STAGING:
-      return process.env.REACT_APP_API_BASE_URL || 'https://staging-api.company.com/api';
-    case Environment.PRODUCTION:
-      return process.env.REACT_APP_API_BASE_URL || 'https://api.company.com/api';
-    default:
-      return 'http://localhost:8080/api';
-  }
+  // 统一使用相对路径 /api，由 nginx 代理到后端 Express 8088
+  // 这样无论开发还是生产环境，都通过 nginx 反代，避免跨域问题
+  const envUrl = process.env.REACT_APP_API_BASE_URL;
+  if (envUrl) return envUrl;
+  return '/api';
 }
 
 /**

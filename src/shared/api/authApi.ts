@@ -82,8 +82,14 @@ class AuthApiService {
    * 用户登录
    */
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    // Backend uses employeeId field; map from username
-    const payload = { employeeId: credentials.username, password: credentials.password };
+    // 新后端 (Express) 接受 { username, password }
+    // 旧后端 (Spring Boot) 接受 { employeeId, password }
+    // 同时发送两个字段，兼容两种后端
+    const payload = {
+      username: credentials.username,
+      employeeId: credentials.username,
+      password: credentials.password,
+    };
     return apiClient.post(`${this.baseUrl}/login`, payload, {
       skipCache: true,
       skipRetry: true,

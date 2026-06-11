@@ -72,7 +72,7 @@ http.interceptors.response.use(
           message.error(error.response.data?.message || '请求失败');
         }
       } else if (error.request) {
-        message.error('网络连接失败，请检查后端服务是否启动（端口8080）');
+        message.error('网络连接失败，请检查后端服务是否启动（端口8088）');
       }
     }
 

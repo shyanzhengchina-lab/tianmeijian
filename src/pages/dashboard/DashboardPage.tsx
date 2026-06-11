@@ -718,7 +718,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const totalScrap   = doneTasks.reduce((s, t) => s + (t.scrapQty  || 0), 0);
   const yieldRate    = totalReport > 0
     ? Math.round(((totalReport - totalScrap) / totalReport) * 1000) / 10
-    : 98.4; // 根管锉行业参考良率
+    : 98.4; // 保健品行业参考良率
 
   // 今日计划 & 完成
   const today         = todayStr();
@@ -1079,10 +1079,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 { key: 'production-order', label: '生产订单',   icon: <FileTextOutlined />,     color: '#1677ff', bg: '#eff6ff' },
                 { key: 'work-order',       label: '生产工单',   icon: <UnorderedListOutlined />, color: '#fa8c16', bg: '#fff7e6' },
                 { key: 'task-order',       label: '任务派工',   icon: <TeamOutlined />,          color: '#52c41a', bg: '#f0fff4' },
-                { key: 'pad-execution',    label: 'PAD执行',    icon: <TabletOutlined />,        color: '#722ed1', bg: '#f5f0ff' },
+                { key: 'ebr-list',         label: '电子批记录', icon: <CheckCircleOutlined />,   color: '#722ed1', bg: '#f5f0ff' },
                 { key: 'inspection',       label: '质检工作台', icon: <SafetyOutlined />,        color: '#13c2c2', bg: '#e6fffb' },
-                { key: 'floatticket',      label: '生产浮票',   icon: <NodeIndexOutlined />,     color: '#eb2f96', bg: '#fff0f6' },
-                { key: 'ebr-list',         label: '电子批记录', icon: <CheckCircleOutlined />,   color: '#2f54eb', bg: '#eef2ff' },
+                { key: 'trace-forward',    label: '追溯查询',   icon: <NodeIndexOutlined />,     color: '#eb2f96', bg: '#fff0f6' },
+                { key: 'material-issuance',label: '领料管理',   icon: <InboxOutlined />,         color: '#2f54eb', bg: '#eef2ff' },
                 { key: 'workshop',         label: '车间看板',   icon: <BarChartOutlined />,      color: '#fa541c', bg: '#fff2e8' },
               ].map(s => (
                 <div

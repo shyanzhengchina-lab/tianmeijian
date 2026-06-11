@@ -74,8 +74,7 @@ const MaterialIssuancePage = lazy(() => import('./pages/issuance/MaterialIssuanc
 const PadIssuancePage = lazy(() => import('./pages/issuance/PadIssuancePage'));
 const BackflushMonitorPage = lazy(() => import('./pages/issuance/BackflushMonitorPage'));
 const PerformanceTestPage = lazy(() => import('./pages/performance-test/PerformanceTestPage'));
-const UdiPage = lazy(() => import('./pages/udi/UdiPage'));
-const UdiSettingsPage = lazy(() => import('./pages/udi/UdiSettingsPage'));
+// UDI页面已移除，保健品行业使用追溯管理替代
 const FinishedGoodsReceiptPage = lazy(() => import('./pages/udi/FinishedGoodsReceiptPage'));
 const SalesShipmentPage = lazy(() => import('./pages/udi/SalesShipmentPage'));
 
@@ -297,10 +296,14 @@ const App: React.FC = () => {
       case 'pad-issuance':        return ['领料管理', 'PDA拣货执行'];
       case 'backflush-monitor':   return ['领料管理', '倒扣监控'];
       case 'performance-test':     return ['系统管理', '性能测试'];
-      case 'udi-manage':          return ['UDI管理', 'UDI码管理'];
-      case 'udi-settings':        return ['UDI管理', 'UDI设置'];
-      case 'fg-receipt':          return ['库存管理', '成品入库'];
-      case 'sales-shipment':      return ['库存管理', '销售出库'];
+      case 'trace-forward':    return ['追溯管理', '正向追溯'];
+      case 'trace-backward':   return ['追溯管理', '逆向追溯'];
+      case 'trace-barcode':    return ['追溯管理', '追溯码查询'];
+      case 'gmp-hygiene':      return ['GMP合规', '卫生管理记录'];
+      case 'gmp-deviation':    return ['GMP合规', '偏差处理'];
+      case 'gmp-capa':         return ['GMP合规', 'CAPA管理'];
+      case 'fg-receipt':       return ['仓储管理', '成品入库'];
+      case 'sales-shipment':   return ['仓储管理', '成品出库'];
       default:                  return [];
     }
   };
@@ -330,7 +333,7 @@ const App: React.FC = () => {
       case 'task-order':        return <PageWrapper><TaskOrderPage onNavigateToPad={() => setCurrentPage('pad-execution')} onNavigateToTaskPool={() => setCurrentPage('pad-taskpool')} /></PageWrapper>;
       case 'workorder':         return <PageWrapper><WorkOrderListPage initialOpenWoId={openWoId} onNavigateToRouting={handleNavigateToRouting} /></PageWrapper>;
       case 'inspection':        return <PageWrapper><InspectionPage /></PageWrapper>;
-      case 'mrb':               return <PageWrapper><MrbPage /></PageWrapper>;
+      // MRB已替换：保健品不使用MRB评审流程
       case 'release':           return <PageWrapper><ReleasePage /></PageWrapper>;
       case 'pad-execution':     return <PageWrapper><PadIndex /></PageWrapper>;
       case 'pad-taskpool':      return <PageWrapper><PadTaskPoolPage onNavigate={handlePageChange} /></PageWrapper>;
@@ -344,8 +347,27 @@ const App: React.FC = () => {
       case 'pad-issuance':        return <PageWrapper><PadIssuancePage /></PageWrapper>;
       case 'backflush-monitor':   return <PageWrapper><BackflushMonitorPage /></PageWrapper>;
       case 'performance-test':     return <PageWrapper><PerformanceTestPage /></PageWrapper>;
-      case 'udi-manage':          return <PageWrapper><UdiPage /></PageWrapper>;
-      case 'udi-settings':        return <PageWrapper><UdiSettingsPage /></PageWrapper>;
+      // UDI已替换为追溯管理（内容展示通用占位符）
+      case 'trace-forward':
+      case 'trace-backward':
+      case 'trace-barcode':
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+            <div style={{ fontSize: 16, color: '#999' }}>追溯查询功能开发中...</div>
+            <div style={{ fontSize: 13, color: '#bbb', marginTop: 8 }}>GMP保健品追溯管理模块</div>
+          </div>
+        );
+      case 'gmp-hygiene':
+      case 'gmp-deviation':
+      case 'gmp-capa':
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+            <div style={{ fontSize: 16, color: '#999' }}>GMP合规管理开发中...</div>
+            <div style={{ fontSize: 13, color: '#bbb', marginTop: 8 }}>保健品GMP合规管理模块</div>
+          </div>
+        );
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
       default:
