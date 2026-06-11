@@ -57,7 +57,7 @@ function initScheme(base?: QcScheme): EditScheme {
 type SchemeQuickFilter = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'IQC' | 'IPQC' | 'FQC_OQC';
 
 const QcSchemePage: React.FC = () => {
-  const [schemes, setSchemes] = useState<QcScheme[]>(mockQcSchemes);
+  const [schemes, setSchemes] = useState<QcScheme[]>([]);  // 启动时为空，loadFromApi 加载真实数据，失败才降级到 mock
   const [apiLoading, setApiLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<QcSchemeType | 'ALL'>('ALL');
@@ -84,17 +84,27 @@ const QcSchemePage: React.FC = () => {
       const resp = await getInspectionItemList() as any;
       const list: InspectionItemRecord[] = resp?.data ?? [];
       if (list.length > 0) {
-        const mapped: QcItem[] = list.map(it => ({
+        // 双字段回退链：兼容 snake_case (DB直出) 与 camelCase (compat路由)
+        // DB 使用扩展分类；映射到 QcItemCategory 合法值
+        const API_TO_CAT: Record<string, string> = {
+          'APPEARANCE':'APPEARANCE','PHYSICAL':'PHYSICAL','CHEMICAL':'CHEMICAL',
+          'MICRO':'MICROBIAL','MICROBIAL':'MICROBIAL',
+          'PACKAGING':'DOCUMENT','HEAVY_METAL':'CHEMICAL',
+          'RELEASE':'DOCUMENT',
+          'SIZE':'SIZE','FUNCTION':'PERFORMANCE','PERFORMANCE':'PERFORMANCE',
+          'DOCUMENT':'DOCUMENT','OTHER':'DOCUMENT',
+        };
+        const mapped: QcItem[] = list.map((it: any) => ({
           id:            String(it.id ?? ''),
-          itemCode:      it.code ?? String(it.id ?? ''),
-          itemName:      it.name ?? '',
-          category:      (it.category as QcItemCategory) ?? 'SIZE',
+          itemCode:      it.itemCode   ?? it.item_code  ?? it.code  ?? String(it.id ?? ''),
+          itemName:      it.itemName   ?? it.item_name  ?? it.name  ?? '',
+          category:      (API_TO_CAT[it.itemType ?? it.item_type ?? it.category ?? ''] ?? 'APPEARANCE') as QcItemCategory,
           standardType:  'NUMERIC' as any,
-          standardValue: it.standard ?? undefined,
-          minValue:      it.minValue ?? undefined,
-          maxValue:      it.maxValue ?? undefined,
-          unit:          it.unit ?? undefined,
-          instrumentType: it.method ?? undefined,
+          standardValue: it.specText   ?? it.spec_text  ?? it.standard ?? undefined,
+          minValue:      it.specMin    ?? it.spec_min   ?? it.minValue  ?? undefined,
+          maxValue:      it.specMax    ?? it.spec_max   ?? it.maxValue  ?? undefined,
+          unit:          it.unitName   ?? it.unit_name  ?? it.unit  ?? undefined,
+          instrumentType: it.testMethod ?? it.test_method ?? it.method ?? undefined,
           isCritical:    it.isKeyItem === 1,
           isRequired:    true,
           applyTypes:    [],
@@ -119,22 +129,24 @@ const QcSchemePage: React.FC = () => {
       if (apiList.length > 0) {
         const mapped: QcScheme[] = apiList.map((item: any) => ({
           id:            item.id?.toString() ?? genQcSchemeCode('IQC'),
-          schemeCode:    item.schemeCode ?? item.id?.toString() ?? '',
-          schemeName:    item.schemeName ?? '',
-          schemeType:    (item.schemeType as QcSchemeType) ?? 'IQC',
-          samplingType:  (item.samplingType as any) ?? 'AQL',
-          aqlLevel:      item.aqlLevel ?? '1.0',
-          status:        item.status === 0 ? 'INACTIVE' : 'ACTIVE',
+          schemeCode:    item.schemeCode ?? item.scheme_code ?? item.id?.toString() ?? '',
+          schemeName:    item.schemeName ?? item.scheme_name ?? '',
+          schemeType:    (item.schemeType ?? item.scheme_type ?? 'IQC') as QcSchemeType,
+          samplingType:  (item.samplingType ?? item.sampling_type ?? 'AQL') as any,
+          aqlLevel:      item.aqlLevel ?? item.aql_level ?? '1.0',
+          status:        (item.status === 0 || item.status === '0') ? 'INACTIVE' : 'ACTIVE',
           version:       item.version ?? 'V1.0',
-          effectiveDate: item.effectiveDate ?? '',
+          effectiveDate: item.effectiveDate ?? item.effective_date ?? '',
           description:   item.description ?? '',
           createdAt:     item.createTime ? item.createTime.slice(0, 10) : '',
           updatedAt:     item.updateTime ? item.updateTime.slice(0, 10) : '',
           items:         [],
         }));
         setSchemes(mapped);
+      } else {
+        setSchemes([]);
       }
-    } catch { /* 保留本地 mock */ } finally { setApiLoading(false); }
+    } catch { /* 保留本地状态 */ } finally { setApiLoading(false); }
   }, []);
 
   useEffect(() => { loadFromApi(); }, [loadFromApi]);
