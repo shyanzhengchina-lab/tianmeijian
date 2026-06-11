@@ -7,7 +7,7 @@ import { getBomList, getBomDetails } from '../../api/boms';
 type PageView = 'list' | 'detail';
 
 const BomIndex: React.FC = () => {
-  const [bomList, setBomList] = useState<BomHeader[]>(mockBomList);
+  const [bomList, setBomList] = useState<BomHeader[]>([]);  // start empty, fill from API
   const [view, setView]       = useState<PageView>('list');
   const [selected, setSelected] = useState<BomHeader | null>(null);
   const [detailMode, setDetailMode] = useState<'view' | 'edit' | 'new'>('view');
@@ -22,20 +22,20 @@ const BomIndex: React.FC = () => {
       // 先建基础 BOM 对象（children 暂为空）
       const baseBoms: BomHeader[] = apiList.map((item: any) => ({
         id: `api-${item.id}`,
-        code: item.code ?? '',
-        name: item.materialName ?? item.code ?? '',
-        spec: '',
-        unit: item.unitName ?? '个',
-        version: item.version ?? '1.00',
+        code: item.code ?? item.bomCode ?? '',
+        name: item.materialName ?? item.name ?? item.code ?? '',
+        spec: item.spec ?? '',
+        unit: item.unitName ?? item.batchUnit ?? '个',
+        version: item.version ?? item.bomVersion ?? '1.00',
         bomType: (item.bomType as BomType) ?? '主BOM',
-        status: (item.status === 'APPROVED' ? 'approved'
+        status: (item.status === 'APPROVED' || item.status === 'ACTIVE' ? 'approved'
                : item.status === 'DRAFT' ? 'draft'
-               : item.status === 'DISABLED' ? 'disabled'
-               : 'draft') as BomStatus,
-        mainQty: Number(item.quantity ?? 1),
-        mainUnit: item.unitName ?? '个',
-        batchQty: 1000,
-        calcUnit: item.unitName ?? '个',
+               : item.status === 'DISABLED' || item.status === 'INACTIVE' ? 'disabled'
+               : 'approved') as BomStatus,
+        mainQty: Number(item.batchSize ?? item.quantity ?? 1000),
+        mainUnit: item.unitName ?? item.batchUnit ?? '个',
+        batchQty: Number(item.batchSize ?? 1000),
+        calcUnit: item.unitName ?? item.batchUnit ?? '个',
         effectDate: item.effectiveDate ?? '',
         createdBy: item.createBy ?? '',
         createdAt: item.createTime ?? '',

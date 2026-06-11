@@ -101,7 +101,7 @@ const genId = () => `id_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
 // 主组件
 // ════════════════════════════════════════════════════════════
 const OperationListPage: React.FC = () => {
-  const [operations, setOperations] = useLocalStorage<Operation[]>('bip_operations', mockOperations);
+  const [operations, setOperations] = useLocalStorage<Operation[]>('bip_operations', []);
 
   // ── 工作中心选项：从API加载，fallback到静态列表 ──
   const [wcOptions, setWcOptions] = useState<WorkCenterRecord[]>([]);
@@ -152,23 +152,23 @@ const OperationListPage: React.FC = () => {
       if (apiList.length > 0) {
         const newOps: Operation[] = apiList.map((item: any) => ({
           id: `api-${item.id}`,
-          opCode: item.operationCode ?? `OP-${item.id}`,
-          opName: item.operationName ?? '',
-          opShort: item.aliasName ?? item.operationName ?? '',
-          category: 'PROD' as any,
-          workshop: '',
+          opCode: item.opCode ?? item.code ?? item.operationCode ?? `OP-${item.id}`,
+          opName: item.opName ?? item.name ?? item.operationName ?? '',
+          opShort: item.opName ?? item.name ?? '',
+          category: (item.opType || 'PROD') as any,
+          workshop: item.workshopType ?? '',
           productLine: '',
           workCenter: item.workCenterName ?? '',
           equipType: '',
-          stdTimeMin: Number(item.standardTime ?? 0),
+          stdTimeMin: Number(item.stdTime ?? item.standardTime ?? 0),
           prepTimeMin: 0,
           hasFirstPiece: false,
           hasLastPiece: false,
           hasPatrol: false,
           hasCleanup: false,
-          isBottleneck: item.isKeyOperation === 1,
-          isReportPoint: item.reportRequired === 1,
-          isQcPoint: !!item.inspectionTrigger,
+          isBottleneck: false,
+          isReportPoint: false,
+          isQcPoint: false,
           status: 'ACTIVE' as any,
           version: 'V1.0',
           effectDate: item.createTime?.slice(0, 10) ?? '',

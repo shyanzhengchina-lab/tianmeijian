@@ -23,7 +23,7 @@ const SeriesContext = createContext<SeriesContextType | null>(null);
 
 // ── Provider ──────────────────────────────────────────────────────
 export const SeriesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [seriesList, setSeriesList] = useLocalStorage<ProductSeries[]>('bip_product_series', mockProductSeries);
+  const [seriesList, setSeriesList] = useLocalStorage<ProductSeries[]>('bip_product_series', []);
   const [families, setFamilies]     = useLocalStorage<string[]>('bip_product_families', DEFAULT_FAMILIES);
   return (
     <SeriesContext.Provider value={{ seriesList, setSeriesList, families, setFamilies }}>

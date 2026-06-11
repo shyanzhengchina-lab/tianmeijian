@@ -36,7 +36,7 @@ interface Props {
 }
 
 const RoutingMasterListPage: React.FC<Props> = ({ onViewDetail, onNavigateToSeries, initialHighlightCode }) => {
-  const [routings, setRoutings] = useLocalStorage<RoutingMaster[]>('bip_routings', mockRoutingMasters);
+  const [routings, setRoutings] = useLocalStorage<RoutingMaster[]>('bip_routings', []);
 
   // ── 从后端加载工艺路径列表，与本地数据去重合并 ────────────────────
   const loadFromApi = useCallback(async () => {
@@ -45,11 +45,11 @@ const RoutingMasterListPage: React.FC<Props> = ({ onViewDetail, onNavigateToSeri
       const apiList: any[] = resp?.data ?? [];
       if (apiList.length > 0) {
         const newItems = apiList.map(item => ({
-          routingCode: item.routingCode ?? item.id?.toString() ?? '',
-          routingName: item.routingName ?? '',
+          routingCode: item.routeCode ?? item.code ?? item.routingCode ?? item.id?.toString() ?? '',
+          routingName: item.routeName ?? item.name ?? item.routingName ?? '',
           seriesCode: item.productCode ?? '',
-          status: (item.status === 'ENABLED' ? 'ENABLED'
-                 : item.status === 'DISABLED' ? 'DISABLED'
+          status: (item.status === 'ACTIVE' || item.status === 'ENABLED' ? 'ENABLED'
+                 : item.status === 'DISABLED' || item.status === 'INACTIVE' ? 'DISABLED'
                  : 'DRAFT') as RMStatus,
           variantType: 'STANDARD' as any,
           currentVersion: item.version ?? '1.0',
