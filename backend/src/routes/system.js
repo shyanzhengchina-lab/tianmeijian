@@ -12,23 +12,57 @@ const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
 // 登录
 router.post('/auth/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) return fail(res, '用户名和密码不能为空');
+    // 兼容两种前端：{ username } 或 { employeeId }（旧Spring Boot前端）
+    const { username, employeeId, password } = req.body;
+    const loginName = username || employeeId;
+    if (!loginName || !password) return fail(res, '用户名和密码不能为空');
     const [rows] = await db.execute(
-      'SELECT * FROM sys_user WHERE username=? AND deleted=0', [username]
+      'SELECT * FROM sys_user WHERE username=? AND deleted=0', [loginName]
     );
     if (!rows.length) return fail(res, '用户名或密码错误', 401);
     const user = rows[0];
     if (user.status !== 1) return fail(res, '账号已被禁用', 403);
-    // 简化密码校验 (生产环境需bcrypt)
-    const valid = password === 'Admin@2026' || await bcrypt.compare(password, user.password).catch(() => false);
+    // 简化密码校验：
+    // - 'Admin@2026' 为万能演示密码（所有账号通用）
+    // - 'admin123' 为 admin 账号演示密码
+    // - 'op123456' 为 op001 演示密码
+    // - 'qc123456' 为 qc001 演示密码
+    // - 其他账号使用 bcrypt 校验
+    const DEMO_PASSWORDS = {
+      admin: 'admin123',
+      op001: 'op123456',
+      qc001: 'qc123456',
+    };
+    const demoPass = DEMO_PASSWORDS[loginName];
+    const valid = password === 'Admin@2026'
+      || (demoPass && password === demoPass)
+      || await bcrypt.compare(password, user.password).catch(() => false);
     if (!valid) return fail(res, '用户名或密码错误', 401);
     await db.execute('UPDATE sys_user SET last_login=NOW() WHERE id=?', [user.id]);
     const token = jwt.sign(
       { id: user.id, username: user.username, realName: user.real_name, roleCode: user.role_code, factoryCode: user.factory_code },
       JWT_SECRET, { expiresIn: '12h' }
     );
-    ok(res, { token, userInfo: { id: user.id, username: user.username, realName: user.real_name, roleCode: user.role_code, factoryCode: user.factory_code } });
+    // 返回前端兼容格式（authStore.ts 期望 data.token + data.user）
+    ok(res, {
+      token,
+      // 保留旧字段 userInfo（兼容 tmj-mes 前端）
+      userInfo: { id: user.id, username: user.username, realName: user.real_name, roleCode: user.role_code, factoryCode: user.factory_code },
+      // 新字段 user（兼容 webapp authStore.ts）
+      user: {
+        id: String(user.id),
+        username: user.username,
+        realName: user.real_name || user.username,
+        email: user.email || '',
+        phone: user.phone || '',
+        roleIds: user.role_code ? [user.role_code] : ['OPERATOR'],
+        roleNames: [user.role_code || 'OPERATOR'],
+        factoryIds: user.factory_code ? [user.factory_code === 'NJ' ? 'F001' : 'F002'] : ['F001'],
+        defaultFactoryId: user.factory_code === 'LS' ? 'F002' : 'F001',
+        status: user.status === 1 ? 'active' : 'inactive',
+        permissions: [],
+      }
+    });
   } catch (e) {
     fail(res, e.message, 500);
   }
