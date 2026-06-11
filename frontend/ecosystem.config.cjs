@@ -11,11 +11,14 @@ module.exports = {
         BROWSER: 'none',
         REACT_APP_API_URL: '',
         DANGEROUSLY_DISABLE_HOST_CHECK: 'true',
-        WDS_SOCKET_HOST: '0.0.0.0',
-        WDS_SOCKET_PORT: '0',
+        // Disable HMR WebSocket completely
+        FAST_REFRESH: 'false',
+        CHOKIDAR_USEPOLLING: 'false',
         CI: 'false',
         GENERATE_SOURCEMAP: 'false',
-        FAST_REFRESH: 'false',
+        // Suppress WDS client injection
+        WDS_SOCKET_HOST: 'disabled',
+        WDS_SOCKET_PORT: '0',
       },
       watch: false,
       instances: 1,
