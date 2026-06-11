@@ -175,7 +175,8 @@ const deleteNode = (tree: MaterialCategory[], id: string): MaterialCategory[] =>
 
 // ── 主页面组件 ────────────────────────────────────────────────────────────
 const MaterialCategoryPage: React.FC = () => {
-  const [cats, setCats] = useLocalStorage<MaterialCategory[]>('bip_material_categories', JSON.parse(JSON.stringify(mockCategories)));
+  // 不再用 useLocalStorage 初始化旧mock数据，直接从API加载
+  const [cats, setCats] = useState<MaterialCategory[]>([]);
   const [selectedId, setSelectedId] = useState<string>('1');
   const [treeSearch, setTreeSearch] = useState('');
   const [tableSearch, setTableSearch] = useState('');

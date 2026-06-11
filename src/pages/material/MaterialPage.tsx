@@ -71,7 +71,8 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 const MaterialPage: React.FC = () => {
-  const [materials, setMaterials] = useState<any[]>(mockMaterials as any);
+  // 初始化空数组，等API加载后填充天美健真实数据
+  const [materials, setMaterials] = useState<any[]>([]);
   const [apiLoading, setApiLoading] = useState(false);
 
   // ── API-loaded categories & units (fallback to mock) ─────────────
