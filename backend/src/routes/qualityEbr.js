@@ -551,6 +551,149 @@ router.get('/quality-releases/page', authMiddleware, async (req, res) => {
   } catch (e) { fail(res, e.message, 500); }
 });
 
+// ── /qc-schemes/* 前端路径兼容 ──────────────────────────────────────────
+// 前端调用 /qc-schemes/list|page|:id|POST|PUT|DELETE
+// 后端实际数据在 qms_qc_scheme + qms_qc_scheme_detail
+// check_type TINYINT 映射: 1=IQC 2=IPQC 4=IPQC_PATROL 3=FQC 5=清洁
+const CHECK_TYPE_TO_SCHEME = {
+  1: 'IQC',
+  2: 'IPQC',
+  3: 'FQC',
+  4: 'IPQC_PATROL',
+  5: 'OQC',
+};
+const SCHEME_TYPE_TO_CHECK = {
+  'IQC': 1,
+  'IPQC': 2, 'IPQC_FIRST': 2, 'IPQC_PATROL': 4, 'IPQC_SELF': 2, 'IPQC_LAST': 2,
+  'FQC': 3, 'OQC': 5,
+};
+
+function mapQcScheme(row) {
+  const checkType = Number(row.check_type ?? row.checkType ?? 1);
+  return {
+    id:            row.id,
+    schemeCode:    row.scheme_code ?? row.schemeCode ?? '',
+    schemeName:    row.scheme_name ?? row.schemeName ?? '',
+    materialCode:  row.material_code ?? row.materialCode ?? '',
+    materialId:    row.material_id ?? row.materialId ?? null,
+    checkType:     checkType,
+    schemeType:    CHECK_TYPE_TO_SCHEME[checkType] ?? 'IQC',
+    samplingType:  'AQL',
+    aqlLevel:      '1.0',
+    version:       'V1.0',
+    effectiveDate: '',
+    description:   '',
+    status:        row.status ?? 1,
+    createTime:    row.create_time ?? row.createTime ?? null,
+    updateTime:    row.update_time ?? row.updateTime ?? null,
+  };
+}
+
+// GET /qc-schemes/list
+router.get('/qc-schemes/list', authMiddleware, async (req, res) => {
+  try {
+    const { status, schemeType } = req.query;
+    let sql = 'SELECT * FROM qms_qc_scheme WHERE deleted=0';
+    const params = [];
+    if (status !== undefined && status !== '') { sql += ' AND status=?'; params.push(status); }
+    if (schemeType) {
+      const ct = SCHEME_TYPE_TO_CHECK[schemeType];
+      if (ct) { sql += ' AND check_type=?'; params.push(ct); }
+    }
+    sql += ' ORDER BY check_type, id';
+    const [rows] = await db.execute(sql, params);
+    ok(res, rows.map(mapQcScheme));
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// GET /qc-schemes/page
+router.get('/qc-schemes/page', authMiddleware, async (req, res) => {
+  try {
+    const { current = 1, pageSize = 15, status, schemeType } = req.query;
+    let sql = 'SELECT * FROM qms_qc_scheme WHERE deleted=0';
+    const params = [];
+    if (status !== undefined && status !== '') { sql += ' AND status=?'; params.push(status); }
+    if (schemeType) {
+      const ct = SCHEME_TYPE_TO_CHECK[schemeType];
+      if (ct) { sql += ' AND check_type=?'; params.push(ct); }
+    }
+    const [cntRows] = await db.execute(sql.replace('SELECT *', 'SELECT COUNT(*) as cnt'), params);
+    sql += ` ORDER BY check_type, id LIMIT ${+pageSize} OFFSET ${(+current - 1) * +pageSize}`;
+    const [rows] = await db.execute(sql, params);
+    page(res, rows.map(mapQcScheme), cntRows[0].cnt, +current, +pageSize);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// GET /qc-schemes/:id  (include details)
+router.get('/qc-schemes/:id', authMiddleware, async (req, res) => {
+  try {
+    const [schemes] = await db.execute('SELECT * FROM qms_qc_scheme WHERE id=? AND deleted=0', [req.params.id]);
+    if (!schemes.length) return fail(res, '方案不存在', 404);
+    const scheme = mapQcScheme(schemes[0]);
+    const [details] = await db.execute(
+      'SELECT * FROM qms_qc_scheme_detail WHERE scheme_id=? ORDER BY sort_no',
+      [req.params.id]
+    );
+    scheme.items = details.map(d => ({
+      id:         d.id,
+      itemId:     d.item_id,
+      itemCode:   d.item_code ?? '',
+      itemName:   d.item_name ?? '',
+      specMin:    d.spec_min ?? null,
+      specMax:    d.spec_max ?? null,
+      specText:   d.spec_text ?? '',
+      isRequired: d.is_required ?? 1,
+      sortNo:     d.sort_no ?? 0,
+    }));
+    ok(res, scheme);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// POST /qc-schemes  (create)
+router.post('/qc-schemes', authMiddleware, async (req, res) => {
+  try {
+    const { schemeCode, schemeName, materialCode, materialId, schemeType, checkType, status } = req.body;
+    const ct = checkType ?? SCHEME_TYPE_TO_CHECK[schemeType] ?? 1;
+    const [result] = await db.execute(
+      'INSERT INTO qms_qc_scheme (scheme_code, scheme_name, material_code, material_id, check_type, status) VALUES (?,?,?,?,?,?)',
+      [schemeCode, schemeName, materialCode ?? '', materialId ?? null, ct, status ?? 1]
+    );
+    ok(res, { id: result.insertId, schemeCode, schemeName, schemeType: CHECK_TYPE_TO_SCHEME[ct] ?? 'IQC' });
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// PUT /qc-schemes/:id  (update)
+router.put('/qc-schemes/:id', authMiddleware, async (req, res) => {
+  try {
+    const { schemeName, materialCode, schemeType, checkType, status } = req.body;
+    const ct = checkType ?? SCHEME_TYPE_TO_CHECK[schemeType] ?? 1;
+    await db.execute(
+      'UPDATE qms_qc_scheme SET scheme_name=?, material_code=?, check_type=?, status=? WHERE id=?',
+      [schemeName, materialCode ?? '', ct, status ?? 1, req.params.id]
+    );
+    ok(res, null);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// DELETE /qc-schemes/:id
+router.delete('/qc-schemes/:id', authMiddleware, async (req, res) => {
+  try {
+    await db.execute('UPDATE qms_qc_scheme SET deleted=1 WHERE id=?', [req.params.id]);
+    ok(res, null);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
+// DELETE /qc-schemes/batch
+router.delete('/qc-schemes/batch', authMiddleware, async (req, res) => {
+  try {
+    const ids = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return ok(res, null);
+    const ph = ids.map(() => '?').join(',');
+    await db.execute(`UPDATE qms_qc_scheme SET deleted=1 WHERE id IN (${ph})`, ids);
+    ok(res, null);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
 // ── /qms/* 前端旧路径兼容 ────────────────────────────────────────────
 // /qms/inspection-orders → /quality/inspections 逻辑
 router.get('/qms/inspection-orders', authMiddleware, async (req, res) => {
