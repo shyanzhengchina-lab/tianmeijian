@@ -170,7 +170,7 @@ type QuickFilter = 'ALL' | 'ACTIVE' | 'MAINTENANCE' | 'DISABLED';
 // 主组件
 // ════════════════════════════════════════════════════════════
 const EquipmentPage: React.FC = () => {
-  const [list, setList] = useState<Equipment[]>(initData);
+  const [list, setList] = useState<Equipment[]>([]); // 启动时为空，由 loadFromApi 填充；initData 仅作备用
   const [apiLoading, setApiLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filterCat, setFilterCat] = useState<string | undefined>();
@@ -192,31 +192,71 @@ const EquipmentPage: React.FC = () => {
     setApiLoading(true);
     try {
       const resp = await getEquipmentList() as any;
-      const apiList: any[] = resp.data ?? [];
+      // 后端返回分页格式 data:{list,total,...}，也兼容直接数组
+      const rawData = resp?.data;
+      const apiList: any[] = Array.isArray(rawData)
+        ? rawData
+        : (rawData?.list ?? rawData?.records ?? []);
+
+      // eq_status DB值 → 前端 EquipStatus
+      const EQ_STATUS_MAP: Record<string, EquipStatus> = {
+        'RUN':     'ACTIVE',
+        'RUNNING': 'ACTIVE',
+        'STANDBY': 'ACTIVE',
+        'FAULT':   'MAINTENANCE',
+        'MAINT':   'MAINTENANCE',
+        'RETIRE':  'SCRAPPED',
+        'STOP':    'DISABLED',
+        '0':       'DISABLED',
+        '1':       'ACTIVE',
+      };
+
+      // eq_type 中文字符串 → 前端 EquipCategory
+      const EQ_TYPE_MAP: Record<string, EquipCategory> = {
+        '压片设备': 'MACHINE', '混合设备': 'MACHINE', '干燥设备': 'MACHINE',
+        '制粒设备': 'MACHINE', '充填设备': 'MACHINE', '包衣设备': 'MACHINE',
+        '灌装设备': 'MACHINE', '配料设备': 'MACHINE', '乳化设备': 'MACHINE',
+        '滴丸设备': 'MACHINE', '抛光设备': 'MACHINE', '辅助设备': 'MACHINE',
+        '灭菌设备': 'MACHINE', '过滤设备': 'MACHINE', '水处理设备': 'MACHINE',
+        '软胶囊设备': 'MACHINE',
+        '包装设备': 'PACK',
+        '检测设备': 'INSPECT', '分析仪器': 'INSPECT', '检验设备': 'INSPECT', '称量设备': 'INSPECT',
+        '清洁设备': 'CLEAN', '清洗设备': 'CLEAN',
+      };
+
+      const fmt = (d: string | null | undefined) =>
+        d ? d.replace('T', ' ').slice(0, 10) : '';
+
       if (apiList.length > 0) {
         const mapped: Equipment[] = apiList.map((item: any) => ({
           id:            item.id?.toString() ?? genId(),
-          equipCode:     item.code ?? '',
-          equipName:     item.name ?? '',
-          category:      (item.category as EquipCategory) ?? 'MACHINE',
-          model:         item.model ?? '',
-          brand:         item.brand ?? '',
-          workshop:      item.workshopName ?? '',
-          workCenter:    item.workCenterName ?? '',
-          location:      item.location ?? '',
-          purchaseDate:  item.purchaseDate ?? '',
-          warrantyDate:  item.warrantyDate ?? '',
-          lastMaintDate: item.lastMaintDate ?? '',
-          nextMaintDate: item.nextMaintDate ?? '',
-          status:        item.status === 0 ? 'DISABLED' : 'ACTIVE',
-          precision:     item.precision,
-          remark:        item.description ?? '',
-          createdAt:     item.createTime ? item.createTime.slice(0, 10) : '',
-          updatedAt:     item.updateTime ? item.updateTime.slice(0, 10) : '',
+          // 双字段回退：优先 camelCase，再 snake_case
+          equipCode:     item.equipCode   ?? item.eq_code    ?? item.code    ?? '',
+          equipName:     item.equipName   ?? item.eq_name    ?? item.name    ?? '',
+          category:      EQ_TYPE_MAP[item.eqType ?? item.eq_type ?? item.category ?? ''] ?? 'MACHINE',
+          model:         item.eqModel     ?? item.eq_model   ?? item.model   ?? '',
+          brand:         item.manufacturer ?? item.brand      ?? '',
+          workshop:      item.workshopName ?? item.workshop_name ?? item.workshop ?? '',
+          workCenter:    item.workCenterName ?? item.wc_name  ?? item.workCenter ?? '',
+          location:      item.location    ?? '',
+          purchaseDate:  fmt(item.purchaseDate  ?? item.purchase_date),
+          warrantyDate:  fmt(item.warrantyDate  ?? item.warranty_date),
+          lastMaintDate: fmt(item.lastMaintDate ?? item.last_maint_date),
+          nextMaintDate: fmt(item.nextMaintDate ?? item.next_maint_date),
+          status:        EQ_STATUS_MAP[item.eqStatus ?? item.eq_status ?? String(item.status ?? '')] ?? 'ACTIVE',
+          precision:     item.precision ?? item.rated_speed ?? undefined,
+          remark:        item.description ?? item.remark ?? '',
+          createdAt:     fmt(item.createTime  ?? item.create_time),
+          updatedAt:     fmt(item.updateTime  ?? item.update_time),
         }));
         setList(mapped);
+      } else {
+        setList([]);
       }
-    } catch { /* 保留本地 mock */ } finally { setApiLoading(false); }
+    } catch (e) {
+      console.error('loadFromApi equipment error', e);
+      setList(initData); // 网络完全失败时降级到内置 mock
+    } finally { setApiLoading(false); }
   }, []);
 
   useEffect(() => { loadFromApi(); }, [loadFromApi]);
