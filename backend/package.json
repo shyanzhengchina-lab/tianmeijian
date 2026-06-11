@@ -1,0 +1,19 @@
+{
+  "name": "tmj-mes-backend",
+  "version": "1.0.0",
+  "description": "天美健MES系统后端 - Node.js + Express + MySQL",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node src/app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0",
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "dayjs": "^1.11.10",
+    "express-validator": "^7.0.1"
+  }
+}
