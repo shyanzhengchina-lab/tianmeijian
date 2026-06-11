@@ -11,21 +11,79 @@ const dayjs = require('dayjs');
 const genCode = (prefix) => `${prefix}${dayjs().format('YYYYMMDDHHmm')}${String(Math.floor(Math.random()*900)+100)}`;
 
 // ===== 设备档案 =====
+
+// 设备状态映射: DB eq_status → 前端 EquipStatus
+const EQ_STATUS_FE = {
+  'RUN':     'ACTIVE',
+  'RUNNING': 'ACTIVE',
+  'STANDBY': 'ACTIVE',
+  'FAULT':   'MAINTENANCE',
+  'MAINT':   'MAINTENANCE',
+  'RETIRE':  'SCRAPPED',
+  'STOP':    'DISABLED',
+};
+
+// 设备类型映射: DB eq_type 中文 → 前端 EquipCategory
+const EQ_TYPE_FE = (t) => {
+  if (!t) return 'MACHINE';
+  if (/包装/.test(t)) return 'PACK';
+  if (/检测|分析|检验|称量/.test(t)) return 'INSPECT';
+  if (/清洗|清洁/.test(t)) return 'CLEAN';
+  return 'MACHINE';
+};
+
+const fmt = (d) => d ? String(d).replace('T', ' ').slice(0, 10) : '';
+
+function mapEquip(row) {
+  return {
+    id:            row.id,
+    equipCode:     row.eq_code    ?? '',
+    eqCode:        row.eq_code    ?? '',
+    equipName:     row.eq_name    ?? '',
+    eqName:        row.eq_name    ?? '',
+    category:      EQ_TYPE_FE(row.eq_type),
+    eqType:        row.eq_type    ?? '',
+    model:         row.eq_model   ?? '',
+    eqModel:       row.eq_model   ?? '',
+    brand:         row.manufacturer ?? '',
+    manufacturer:  row.manufacturer ?? '',
+    workshopId:    row.workshop_id,
+    workshopName:  row.workshop_name ?? '',
+    workshop:      row.workshop_name ?? '',
+    wcId:          row.wc_id,
+    workCenterName:'',
+    workCenter:    '',
+    location:      '',
+    purchaseDate:  fmt(row.purchase_date),
+    warrantyDate:  '',
+    lastMaintDate: fmt(row.last_maint_date),
+    nextMaintDate: fmt(row.next_maint_date),
+    status:        EQ_STATUS_FE[row.eq_status] ?? 'ACTIVE',
+    eqStatus:      row.eq_status  ?? 'STANDBY',
+    oeeTarget:     row.oee_target,
+    precision:     row.rated_speed ? `${row.rated_speed}rpm` : undefined,
+    remark:        '',
+    createTime:    fmt(row.create_time),
+    updateTime:    fmt(row.update_time),
+    createdAt:     fmt(row.create_time),
+    updatedAt:     fmt(row.update_time),
+  };
+}
+
+// GET /equipment/list — 返回全量列表（不分页），供前端设备档案页使用
 router.get('/equipment/list', authMiddleware, async (req, res) => {
   try {
-    const { pageNum = 1, pageSize = 20, eqCode, eqName, factoryCode, eqStatus, eqType } = req.query;
+    const { eqCode, eqName, factoryCode, eqStatus, eqType } = req.query;
     let sql = 'SELECT e.*,w.workshop_name FROM eqp_equipment e LEFT JOIN base_workshop w ON e.workshop_id=w.id WHERE e.deleted=0';
     const params = [];
-    if (eqCode) { sql += ' AND e.eq_code LIKE ?'; params.push(`%${eqCode}%`); }
-    if (eqName) { sql += ' AND e.eq_name LIKE ?'; params.push(`%${eqName}%`); }
-    if (factoryCode) { sql += ' AND e.factory_code=?'; params.push(factoryCode); }
-    if (eqStatus) { sql += ' AND e.eq_status=?'; params.push(eqStatus); }
-    if (eqType) { sql += ' AND e.eq_type=?'; params.push(eqType); }
-    const baseSql = `SELECT COUNT(*) as cnt FROM eqp_equipment e WHERE e.deleted=0${eqCode ? ' AND e.eq_code LIKE ?' : ''}${eqName ? ' AND e.eq_name LIKE ?' : ''}${factoryCode ? ' AND e.factory_code=?' : ''}${eqStatus ? ' AND e.eq_status=?' : ''}${eqType ? ' AND e.eq_type=?' : ''}`;
-    const [cntRows] = await db.execute(baseSql, params);
-    sql += ` ORDER BY e.eq_code LIMIT ${pageSize} OFFSET ${(pageNum - 1) * pageSize}`;
+    if (eqCode)      { sql += ' AND e.eq_code LIKE ?';    params.push(`%${eqCode}%`); }
+    if (eqName)      { sql += ' AND e.eq_name LIKE ?';    params.push(`%${eqName}%`); }
+    if (factoryCode) { sql += ' AND e.factory_code=?';    params.push(factoryCode); }
+    if (eqStatus)    { sql += ' AND e.eq_status=?';       params.push(eqStatus); }
+    if (eqType)      { sql += ' AND e.eq_type LIKE ?';    params.push(`%${eqType}%`); }
+    sql += ' ORDER BY e.factory_code, e.workshop_id, e.eq_code';
     const [rows] = await db.execute(sql, params);
-    page(res, rows, cntRows[0].cnt, +pageNum, +pageSize);
+    ok(res, rows.map(mapEquip));
   } catch (e) { fail(res, e.message, 500); }
 });
 
