@@ -77,6 +77,9 @@ const PerformanceTestPage = lazy(() => import('./pages/performance-test/Performa
 // UDI页面已移除，保健品行业使用追溯管理替代
 const FinishedGoodsReceiptPage = lazy(() => import('./pages/udi/FinishedGoodsReceiptPage'));
 const SalesShipmentPage = lazy(() => import('./pages/udi/SalesShipmentPage'));
+// 保健品新增模块
+const TracePage = lazy(() => import('./pages/trace/TracePage'));
+const GmpPage = lazy(() => import('./pages/gmp/GmpPage'));
 
 
 // 配置dayjs中文
@@ -347,27 +350,16 @@ const App: React.FC = () => {
       case 'pad-issuance':        return <PageWrapper><PadIssuancePage /></PageWrapper>;
       case 'backflush-monitor':   return <PageWrapper><BackflushMonitorPage /></PageWrapper>;
       case 'performance-test':     return <PageWrapper><PerformanceTestPage /></PageWrapper>;
-      // UDI已替换为追溯管理（内容展示通用占位符）
+      // 追溯管理（保健品GMP追溯）
       case 'trace-forward':
       case 'trace-backward':
       case 'trace-barcode':
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-            <div style={{ fontSize: 16, color: '#999' }}>追溯查询功能开发中...</div>
-            <div style={{ fontSize: 13, color: '#bbb', marginTop: 8 }}>GMP保健品追溯管理模块</div>
-          </div>
-        );
+        return <PageWrapper><TracePage subPage={currentPage} /></PageWrapper>;
+      // GMP合规管理
       case 'gmp-hygiene':
       case 'gmp-deviation':
       case 'gmp-capa':
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-            <div style={{ fontSize: 16, color: '#999' }}>GMP合规管理开发中...</div>
-            <div style={{ fontSize: 13, color: '#bbb', marginTop: 8 }}>保健品GMP合规管理模块</div>
-          </div>
-        );
+        return <PageWrapper><GmpPage subPage={currentPage} /></PageWrapper>;
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
       default:

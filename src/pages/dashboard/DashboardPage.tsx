@@ -1,19 +1,20 @@
 /**
- * 生产看板（Dashboard）— 医疗器械MES完整实战版
+ * 生产看板（Dashboard）— 天美健保健品MES实战版
  * ================================================================
- * 数据源：mesStore（bip_production_orders / bip_work_orders / bip_task_orders）
- * 实时刷新：每30秒自动拉取 localStorage 数据
+ * 数据源：后端API /api/dashboard/factory（实时DB数据）
+ * 实时刷新：每30秒自动拉取后端数据
  * 功能：
  *   - 顶部实时时钟 + 当前班次 + 工厂信息
- *   - KPI卡片行（订单/工单/任务单/良率/今日完成率/设备）
- *   - 在产工单进度列表
+ *   - KPI卡片行（订单/工单/任务单/良率/今日完成率/设备OEE）
+ *   - 在产工单进度列表（实时DB工单）
  *   - 生产订单总览
  *   - 任务单看板（待派工/已派工/执行中/暂停/完成）
  *   - 班次在岗情况
- *   - 各车间良率横向柱图
- *   - 设备状态看板
+ *   - 各工序良率横向柱图
+ *   - 设备状态看板（实时DB设备）
  *   - 快捷入口（8个功能模块）
- *   - 在产工单工序进度总览（9段工艺线）
+ *   - 近7日OEE趋势看板
+ *   - GMP合规警示（偏差/物料预警）
  * ================================================================
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -48,15 +49,11 @@ import {
 } from '../../store/mesStore';
 import type { ProductionOrder, WorkOrder, TaskOrder } from '../workorder/workOrderData';
 import {
-  SHIFTS, EQUIPMENTS,
+  SHIFTS,
   PO_STATUS, WO_STATUS,
   PRIORITY_MAP,
 } from '../workorder/workOrderData';
-import { getProductionOrderList } from '../../api/productionOrders';
-import { getWorkOrderList } from '../../api/workOrders';
-import { getTaskOrderList } from '../../api/taskOrders';
-import { getInspectionTaskList } from '../../api/inspectionTasks';
-import { getMaterialIssuanceList } from '../../api/materialIssuances';
+import axios from 'axios';
 import './DashboardPage.css';
 
 // ── 工具函数 ─────────────────────────────────────────────────────────
@@ -79,6 +76,42 @@ function getCurrentShifts(): string[] {
   if (h >= 6  && h < 14) active.push('SH03');  // 早班 06-14
   if (h >= 14 && h < 22) active.push('SH04');  // 中班 14-22
   return active;
+}
+
+// ── 后端API类型 ──────────────────────────────────────────────────────
+interface FactoryDashboard {
+  woStats: {
+    total: number;
+    pending: string | number;
+    inProgress: string | number;
+    waitInspect: string | number;
+    completed: string | number;
+    paused: string | number;
+  };
+  todayWo: { todayTotal: number; todayInProgress: string | number; todayCompleted: string | number; };
+  qcStats: { totalInspections: number; passed: number | null; failed: number | null; };
+  eqStats: { eq_status: string; cnt: number }[];
+  oeeAvg: { avgOee: string; date: string }[];
+  deviations: { severity: string; cnt: number }[];
+  stockAlerts: { material_code: string; material_name: string; available: number; min_stock: number }[];
+}
+
+// 实时工单（来自 /api/plan/work-orders）
+interface LiveWorkOrder {
+  id: number;
+  wo_code: string;
+  product_name: string;
+  batch_no: string;
+  plan_qty: string;
+  actual_qty: string;
+  unit_name: string;
+  wo_status: number; // 1=待生产 2=生产中 3=待检验 4=检验中 5=完成 6=关闭 7=暂停
+  priority: number;
+  plan_start: string;
+  plan_end: string;
+  workshop_code: string;
+  product_code: string;
+  route_code: string;
 }
 
 // ── 类型 ─────────────────────────────────────────────────────────────
@@ -105,6 +138,17 @@ function loadData(): DashboardData {
     ts:              fmt(new Date()),
   };
 }
+
+// 工单状态码 -> 前端状态字符串
+const WO_STATUS_MAP: Record<number, string> = {
+  1: 'RELEASED',     // 待生产
+  2: 'IN_PROGRESS',  // 生产中
+  3: 'IN_PROGRESS',  // 待检验（仍算在产）
+  4: 'IN_PROGRESS',  // 检验中
+  5: 'COMPLETED',    // 完成
+  6: 'COMPLETED',    // 关闭
+  7: 'PAUSED',       // 暂停
+};
 
 // ─────────────────────────────────────────────────────────────────────
 // 子组件：KPI 卡片
@@ -358,15 +402,15 @@ const YieldSection: React.FC<{ tasks: TaskOrder[] }> = ({ tasks }) => {
 
   const barColors = ['#1677ff', '#722ed1', '#fa8c16', '#13c2c2', '#52c41a', '#eb2f96', '#fa541c'];
 
-  // 若无实际完工数据，展示根管锉实际工艺良率参考值
+  // 若无实际完工数据，展示天美健保健品各工序参考良率
   const DEMO: { label: string; value: number; color: string }[] = [
-    { label: '机加工', value: 97.2, color: '#1677ff' },
-    { label: '热处理', value: 99.3, color: '#fa8c16' },
-    { label: '涂层',   value: 98.7, color: '#722ed1' },
-    { label: '注塑',   value: 99.6, color: '#13c2c2' },
-    { label: '组装',   value: 98.4, color: '#52c41a' },
-    { label: '包装',   value: 99.8, color: '#eb2f96' },
-    { label: '终检',   value: 96.5, color: '#fa541c' },
+    { label: '称量配料', value: 99.5, color: '#1677ff' },
+    { label: '制粒混合', value: 98.8, color: '#fa8c16' },
+    { label: '压片压丸', value: 97.2, color: '#722ed1' },
+    { label: '包衣干燥', value: 98.9, color: '#13c2c2' },
+    { label: '内包装',   value: 99.6, color: '#52c41a' },
+    { label: '外包装',   value: 99.8, color: '#eb2f96' },
+    { label: '灭菌检验', value: 96.8, color: '#fa541c' },
   ];
 
   const entries = Object.entries(centerMap);
@@ -400,52 +444,66 @@ const YieldSection: React.FC<{ tasks: TaskOrder[] }> = ({ tasks }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────
-// 子组件：设备状态看板
+// 子组件：设备状态看板（使用后端DB真实数据）
 // ─────────────────────────────────────────────────────────────────────
-const EquipStatusSection: React.FC = () => {
-  const CFG: Record<string, { label: string; color: string; dot: string }> = {
-    NORMAL:   { label: '正常运行', color: '#52c41a', dot: '#52c41a' },
-    MAINTAIN: { label: '维护中',   color: '#fa8c16', dot: '#fa8c16' },
-    FAULT:    { label: '故障停机', color: '#ff4d4f', dot: '#ff4d4f' },
-    IDLE:     { label: '空闲',     color: '#8c8c8c', dot: '#d9d9d9' },
+const EquipStatusSection: React.FC<{
+  eqStats: { eq_status: string; cnt: number }[];
+  oeeData: { avgOee: string; date: string }[];
+}> = ({ eqStats, oeeData }) => {
+  const CFG: Record<string, { label: string; color: string }> = {
+    RUNNING:  { label: '运行中',   color: '#52c41a' },
+    STANDBY:  { label: '待机',     color: '#1677ff' },
+    MAINTAIN: { label: '维护中',   color: '#fa8c16' },
+    REPAIR:   { label: '维修中',   color: '#ff4d4f' },
+    STOPPED:  { label: '停机',     color: '#8c8c8c' },
   };
 
-  const grouped = {
-    NORMAL:   EQUIPMENTS.filter(e => e.status === 'NORMAL'),
-    MAINTAIN: EQUIPMENTS.filter(e => e.status === 'MAINTAIN'),
-    FAULT:    EQUIPMENTS.filter(e => e.status === 'FAULT'),
-    IDLE:     EQUIPMENTS.filter(e => e.status === 'IDLE'),
-  };
+  const total = eqStats.reduce((s, e) => s + e.cnt, 0);
 
   return (
     <div>
+      {/* 设备状态汇总 */}
       <div className="db-equip-stat-row">
-        {(Object.entries(grouped) as [string, typeof EQUIPMENTS[0][]][]).map(([status, list]) => {
-          const cfg = CFG[status];
+        {eqStats.map(e => {
+          const cfg = CFG[e.eq_status] ?? { label: e.eq_status, color: '#8c8c8c' };
           return (
-            <div key={status} className="db-equip-stat-item"
+            <div key={e.eq_status} className="db-equip-stat-item"
               style={{ borderColor: `${cfg.color}30`, background: `${cfg.color}08` }}>
-              <div className="db-equip-stat-val" style={{ color: cfg.color }}>{list.length}</div>
+              <div className="db-equip-stat-val" style={{ color: cfg.color }}>{e.cnt}</div>
               <div className="db-equip-stat-lbl" style={{ color: cfg.color }}>{cfg.label}</div>
             </div>
           );
         })}
+        {total === 0 && (
+          <div className="db-equip-stat-item" style={{ borderColor: '#d9d9d9', background: '#fafafa' }}>
+            <div className="db-equip-stat-val" style={{ color: '#8c8c8c' }}>—</div>
+            <div className="db-equip-stat-lbl" style={{ color: '#8c8c8c' }}>加载中</div>
+          </div>
+        )}
       </div>
-      <div className="db-equip-list">
-        {EQUIPMENTS.map(eq => {
-          const cfg = CFG[eq.status];
-          const shortWC = eq.workCenter.replace('机加工-','').replace('热处理-','').replace('车间','');
-          return (
-            <Tooltip key={eq.id} title={`${eq.name}（${eq.code}）— ${cfg.label}`}>
-              <div className="db-equip-chip" style={{ borderColor: `${cfg.color}40`, background: `${cfg.color}08` }}>
-                <span className="db-equip-dot" style={{ background: cfg.dot }} />
-                <span className="db-equip-name">{eq.name}</span>
-                <span className="db-equip-wc">{shortWC}</span>
-              </div>
-            </Tooltip>
-          );
-        })}
-      </div>
+
+      {/* 近7日OEE趋势（迷你折线图） */}
+      {oeeData.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>近7日OEE趋势（目标≥80%）</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 36 }}>
+            {oeeData.map((d, i) => {
+              const val = parseFloat(d.avgOee);
+              const h = Math.round((val / 100) * 34);
+              const color = val >= 80 ? '#13c2c2' : '#fa8c16';
+              const dateStr = d.date ? new Date(d.date).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : '';
+              return (
+                <Tooltip key={i} title={`${dateStr} OEE: ${val}%`}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <div style={{ width: '100%', height: h, background: color, borderRadius: 2, opacity: 0.85 }} />
+                    <span style={{ fontSize: 9, color: '#8c8c8c', writingMode: 'horizontal-tb' }}>{val}%</span>
+                  </div>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -512,16 +570,17 @@ const ShiftSection: React.FC<{ tasks: TaskOrder[] }> = ({ tasks }) => {
 // ─────────────────────────────────────────────────────────────────────
 // 子组件：工序进度总览（9段工艺条）
 // ─────────────────────────────────────────────────────────────────────
+// 天美健保健品生产工艺阶段（固体制剂）
 const STAGES = [
-  { code: 'S1', label: 'S1备料',   short: 'S1' },
-  { code: 'S2', label: 'S2磨锥',   short: 'S2' },
-  { code: 'S3', label: 'S3螺纹',   short: 'S3' },
-  { code: 'S4', label: 'S4热处理', short: 'S4' },
-  { code: 'S5', label: 'S5涂层',   short: 'S5' },
-  { code: 'S6', label: 'S6注塑',   short: 'S6' },
-  { code: 'S7', label: 'S7组装',   short: 'S7' },
-  { code: 'S8', label: 'S8包装',   short: 'S8' },
-  { code: 'S9', label: 'S9入库',   short: 'S9' },
+  { code: 'S1', label: 'S1称量配料', short: '称量' },
+  { code: 'S2', label: 'S2制粒/混合', short: '制粒' },
+  { code: 'S3', label: 'S3压片/压丸', short: '压片' },
+  { code: 'S4', label: 'S4包衣/干燥', short: '包衣' },
+  { code: 'S5', label: 'S5中检',      short: '中检' },
+  { code: 'S6', label: 'S6铝塑内包',  short: '内包' },
+  { code: 'S7', label: 'S7外包装',    short: '外包' },
+  { code: 'S8', label: 'S8成品检验',  short: '成检' },
+  { code: 'S9', label: 'S9入库',      short: '入库' },
 ];
 
 const RoutingOverview: React.FC<{ wos: WorkOrder[] }> = ({ wos }) => {
@@ -594,10 +653,12 @@ interface DashboardPageProps {
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
-  const [data, setData]       = useState<DashboardData>(loadData);
-  const [loading, setLoading] = useState(false);
-  const [clock, setClock]     = useState(new Date());
-  const timerRef              = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [data, setData]             = useState<DashboardData>(loadData);
+  const [loading, setLoading]       = useState(false);
+  const [clock, setClock]           = useState(new Date());
+  const [factoryDB, setFactoryDB]   = useState<FactoryDashboard | null>(null);
+  const [liveWOs, setLiveWOs]       = useState<LiveWorkOrder[]>([]);
+  const timerRef                    = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 实时时钟（每秒更新）
   useEffect(() => {
@@ -608,83 +669,57 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-    // 从 localStorage 读取基础数据
-    const base = loadData();
-    // 并行从后端拉取最新数据
-    const [poResp, woResp, toResp, qcResp, miResp] = await Promise.allSettled([
-      getProductionOrderList() as any,
-      getWorkOrderList() as any,
-      getTaskOrderList() as any,
-      getInspectionTaskList() as any,
-      getMaterialIssuanceList() as any,
-    ]);
-    // API-first replace：后端有数据则完全替换本地 mock，否则保留 loadData() 基线
-    const apiPos: any[] = poResp.status === 'fulfilled' ? (poResp.value as any)?.data ?? [] : [];
-    if (apiPos.length > 0) {
-      base.pos = apiPos.map((p: any) => ({
-        id: String(p.id), orderNo: p.orderNo ?? '', productCode: p.productCode ?? '',
-        productSpec: p.productSpec ?? p.productCode ?? '', productName: p.customerName ?? p.productName ?? '',
-        totalQty: p.totalQuantity ?? 0, completedQty: p.completedQuantity ?? 0, scrapQty: 0,
-        bomVersion: '', routingCode: '',
-        deliveryDate: p.deliveryDate ?? '',
-        priority: (p.priority === 4 ? 'URGENT' : p.priority === 3 ? 'HIGH' : p.priority === 2 ? 'NORMAL' : 'LOW') as 'LOW'|'NORMAL'|'HIGH'|'URGENT',
-        status: (({ DRAFT: 'OPEN', RELEASED: 'RELEASED', IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'COMPLETED', CLOSED: 'COMPLETED' } as Record<string, string>)[p.status ?? ''] ?? 'OPEN') as any,
-        isAudited: p.status !== 'DRAFT',
-        createdAt: p.createTime?.slice(0, 19).replace('T', ' ') ?? '',
-        createdBy: p.createBy ?? '',
-        remark: p.remark ?? '',
-        workOrders: [],
-      })) as unknown as ProductionOrder[];
-    }
-    // API-first replace：工单
-    const apiWos: any[] = woResp.status === 'fulfilled' ? (woResp.value as any)?.data ?? [] : [];
-    if (apiWos.length > 0) {
-      base.wos = apiWos.map((w: any) => ({
-        id: String(w.id), woNo: w.workOrderNo ?? '', poId: String(w.orderId ?? ''),
-        productCode: w.materialCode ?? '', productSpec: w.spec ?? w.materialCode ?? '',
-        productName: w.materialName ?? '', batchNo: (w as any).batchNo ?? '',
-        bomVersion: w.bomVersion ?? '', routingCode: '', routingName: '',
-        planQty: w.planQuantity ?? 0, actualQty: w.completedQuantity ?? 0,
-        priority: 'NORMAL' as 'LOW'|'NORMAL'|'HIGH'|'URGENT',
-        status: (({ DRAFT: 'CREATED', RELEASED: 'RELEASED', IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'COMPLETED', CLOSED: 'COMPLETED' } as Record<string, string>)[w.status ?? ''] ?? 'CREATED') as any,
-        progressPct: w.progress ?? 0,
-        currentOp: '',
-        createdAt: w.createTime?.slice(0, 19).replace('T', ' ') ?? '',
-        createdBy: w.createBy ?? '',
-      })) as unknown as WorkOrder[];
-    }
-    // API-first replace：任务单
-    const apiTos: any[] = toResp.status === 'fulfilled' ? (toResp.value as any)?.data ?? [] : [];
-    if (apiTos.length > 0) {
-      base.tasks = apiTos.map((t: any) => ({
-        id: String(t.id), taskNo: t.taskNo ?? '', woId: String(t.workOrderId ?? ''),
-        woNo: t.workOrderNo ?? '', batchNo: (t as any).batchNo ?? '',
-        workCenter: t.workCenterName ?? '', shiftId: 'SH01', shiftName: '',
-        team: t.assignedToName ?? '', operator: t.assignedToName ?? '',
-        stationScope: '', operationCode: t.operationCode ?? '', operationName: t.operationName ?? '',
-        planQty: t.planQuantity ?? 0, reportQty: t.completedQuantity ?? 0, scrapQty: 0,
-        status: (({ PENDING: 'PENDING', ASSIGNED: 'ASSIGNED', IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'DONE', PAUSED: 'PAUSED' } as Record<string, string>)[t.status ?? ''] ?? 'PENDING') as any,
-        padStation: '',
-        planStart: t.plannedStartTime ?? '', planEnd: t.plannedEndTime ?? '',
-        actualStart: '', actualEnd: '',
-        deviationFlag: false, remark: t.remark ?? '',
-      })) as unknown as TaskOrder[];
-    }
-    // QC 汇总
-    const qcList: any[] = qcResp.status === 'fulfilled' ? (qcResp.value as any)?.data ?? [] : [];
-    base.qcTotal   = qcList.length;
-    base.qcPending = qcList.filter((q: any) => q.status === 'PENDING').length;
-    // 领料单汇总
-    const miList: any[] = miResp.status === 'fulfilled' ? (miResp.value as any)?.data ?? [] : [];
-    base.issuanceTotal   = miList.length;
-    base.issuancePending = miList.filter((m: any) => m.status === 'PENDING').length;
+      const token = localStorage.getItem('token') || localStorage.getItem('mes_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-    base.ts = fmt(new Date());
-    setData(base);
+      // 并行拉取工厂看板 + 工单列表
+      const [dashRes, woRes] = await Promise.allSettled([
+        axios.get('/api/dashboard/factory?factoryCode=NJ', { headers }),
+        axios.get('/api/plan/work-orders?page=1&size=50', { headers }),
+      ]);
+
+      // 1. 工厂看板实时数据
+      if (dashRes.status === 'fulfilled' && dashRes.value.data?.code === 200) {
+        setFactoryDB(dashRes.value.data.data as FactoryDashboard);
+      }
+
+      // 2. 真实工单数据 → 映射为前端 WorkOrder 类型
+      const rawWOs: LiveWorkOrder[] = woRes.status === 'fulfilled'
+        ? (woRes.value.data?.data?.list ?? [])
+        : [];
+      setLiveWOs(rawWOs);
+
+      // 3. 更新 data.wos / data.pos（保留 localStorage 的 tasks 作为后备）
+      const base = loadData();
+      if (rawWOs.length > 0) {
+        base.wos = rawWOs.map(w => ({
+          id: String(w.id),
+          woNo: w.wo_code,
+          poId: '',
+          productCode: w.product_code,
+          productSpec: w.product_name,
+          productName: w.product_name,
+          batchNo: w.batch_no,
+          bomVersion: '',
+          routingCode: w.route_code ?? '',
+          routingName: '',
+          planQty: parseFloat(w.plan_qty) || 0,
+          actualQty: parseFloat(w.actual_qty) || 0,
+          priority: (w.priority === 3 ? 'URGENT' : w.priority === 2 ? 'HIGH' : 'NORMAL') as any,
+          status: (WO_STATUS_MAP[w.wo_status] ?? 'RELEASED') as any,
+          progressPct: w.plan_qty ? Math.min(100, Math.round((parseFloat(w.actual_qty) / parseFloat(w.plan_qty)) * 100)) : 0,
+          currentOp: '',
+          createdAt: '',
+          createdBy: '',
+        })) as unknown as WorkOrder[];
+      }
+
+      base.ts = fmt(new Date());
+      setData(base);
     } catch (e) {
       console.error('Dashboard refresh error:', e);
     } finally {
-    setLoading(false);
+      setLoading(false);
     }
   }, []);
 
@@ -697,15 +732,19 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   const { pos, wos, tasks, qcTotal, qcPending, issuanceTotal, issuancePending } = data;
 
-  // ── KPI 计算 ─────────────────────────────────────────────────────
-  const poInProgress  = pos.filter(p => p.status === 'IN_PROGRESS').length;
-  const poReleased    = pos.filter(p => p.status === 'RELEASED').length;
-  const poCompleted   = pos.filter(p => p.status === 'COMPLETED').length;
+  // ── KPI 计算（优先使用后端真实数据）─────────────────────────────────
+  // 从 factoryDB 获取真实工单统计
+  const dbWoStats = factoryDB?.woStats;
+  const poInProgress  = dbWoStats ? Number(dbWoStats.inProgress) : pos.filter(p => p.status === 'IN_PROGRESS').length;
+  const poReleased    = dbWoStats ? Number(dbWoStats.pending)    : pos.filter(p => p.status === 'RELEASED').length;
+  const poCompleted   = dbWoStats ? Number(dbWoStats.completed)  : pos.filter(p => p.status === 'COMPLETED').length;
   const poUnaudited   = pos.filter(p => !p.isAudited && p.status !== 'CLOSED').length;
 
-  const woInProgress  = wos.filter(w => w.status === 'IN_PROGRESS').length;
-  const woReleased    = wos.filter(w => w.status === 'RELEASED').length;
-  const woCompleted   = wos.filter(w => w.status === 'COMPLETED').length;
+  // 工单数据优先取liveWOs（真实DB）
+  const woInProgress  = dbWoStats ? Number(dbWoStats.inProgress) : wos.filter(w => w.status === 'IN_PROGRESS').length;
+  const woReleased    = dbWoStats ? Number(dbWoStats.pending)     : wos.filter(w => w.status === 'RELEASED').length;
+  const woCompleted   = dbWoStats ? Number(dbWoStats.completed)   : wos.filter(w => w.status === 'COMPLETED').length;
+  const woTotal       = dbWoStats ? dbWoStats.total               : wos.length;
 
   const taskInProgress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
   const taskAssigned   = tasks.filter(t => t.status === 'ASSIGNED').length;
@@ -729,9 +768,29 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     ? Math.min(100, Math.round((todayReportQty / todayPlanQty) * 100))
     : 0;
 
-  // 设备告警
-  const faultEquips    = EQUIPMENTS.filter(e => e.status === 'FAULT');
-  const normalEquips   = EQUIPMENTS.filter(e => e.status === 'NORMAL');
+  // ── 设备状态（优先使用后端DB数据）──────────────────────────────────
+  const eqStats = factoryDB?.eqStats ?? [];
+  const runningCnt  = eqStats.find(e => e.eq_status === 'RUNNING')?.cnt  ?? 0;
+  const standbyCnt  = eqStats.find(e => e.eq_status === 'STANDBY')?.cnt  ?? 0;
+  const repairCnt   = eqStats.find(e => e.eq_status === 'REPAIR')?.cnt   ?? 0;
+  const maintainCnt = eqStats.find(e => e.eq_status === 'MAINTAIN')?.cnt ?? 0;
+  const totalEqCnt  = eqStats.reduce((s, e) => s + e.cnt, 0);
+  const faultCnt    = repairCnt + maintainCnt;
+  // 兼容旧代码使用 faultEquips
+  const faultEquips: any[] = Array(faultCnt).fill({ name: '维修设备', status: 'FAULT' });
+  const normalEquips: any[] = Array(runningCnt + standbyCnt).fill({ status: 'NORMAL' });
+
+  // OEE均值（近7日最新一天）
+  const oeeData = factoryDB?.oeeAvg ?? [];
+  const latestOee = oeeData.length > 0 ? parseFloat(oeeData[oeeData.length - 1].avgOee) : null;
+
+  // 偏差统计
+  const deviations = factoryDB?.deviations ?? [];
+  const totalDeviations = deviations.reduce((s, d) => s + d.cnt, 0);
+  const criticalDeviations = deviations.find(d => d.severity === 'CRITICAL')?.cnt ?? 0;
+
+  // 库存预警
+  const stockAlerts = factoryDB?.stockAlerts ?? [];
 
   // 在产工单
   const activeWOs = wos
@@ -769,7 +828,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         })}
         <span className="db-clock-separator" />
         <EnvironmentOutlined style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
-        <span className="db-clock-factory">YonBIP/SY 医疗器械 · 生产执行车间 · MES v2.1</span>
+        <span className="db-clock-factory">天美健大自然生物工程 · 南京工厂 · 保健品MES v2.0</span>
       </div>
 
       {/* ──── 顶部标题栏 ─────────────────────────────────────────────── */}
@@ -777,7 +836,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         <div className="db-topbar-left">
           <AppstoreOutlined style={{ color: '#1677ff', fontSize: 18, marginRight: 8 }} />
           <span className="db-topbar-title">生产看板</span>
-          <span className="db-topbar-sub">医疗器械MES · 实时数据驱动</span>
+          <span className="db-topbar-sub">天美健保健品MES · 实时数据驱动 · GMP合规</span>
         </div>
         <div className="db-topbar-right">
           <span className="db-topbar-ts">⏱ 上次刷新 {data.ts.slice(11)}</span>
@@ -793,13 +852,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       </div>
 
       {/* ──── 告警条（条件显示） ──────────────────────────────────────── */}
-      {faultEquips.length > 0 && (
+      {faultCnt > 0 && (
         <div className="db-alert-bar red">
           <ExclamationCircleOutlined style={{ fontSize: 14 }} />
-          设备告警：{faultEquips.map(e => e.name).join('、')} 故障停机，请立即处理！
+          设备告警：{faultCnt} 台设备处于维修/故障状态，请关注设备管理模块！
         </div>
       )}
-      {poUnaudited > 0 && faultEquips.length === 0 && (
+      {criticalDeviations > 0 && (
+        <div className="db-alert-bar red">
+          <AlertOutlined style={{ fontSize: 14 }} />
+          GMP严重偏差：本月存在 {criticalDeviations} 条严重级偏差，请立即处理！
+        </div>
+      )}
+      {stockAlerts.length > 0 && (
+        <div className="db-alert-bar">
+          <AlertOutlined style={{ fontSize: 14 }} />
+          物料库存预警：{stockAlerts.map(s => s.material_name).slice(0,3).join('、')}{stockAlerts.length > 3 ? `等${stockAlerts.length}种物料` : ''} 低于安全库存！
+        </div>
+      )}
+      {poUnaudited > 0 && faultCnt === 0 && criticalDeviations === 0 && (
         <div className="db-alert-bar">
           <AlertOutlined style={{ fontSize: 14 }} />
           有 {poUnaudited} 张生产订单待审核，请及时审核后下推工单。
@@ -824,18 +895,18 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       <div className="db-kpi-row">
         <KpiCard
           icon={<FileTextOutlined />}
-          label="生产中订单"
-          value={poInProgress}
-          sub={`已下发 ${poReleased} · 已完成 ${poCompleted}`}
+          label="在产生产工单"
+          value={woInProgress}
+          sub={`待投产 ${woReleased} · 已完成 ${woCompleted} · 共${woTotal}张`}
           color="#1677ff"
           bg="#eff6ff"
           onClick={() => onNavigate?.('production-order')}
         />
         <KpiCard
           icon={<UnorderedListOutlined />}
-          label="在产工单"
-          value={woInProgress}
-          sub={`已下发 ${woReleased} · 已完成 ${woCompleted}`}
+          label="今日生产工单"
+          value={factoryDB?.todayWo?.todayTotal ?? wos.length}
+          sub={`执行中 ${factoryDB?.todayWo ? Number(factoryDB.todayWo.todayInProgress) : woInProgress} · 完成 ${factoryDB?.todayWo ? Number(factoryDB.todayWo.todayCompleted) : woCompleted}`}
           color="#fa8c16"
           bg="#fff7e6"
           onClick={() => onNavigate?.('work-order')}
@@ -871,16 +942,41 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           bg="#f5f0ff"
         />
         <KpiCard
-          icon={faultEquips.length > 0 ? <WarningOutlined /> : <CheckCircleOutlined />}
-          label="设备在线率"
-          value={`${normalEquips.length}/${EQUIPMENTS.length}`}
-          sub={faultEquips.length > 0
-            ? `⚠️ ${faultEquips.length} 台故障: ${faultEquips[0].name}`
-            : '所有设备正常运行'}
-          color={faultEquips.length > 0 ? '#ff4d4f' : '#52c41a'}
-          bg={faultEquips.length > 0 ? '#fff1f0' : '#f0fff4'}
-          alert={faultEquips.length > 0}
+          icon={faultCnt > 0 ? <WarningOutlined /> : <CheckCircleOutlined />}
+          label="设备运行率"
+          value={totalEqCnt > 0 ? `${runningCnt}/${totalEqCnt}` : `${normalEquips.length}台`}
+          sub={faultCnt > 0
+            ? `⚠️ ${faultCnt} 台维修/故障中`
+            : `待机 ${standbyCnt} 台，全部正常`}
+          color={faultCnt > 0 ? '#ff4d4f' : '#52c41a'}
+          bg={faultCnt > 0 ? '#fff1f0' : '#f0fff4'}
+          alert={faultCnt > 0}
+          onClick={() => onNavigate?.('equipment-list')}
         />
+        {latestOee !== null && (
+          <KpiCard
+            icon={<BarChartOutlined />}
+            label="综合OEE"
+            value={`${latestOee}%`}
+            sub={`近7日均值，GMP目标≥80%`}
+            color={latestOee >= 80 ? '#13c2c2' : '#fa8c16'}
+            bg={latestOee >= 80 ? '#e6fffb' : '#fff7e6'}
+            trend={latestOee >= 80 ? 'up' : 'down'}
+            onClick={() => onNavigate?.('equipment-list')}
+          />
+        )}
+        {totalDeviations > 0 && (
+          <KpiCard
+            icon={<ExclamationCircleOutlined />}
+            label="本月偏差"
+            value={totalDeviations}
+            sub={criticalDeviations > 0 ? `⚠️ 严重偏差 ${criticalDeviations} 条` : 'GMP偏差管理'}
+            color={criticalDeviations > 0 ? '#f5222d' : '#fa8c16'}
+            bg={criticalDeviations > 0 ? '#fff1f0' : '#fff7e6'}
+            alert={criticalDeviations > 0}
+            onClick={() => onNavigate?.('gmp-deviation')}
+          />
+        )}
         {poUnaudited > 0 && (
           <KpiCard
             icon={<AlertOutlined />}
@@ -1055,12 +1151,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             title={
               <span className="db-section-title">
                 <ToolOutlined style={{ marginRight: 6, color: '#722ed1' }} />
-                设备状态（{EQUIPMENTS.length} 台）
+                设备状态（{totalEqCnt > 0 ? totalEqCnt : '—'} 台）
               </span>
             }
             style={{ marginBottom: 12 }}
           >
-            <EquipStatusSection />
+            <EquipStatusSection eqStats={eqStats} oeeData={oeeData} />
           </Card>
 
           {/* 快捷入口 */}
@@ -1082,7 +1178,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 { key: 'ebr-list',         label: '电子批记录', icon: <CheckCircleOutlined />,   color: '#722ed1', bg: '#f5f0ff' },
                 { key: 'inspection',       label: '质检工作台', icon: <SafetyOutlined />,        color: '#13c2c2', bg: '#e6fffb' },
                 { key: 'trace-forward',    label: '追溯查询',   icon: <NodeIndexOutlined />,     color: '#eb2f96', bg: '#fff0f6' },
-                { key: 'material-issuance',label: '领料管理',   icon: <InboxOutlined />,         color: '#2f54eb', bg: '#eef2ff' },
+                { key: 'gmp-deviation',    label: 'GMP合规',    icon: <SafetyOutlined />,        color: '#52c41a', bg: '#f0fff4' },
                 { key: 'workshop',         label: '车间看板',   icon: <BarChartOutlined />,      color: '#fa541c', bg: '#fff2e8' },
               ].map(s => (
                 <div
