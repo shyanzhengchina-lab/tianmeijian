@@ -1,0 +1,10 @@
+# 开发环境配置 - 请按实际修改数据库连接信息
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/mes_db?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&connectionCollation=utf8mb4_unicode_ci
+    username: root
+    password: root
+
+logging:
+  level:
+    com.mdk.mes: debug

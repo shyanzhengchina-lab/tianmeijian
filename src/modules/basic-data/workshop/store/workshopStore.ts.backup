@@ -1,0 +1,672 @@
+/**
+ * 车间模块状态管理Store
+ * 使用Zustand进行模块级状态管理
+ */
+
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { Workshop, WorkshopQuery, WorkshopStatistics, WorkshopStatusAction } from '../types';
+import { workshopApi } from '../api/workshopApi';
+
+/**
+ * 车间Store状态接口
+ */
+export interface WorkshopState {
+  // 数据状态
+  workshops: Workshop[];
+  total: number;
+  loading: boolean;
+  error: string | null;
+
+  // 查询状态
+  query: WorkshopQuery;
+  filters: Record<string, any>;
+
+  // 选择状态
+  selectedIds: string[];
+  selectedWorkshops: Workshop[];
+
+  // 详情状态
+  currentWorkshop: Workshop | null;
+
+  // 统计数据
+  statistics: WorkshopStatistics | null;
+
+  // 分类数据
+  categoryTree: Array<{
+    id: string;
+    name: string;
+    children?: Array<{ id: string; name: string }>;
+  }>;
+
+  // UI状态
+  isCreateModalVisible: boolean;
+  isEditModalVisible: boolean;
+  isDetailDrawerVisible: boolean;
+  isCopyModalVisible: boolean;
+
+  // UI Actions
+  setShowCreateModal: (show: boolean) => void;
+  setShowEditModal: (show: boolean) => void;
+  setShowDetailDrawer: (show: boolean) => void;
+  setShowCopyModal: (show: boolean) => void;
+
+  // Actions
+  setWorkshops: (workshops: Workshop[], total: number) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  setQuery: (query: Partial<WorkshopQuery>) => void;
+  setFilters: (filters: Record<string, any>) => void;
+  setSelectedIds: (ids: string[]) => void;
+  clearSelection: () => void;
+  loadWorkshops: () => Promise<void>;
+  refreshWorkshops: () => Promise<void>;
+  createWorkshop: (data: any) => Promise<void>;
+  updateWorkshop: (data: any) => Promise<void>;
+  deleteWorkshop: (id: string) => Promise<void>;
+  batchDeleteWorkshops: (ids: string[]) => Promise<void>;
+  batchEnableWorkshops: (ids: string[]) => Promise<void>;
+  batchDisableWorkshops: (ids: string[]) => Promise<void>;
+  updateWorkshopStatus: (action: WorkshopStatusAction) => Promise<void>;
+  loadWorkshopById: (id: string) => Promise<Workshop | null>;
+  checkCodeUnique: (code: string, excludeId?: string) => Promise<boolean>;
+  getAvailableEmployees: () => Promise<any[]>;
+  loadCategoryTree: () => Promise<void>;
+  getWorkshopsByType: (type: string) => Promise<Workshop[]>;
+  copyWorkshop: (id: string) => Promise<void>;
+  setCurrentWorkshop: (workshop: Workshop | null) => void;
+  loadStatistics: () => Promise<void>;
+  importWorkshops: (file: File, validate?: boolean, updateMode?: 'create' | 'update' | 'skip') => Promise<void>;
+  exportWorkshops: (query?: WorkshopQuery, fileName?: string) => Promise<void>;
+  searchWorkshops: (keyword: string) => Promise<Workshop[]>;
+  reset: () => void;
+}
+
+/**
+ * 车间Store
+ */
+export const useWorkshopStore = create<WorkshopState>()(
+  persist(
+    (set, get) => ({
+      // 初始状态
+      workshops: [],
+      total: 0,
+      loading: false,
+      error: null,
+      query: {
+        current: 1,
+        pageSize: 15,
+      },
+      filters: {},
+      selectedIds: [],
+      selectedWorkshops: [],
+      currentWorkshop: null,
+      statistics: null,
+      categoryTree: [],
+      isCreateModalVisible: false,
+      isEditModalVisible: false,
+      isDetailDrawerVisible: false,
+      isCopyModalVisible: false,
+
+      /**
+       * 设置车间列表数据
+       */
+      setWorkshops: (workshops: Workshop[], total: number) => {
+        set({ workshops, total, error: null });
+      },
+
+      /**
+       * 设置加载状态
+       */
+      setLoading: (loading: boolean) => {
+        set({ loading });
+      },
+
+      /**
+       * 设置错误状态
+       */
+      setError: (error: string | null) => {
+        set({ error });
+      },
+
+      /**
+       * 设置查询参数
+       */
+      setQuery: (query: Partial<WorkshopQuery>) => {
+        set((state) => ({
+          query: { ...state.query, ...query, current: 1 }, // 重置到第一页
+        }));
+      },
+
+      /**
+       * 设置筛选条件
+       */
+      setFilters: (filters: Record<string, any>) => {
+        set({ filters });
+      },
+
+      /**
+       * 设置选中ID列表
+       */
+      setSelectedIds: (ids: string[]) => {
+        const { workshops } = get();
+        const selectedWorkshops = workshops.filter(w => ids.includes(w.id));
+        set({ selectedIds: ids, selectedWorkshops });
+      },
+
+      /**
+       * 清除选择
+       */
+      clearSelection: () => {
+        set({ selectedIds: [], selectedWorkshops: [] });
+      },
+
+      /**
+       * 加载车间列表
+       */
+      loadWorkshops: async () => {
+        const { query } = get();
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.getWorkshops(query);
+
+          if (response.code === 200) {
+            set({
+              workshops: response.data.list,
+              total: response.data.total,
+              loading: false,
+            });
+          } else {
+            set({
+              loading: false,
+              error: response.message || '加载失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '加载失败',
+          });
+        }
+      },
+
+      /**
+       * 刷新车间列表
+       */
+      refreshWorkshops: async () => {
+        const { query } = get();
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.getWorkshops(query);
+
+          if (response.code === 200) {
+            set({
+              workshops: response.data.list,
+              total: response.data.total,
+              loading: false,
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '刷新失败',
+          });
+        }
+      },
+
+      /**
+       * 创建车间
+       */
+      createWorkshop: async (data: any) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.createWorkshop(data);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+            set({ isCreateModalVisible: false });
+          } else {
+            set({
+              loading: false,
+              error: response.message || '创建失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '创建失败',
+          });
+        }
+      },
+
+      /**
+       * 更新车间
+       */
+      updateWorkshop: async (data: any) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.updateWorkshop(data);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+            set({ isEditModalVisible: false, currentWorkshop: null });
+          } else {
+            set({
+              loading: false,
+              error: response.message || '更新失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '更新失败',
+          });
+        }
+      },
+
+      /**
+       * 删除车间
+       */
+      deleteWorkshop: async (id: string) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.deleteWorkshop(id);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+          } else {
+            set({
+              loading: false,
+              error: response.message || '删除失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '删除失败',
+          });
+        }
+      },
+
+      /**
+       * 批量删除车间
+       */
+      batchDeleteWorkshops: async (ids: string[]) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.deleteWorkshops(ids);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+            // 清除选择
+            set({ selectedIds: [], selectedWorkshops: [] });
+          } else {
+            set({
+              loading: false,
+              error: response.message || '批量删除失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '批量删除失败',
+          });
+        }
+      },
+
+      /**
+       * 批量启用车间
+       */
+      batchEnableWorkshops: async (ids: string[]) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.batchEnable(ids);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+          } else {
+            set({
+              loading: false,
+              error: response.message || '批量启用失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '批量启用失败',
+          });
+        }
+      },
+
+      /**
+       * 批量禁用车间
+       */
+      batchDisableWorkshops: async (ids: string[]) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.batchDisable(ids);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+          } else {
+            set({
+              loading: false,
+              error: response.message || '批量禁用失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '批量禁用失败',
+          });
+        }
+      },
+
+      /**
+       * 更新车间状态
+       */
+      updateWorkshopStatus: async (action: WorkshopStatusAction) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.updateStatus(action);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+          } else {
+            set({
+              loading: false,
+              error: response.message || '状态更新失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '状态更新失败',
+          });
+        }
+      },
+
+      /**
+       * 根据ID加载车间
+       */
+      loadWorkshopById: async (id: string): Promise<Workshop | null> => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.getWorkshopById(id);
+
+          if (response.code === 200) {
+            set({
+              currentWorkshop: response.data,
+              loading: false,
+            });
+            return response.data;
+          } else {
+            set({
+              loading: false,
+              error: response.message || '加载失败',
+            });
+            return null;
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '加载失败',
+          });
+          return null;
+        }
+      },
+
+      /**
+       * 检查车间编码唯一性
+       */
+      checkCodeUnique: async (code: string, excludeId?: string): Promise<boolean> => {
+        try {
+          const response = await workshopApi.checkCodeUnique(code, excludeId);
+          return response.code === 200 && response.data.unique;
+        } catch (error: any) {
+          console.error('检查编码唯一性失败:', error);
+          return false;
+        }
+      },
+
+      /**
+       * 获取可用员工列表
+       */
+      getAvailableEmployees: async (): Promise<any[]> => {
+        try {
+          const response = await workshopApi.getAvailableEmployees();
+          return response.code === 200 ? response.data : [];
+        } catch (error: any) {
+          console.error('获取可用员工失败:', error);
+          return [];
+        }
+      },
+
+      /**
+       * 加载分类树
+       */
+      loadCategoryTree: async () => {
+        try {
+          const response = await workshopApi.getCategoryTree();
+
+          if (response.code === 200) {
+            set({ categoryTree: response.data });
+          }
+        } catch (error: any) {
+          console.error('加载分类树失败:', error);
+        }
+      },
+
+      /**
+       * 根据类型筛选车间
+       */
+      getWorkshopsByType: async (type: string): Promise<Workshop[]> => {
+        try {
+          const response = await workshopApi.getWorkshopsByType(type);
+          return response.code === 200 ? response.data : [];
+        } catch (error: any) {
+          console.error('获取车间失败:', error);
+          return [];
+        }
+      },
+
+      /**
+       * 复制车间
+       */
+      copyWorkshop: async (id: string) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.copyWorkshop(id);
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+            set({ isCopyModalVisible: false });
+          } else {
+            set({
+              loading: false,
+              error: response.message || '复制失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '复制失败',
+          });
+        }
+      },
+
+      /**
+       * 显示创建弹窗
+       */
+      setShowCreateModal: (show: boolean) => {
+        set({ isCreateModalVisible: show, currentWorkshop: null });
+      },
+
+      /**
+       * 显示编辑弹窗
+       */
+      setShowEditModal: (show: boolean) => {
+        set({ isEditModalVisible: show });
+      },
+
+      /**
+       * 显示详情抽屉
+       */
+      setShowDetailDrawer: (show: boolean) => {
+        set({ isDetailDrawerVisible: show });
+      },
+
+      /**
+       * 显示复制弹窗
+       */
+      setShowCopyModal: (show: boolean) => {
+        set({ isCopyModalVisible: show });
+      },
+
+      /**
+       * 设置当前车间
+       */
+      setCurrentWorkshop: (workshop: Workshop | null) => {
+        set({ currentWorkshop: workshop });
+      },
+
+      /**
+       * 加载统计数据
+       */
+      loadStatistics: async () => {
+        try {
+          const response = await workshopApi.getStatistics();
+
+          if (response.code === 200) {
+            set({ statistics: response.data });
+          }
+        } catch (error: any) {
+          console.error('加载统计失败:', error);
+        }
+      },
+
+      /**
+       * 导入车间
+       */
+      importWorkshops: async (
+        file: File,
+        validate?: boolean,
+        updateMode?: 'create' | 'update' | 'skip'
+      ) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await workshopApi.importWorkshops({
+            file,
+            validate,
+            updateMode,
+          });
+
+          if (response.code === 200) {
+            // 刷新列表
+            await get().loadWorkshops();
+          } else {
+            set({
+              loading: false,
+              error: response.message || '导入失败',
+            });
+          }
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '导入失败',
+          });
+        }
+      },
+
+      /**
+       * 导出车间
+       */
+      exportWorkshops: async (query?: WorkshopQuery, fileName?: string) => {
+        const { query: currentQuery } = get();
+        set({ loading: true });
+
+        try {
+          await workshopApi.exportWorkshops(query || currentQuery, fileName);
+          set({ loading: false });
+        } catch (error: any) {
+          set({
+            loading: false,
+            error: error.message || '导出失败',
+          });
+        }
+      },
+
+      /**
+       * 搜索车间
+       */
+      searchWorkshops: async (keyword: string): Promise<Workshop[]> => {
+        try {
+          const response = await workshopApi.searchWorkshops(keyword);
+          return response.code === 200 ? response.data : [];
+        } catch (error: any) {
+          console.error('搜索车间失败:', error);
+          return [];
+        }
+      },
+
+      /**
+       * 重置状态
+       */
+      reset: () => {
+        set({
+          workshops: [],
+          total: 0,
+          loading: false,
+          error: null,
+          query: {
+            current: 1,
+            pageSize: 15,
+          },
+          filters: {},
+          selectedIds: [],
+          selectedWorkshops: [],
+          currentWorkshop: null,
+          statistics: null,
+          categoryTree: [],
+          isCreateModalVisible: false,
+          isEditModalVisible: false,
+          isDetailDrawerVisible: false,
+          isCopyModalVisible: false,
+        });
+      },
+    }),
+    {
+      name: 'workshop-store',
+      // 可选：配置存储选项
+      // getStorage: () => localStorage,
+      // setStorage: () => localStorage,
+      // 持久化选定的字段
+      partialize: (state) => ({
+        query: state.query,
+        filters: state.filters,
+      }),
+    }
+  )
+);
+
+export default useWorkshopStore;

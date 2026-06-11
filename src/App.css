@@ -1,0 +1,119 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #F0F2F5;
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D9D9D9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #BFBFBF;
+}
+
+/* Ant Design Global Overrides */
+.ant-table-wrapper {
+  overflow: hidden;
+}
+
+/* ══ 全局 Select 下拉选项 - 打勾模式 ══
+   选中的选项左侧显示蓝色 ✓ 勾号，未选中项左侧留空对齐 */
+
+/* 所有选项增加左侧内边距（为勾号留位） */
+.ant-select-dropdown .ant-select-item-option {
+  padding-left: 30px !important;
+  position: relative;
+}
+
+/* 默认：左侧空白占位 */
+.ant-select-dropdown .ant-select-item-option::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  text-align: center;
+}
+
+/* 选中项：显示蓝色勾号 */
+.ant-select-dropdown .ant-select-item-option-selected::before {
+  content: '✓';
+  color: #1677ff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* 选中项背景与文字颜色 */
+.ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: #e6f4ff !important;
+  color: #1677ff !important;
+  font-weight: 500;
+}
+
+/* 右侧默认选中状态图标隐藏（避免双勾） */
+.ant-select-dropdown .ant-select-item-option-selected .ant-select-item-option-state {
+  display: none !important;
+}
+
+/* hover 高亮 */
+.ant-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-selected) {
+  background-color: #f5f7ff !important;
+}
+
+.ant-btn {
+  font-weight: 500;
+}
+
+.ant-modal-content {
+  border-radius: 10px !important;
+}
+
+.ant-modal-header {
+  border-radius: 10px 10px 0 0 !important;
+  padding: 16px 24px 14px !important;
+  border-bottom: 1px solid #F0F0F0 !important;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid #F0F0F0 !important;
+  padding: 12px 24px !important;
+}
+
+.ant-select-selector {
+  border-radius: 4px !important;
+}
+
+/* Ant Layout override */
+.ant-layout {
+  background: #F0F2F5;
+}
+
+/* Fix Sider */
+.ant-layout-sider {
+  background: #ffffff !important;
+}
+
+.ant-layout-sider-children {
+  height: 100%;
+  overflow: hidden;
+}

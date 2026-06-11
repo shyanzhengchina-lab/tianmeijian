@@ -1,0 +1,403 @@
+import React, { useState } from 'react';
+import { Button, Card, Space, Typography, Tag, Alert, Row, Col, Select, Table, message, Input } from 'antd';
+import { PlusOutlined, CheckCircleOutlined, ScanOutlined, SettingOutlined } from '@ant-design/icons';
+import type { StageExecution } from '../padExecutionData';
+import PadNumPad from '../components/PadNumPad';
+
+const { Text } = Typography;
+const { Option } = Select;
+
+interface DataCollectStageProps {
+  opCode?: string;
+  content?: string;
+  execution: StageExecution;
+  onComplete: (data: Record<string, unknown>) => void;
+}
+
+// ==================== 数据采集字段定义（按工序）====================
+
+interface DcField {
+  key: string;
+  label: string;
+  unit?: string;
+  precision?: number;
+  spec?: string;
+  specMin?: number;
+  specMax?: number;
+  type: 'number' | 'text' | 'select';
+  options?: string[];
+  required?: boolean;
+  colSpan?: number; // antd 栅格 span
+}
+
+interface DcConfig {
+  title: string;            // 数采标题
+  deviceLabel?: string;     // 设备标签
+  fields: DcField[];        // 数采字段
+  minRecords: number;       // 至少录入几条
+  mockData: Array<Record<string, number | string>>; // 示例数据
+}
+
+const DC_CONFIG_BY_OP: Record<string, DcConfig> = {
+  // OP-10 机床成型：抽检外径/尖端径/锥度/螺距/表面粗糙度 + 设备工艺参数
+  'OP-10-GRIND': {
+    title: '机床成型 — 过程抽检数据',
+    deviceLabel: '千分尺 / 投影仪',
+    minRecords: 3,
+    fields: [
+      { key: 'd1', label: '外径 D1', unit: 'mm', precision: 3, spec: '0.250±0.005', specMin: 0.245, specMax: 0.255, type: 'number', required: true, colSpan: 8 },
+      { key: 'd2', label: '尖端外径 D2', unit: 'mm', precision: 3, spec: '0.150±0.005', specMin: 0.145, specMax: 0.155, type: 'number', required: true, colSpan: 8 },
+      { key: 'taper', label: '锥度', unit: '', precision: 3, spec: '0.038~0.042', specMin: 0.038, specMax: 0.042, type: 'number', required: true, colSpan: 8 },
+      { key: 'thread', label: '螺纹完整性', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+      { key: 'surface', label: '表面粗糙度 Ra', type: 'select', options: ['Ra≤0.8 合格', 'Ra>0.8 不合格'], required: true, colSpan: 8 },
+      { key: 'appearance', label: '外观', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+    ],
+    mockData: [
+      { d1: 0.251, d2: 0.152, taper: 0.040, thread: '合格', surface: 'Ra≤0.8 合格', appearance: '合格' },
+      { d1: 0.250, d2: 0.151, taper: 0.040, thread: '合格', surface: 'Ra≤0.8 合格', appearance: '合格' },
+      { d1: 0.252, d2: 0.150, taper: 0.041, thread: '合格', surface: 'Ra≤0.8 合格', appearance: '合格' },
+    ],
+  },
+
+  // OP-140 检测合格（AQL综合检验）
+  'OP-140-INSPECT2': {
+    title: 'AQL综合检验 — 半成品抽检数据',
+    deviceLabel: '综合检测台 / 投影仪',
+    minRecords: 1,
+    fields: [
+      { key: 'total_length', label: '总长', unit: 'mm', precision: 2, spec: '25.0±0.5', specMin: 24.5, specMax: 25.5, type: 'number', required: true, colSpan: 8 },
+      { key: 'appearance', label: '外观（毛刺/崩刃/弯曲）', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+      { key: 'color_mark', label: '颜色标识（黄色#26）', type: 'select', options: ['符合', '不符合'], required: true, colSpan: 8 },
+      { key: 'aql_sample', label: 'AQL抽检数量', unit: '件', precision: 0, type: 'number', required: true, colSpan: 8 },
+      { key: 'aql_judge', label: '批次判定', type: 'select', options: ['合格批', '拒收批'], required: true, colSpan: 8 },
+    ],
+    mockData: [
+      { total_length: 25.0, appearance: '合格', color_mark: '符合', aql_sample: 13, aql_judge: '合格批' },
+    ],
+  },
+};
+
+// 通用默认配置（研磨/抽检通用）
+const DC_CONFIG_DEFAULT: DcConfig = {
+  title: '过程数据采集',
+  deviceLabel: '检测设备',
+  minRecords: 1,
+  fields: [
+    { key: 'd1', label: '外径 D1', unit: 'mm', precision: 3, spec: '0.250±0.005', specMin: 0.245, specMax: 0.255, type: 'number', required: true, colSpan: 8 },
+    { key: 'd2', label: '外径 D2', unit: 'mm', precision: 3, type: 'number', colSpan: 8 },
+    { key: 'taper', label: '锥度', unit: '', precision: 3, spec: '0.038~0.042', specMin: 0.038, specMax: 0.042, type: 'number', required: true, colSpan: 8 },
+  ],
+  mockData: [
+    { d1: 0.251, d2: 0.297, taper: 0.040 },
+    { d1: 0.252, d2: 0.298, taper: 0.040 },
+    { d1: 0.250, d2: 0.296, taper: 0.041 },
+  ],
+};
+
+// 根据字段值判断是否合格
+function isFieldPass(field: DcField, val: number | string | null | undefined): boolean | undefined {
+  if (val === null || val === undefined || val === '') return undefined;
+  if (field.type === 'number' && field.specMin !== undefined && field.specMax !== undefined) {
+    const n = Number(val);
+    return n >= field.specMin && n <= field.specMax;
+  }
+  if (field.type === 'select') {
+    const str = String(val);
+    return str.includes('合格') || str.includes('符合') || str === '合格批';
+  }
+  return true;
+}
+
+type RecordRow = Record<string, number | string | null>;
+
+const MOCK_DEVICES_BY_OP: Record<string, Array<{ id: string; name: string; type: string }>> = {
+  'OP-10-GRIND': [
+    { id: 'DC-001', name: '千分尺-DC001', type: '千分尺' },
+    { id: 'DC-002', name: '投影仪-PT001', type: '投影仪' },
+  ],
+  'OP-140-INSPECT2': [
+    { id: 'EQ-F01', name: '综合检测台-F01', type: '综合检测台' },
+    { id: 'DC-002', name: '投影仪-PT001', type: '投影仪' },
+  ],
+  default: [
+    { id: 'DC-001', name: '千分尺-001', type: '千分尺' },
+    { id: 'DC-002', name: '投影仪-001', type: '投影仪' },
+    { id: 'DC-003', name: '三坐标-001', type: '三坐标测量机' },
+  ],
+};
+
+const DataCollectStage: React.FC<DataCollectStageProps> = ({ opCode = '', content, execution, onComplete }) => {
+  const config = DC_CONFIG_BY_OP[opCode] || DC_CONFIG_DEFAULT;
+  const deviceList = MOCK_DEVICES_BY_OP[opCode] || MOCK_DEVICES_BY_OP.default;
+
+  const [device, setDevice] = useState('');
+  const [records, setRecords] = useState<RecordRow[]>([]);
+  // 当前行输入状态
+  const [editRow, setEditRow] = useState<RecordRow>(
+    Object.fromEntries(config.fields.map(f => [f.key, null]))
+  );
+
+  const isCompleted = execution.status === 'completed';
+
+  const canSubmit = !!device && records.length >= config.minRecords;
+
+  const setField = (key: string, val: number | string | null) => {
+    setEditRow(prev => ({ ...prev, [key]: val }));
+  };
+
+  const handleAddRecord = () => {
+    // 检查必填字段
+    const missing = config.fields.filter(f => f.required && (editRow[f.key] === null || editRow[f.key] === ''));
+    if (missing.length > 0) {
+      message.warning(`请填写：${missing.map(f => f.label).join('、')}`);
+      return;
+    }
+    // 判断整体是否合格
+    const allPass = config.fields.every(f => {
+      const p = isFieldPass(f, editRow[f.key]);
+      return p === undefined || p === true;
+    });
+    const newRow: RecordRow = {
+      ...editRow,
+      _seq: records.length + 1,
+      _result: allPass ? 'pass' : 'fail',
+    };
+    setRecords(prev => [...prev, newRow]);
+    setEditRow(Object.fromEntries(config.fields.map(f => [f.key, null])));
+    message.success(`第 ${records.length + 1} 条记录已添加`);
+  };
+
+  const handleMockData = () => {
+    const mocked = config.mockData.map((d, i) => ({
+      ...d,
+      _seq: i + 1,
+      _result: 'pass',
+    }));
+    setRecords(mocked);
+    setDevice(deviceList[0].id);
+    message.success(`已填入 ${mocked.length} 条模拟数据`);
+  };
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    onComplete({
+      dc_config: opCode,
+      dc_table: records,
+      dc_device: device,
+      dc_device_name: deviceList.find(d => d.id === device)?.name,
+      dc_operator: '张三(1001)',
+      dc_pass_rate: records.length > 0
+        ? Math.round(records.filter(r => r._result === 'pass').length / records.length * 100) + '%'
+        : '—',
+    });
+  };
+
+  if (isCompleted) {
+    return (
+      <Card style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 10 }}>
+        <Space>
+          <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+          <Text strong style={{ color: '#52c41a' }}>数据采集已完成</Text>
+          <Tag color="blue">{records.length > 0 ? `${records.length}条记录` : ''}</Tag>
+        </Space>
+      </Card>
+    );
+  }
+
+  // 构建表格列
+  const tableColumns = [
+    { title: '序号', dataIndex: '_seq', width: 55 },
+    ...config.fields.map(f => ({
+      title: f.label + (f.unit ? `(${f.unit})` : ''),
+      dataIndex: f.key,
+      render: (val: number | string | null) => {
+        if (val === null || val === undefined) return <Text type="secondary">—</Text>;
+        const pass = isFieldPass(f, val);
+        if (f.type === 'number' && f.specMin !== undefined) {
+          return <Text style={{ color: pass ? '#52c41a' : '#ff4d4f', fontWeight: 600 }}>
+            {typeof val === 'number' ? val.toFixed(f.precision ?? 3) : val}
+          </Text>;
+        }
+        return <Text>{String(val)}</Text>;
+      },
+    })),
+    {
+      title: '综合结果',
+      dataIndex: '_result',
+      width: 90,
+      render: (v: string) => v === 'pass'
+        ? <Tag color="success">✓合格</Tag>
+        : <Tag color="error">✗不合格</Tag>,
+    },
+  ];
+
+  const selectedDevice = deviceList.find(d => d.id === device);
+
+  return (
+    <div>
+      <Card
+        title={
+          <Space>
+            <SettingOutlined style={{ color: '#1890ff' }} />
+            <span>数据采集</span>
+            {content && <Tag color="blue" style={{ fontWeight: 'normal', fontSize: 12 }}>{content}</Tag>}
+          </Space>
+        }
+        style={{ marginBottom: 14, borderRadius: 10 }}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size={14}>
+          <Alert
+            message={`${config.title} — 至少录入 ${config.minRecords} 条记录，需体现使用的检测设备`}
+            type="info" showIcon
+          />
+
+          {/* 检测设备绑定 */}
+          <Card size="small" title={<Text strong style={{ fontSize: 12 }}>关联检测设备（{config.deviceLabel}）</Text>} style={{ borderRadius: 8 }}>
+            <Space size={12} wrap>
+              <Select size="large" style={{ width: 230 }} placeholder="选择或扫码检测设备"
+                value={device || undefined} onChange={v => setDevice(v)}>
+                {deviceList.map(d => (
+                  <Option key={d.id} value={d.id}>{d.name}（{d.type}）</Option>
+                ))}
+              </Select>
+              <Button icon={<ScanOutlined />} size="large"
+                onClick={() => { setDevice(deviceList[0].id); message.success(`设备 ${deviceList[0].name} 绑定成功，校准有效`); }}>
+                扫码绑定
+              </Button>
+              {selectedDevice && (
+                <Space>
+                  <Text type="secondary" style={{ fontSize: 12 }}>编号：{selectedDevice.id}</Text>
+                  <Tag color="success" style={{ fontSize: 11 }}>✓ 校准有效至 2026-12-31</Tag>
+                </Space>
+              )}
+            </Space>
+          </Card>
+
+          {/* 数据输入行 */}
+          <Card size="small"
+            title={
+              <Space>
+                <Text strong style={{ fontSize: 12 }}>录入抽检数据</Text>
+                <Tag color="processing" style={{ fontSize: 11 }}>已录 {records.length}/{config.minRecords} 条</Tag>
+              </Space>
+            }
+            style={{ borderRadius: 8 }}
+          >
+            <Space direction="vertical" style={{ width: '100%' }} size={14}>
+              <Row gutter={[12, 12]} align="bottom">
+                {config.fields.map(f => (
+                  <Col key={f.key} xs={24} sm={f.colSpan ?? 8}>
+                    <Space direction="vertical" size={4}>
+                      <Text style={{ fontSize: 12 }}>
+                        {f.label}
+                        {f.required && <Text type="danger" style={{ marginLeft: 2 }}>*</Text>}
+                        {f.spec && <Text type="secondary" style={{ fontSize: 10, marginLeft: 4 }}>规格：{f.spec}</Text>}
+                      </Text>
+                      {f.type === 'number' ? (
+                        <PadNumPad
+                          value={editRow[f.key] as number | null ?? null}
+                          onChange={(v) => setField(f.key, v)}
+                          precision={f.precision ?? 3}
+                          unit={f.unit}
+                          label={f.label}
+                          spec={f.spec}
+                          min={f.specMin !== undefined ? f.specMin * 0.85 : undefined}
+                          max={f.specMax !== undefined ? f.specMax * 1.15 : undefined}
+                          width={155}
+                          height={52}
+                          fontSize={14}
+                          validTag={
+                            editRow[f.key] !== null && editRow[f.key] !== undefined && f.specMin !== undefined
+                              ? (isFieldPass(f, editRow[f.key])
+                                ? <Tag color="success" style={{ marginLeft: 4, fontSize: 10 }}>✓</Tag>
+                                : <Tag color="error" style={{ marginLeft: 4, fontSize: 10 }}>✗</Tag>)
+                              : undefined
+                          }
+                        />
+                      ) : f.type === 'select' ? (
+                        <Select size="large" style={{ width: 160 }} placeholder="请选择"
+                          value={(editRow[f.key] as string) || undefined}
+                          onChange={v => setField(f.key, v)}>
+                          {(f.options ?? []).map(opt => (
+                            <Option key={opt} value={opt}>
+                              <Text style={{ color: (opt.includes('合格') && !opt.includes('不')) || opt.includes('符合') || opt === '合格批' ? '#52c41a' : '#ff4d4f' }}>
+                                {opt}
+                              </Text>
+                            </Option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <Input size="large" style={{ width: 160 }}
+                          value={(editRow[f.key] as string) || ''}
+                          onChange={e => setField(f.key, e.target.value)}
+                          placeholder={f.label}
+                        />
+                      )}
+                    </Space>
+                  </Col>
+                ))}
+              </Row>
+              <Row gutter={12}>
+                <Col>
+                  <Button icon={<PlusOutlined />} type="primary" size="large"
+                    onClick={handleAddRecord}
+                    style={{ height: 52, fontSize: 15, paddingInline: 24 }}>
+                    + 添加记录
+                  </Button>
+                </Col>
+                <Col>
+                  <Button size="large" onClick={handleMockData} style={{ height: 52 }}>
+                    📋 填入示例数据
+                  </Button>
+                </Col>
+              </Row>
+            </Space>
+          </Card>
+
+          {/* 抽检记录汇总表 */}
+          {records.length > 0 && (
+            <Table
+              dataSource={records}
+              columns={tableColumns}
+              rowKey="_seq"
+              pagination={false}
+              size="small"
+              scroll={{ x: 'max-content' }}
+              rowClassName={r => r._result === 'fail' ? 'table-row-error' : ''}
+              summary={() => (
+                <Table.Summary fixed>
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell index={0} colSpan={tableColumns.length - 1}>
+                      <Text strong>
+                        共 {records.length} 条 | 合格 {records.filter(r => r._result === 'pass').length} 条
+                        {records.some(r => r._result === 'fail') && (
+                          <Text type="danger" style={{ marginLeft: 8 }}>
+                            ⚠️ 有 {records.filter(r => r._result === 'fail').length} 条不合格，请处理后再提交
+                          </Text>
+                        )}
+                      </Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1}>
+                      {records.some(r => r._result === 'fail')
+                        ? <Tag color="error">存在不合格</Tag>
+                        : <Tag color="success">全部合格</Tag>}
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                </Table.Summary>
+              )}
+            />
+          )}
+        </Space>
+      </Card>
+
+      <div style={{ textAlign: 'right' }}>
+        <Button type="primary" size="large" disabled={!canSubmit} onClick={handleSubmit}
+          style={{ height: 52, fontSize: 17, paddingInline: 36, fontWeight: 700 }}>
+          ✅ 完成数据采集
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default DataCollectStage;

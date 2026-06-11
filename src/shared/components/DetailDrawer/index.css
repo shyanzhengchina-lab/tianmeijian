@@ -1,0 +1,81 @@
+/**
+ * 详情抽屉组件样式
+ */
+
+.detail-drawer .ant-drawer-body {
+  padding: 24px;
+}
+
+.detail-drawer .ant-descriptions-item-label {
+  font-weight: 500;
+  color: #262626;
+  background: #fafafa;
+  padding: 8px 12px;
+  border-right: 1px solid #f0f0f0;
+}
+
+.detail-drawer .ant-descriptions-item-content {
+  padding: 8px 12px;
+}
+
+.detail-drawer .ant-descriptions-bordered .ant-descriptions-view {
+  border: 1px solid #f0f0f0;
+}
+
+.detail-drawer .ant-descriptions-item {
+  padding-bottom: 0;
+}
+
+.detail-drawer .ant-divider {
+  margin: 24px 0;
+}
+
+/* 图片样式 */
+.detail-drawer img {
+  border-radius: 4px;
+  border: 1px solid #f0f0f0;
+  object-fit: cover;
+}
+
+/* 标签样式 */
+.detail-drawer .ant-tag {
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .detail-drawer .ant-drawer {
+    width: 90% !important;
+  }
+
+  .detail-drawer .ant-drawer-body {
+    padding: 16px;
+  }
+
+  .detail-drawer .ant-descriptions {
+    font-size: 12px;
+  }
+
+  .detail-drawer .ant-descriptions-item-label {
+    width: 100px;
+  }
+}
+
+/* 暗色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .detail-drawer .ant-drawer-header {
+    background: #1f1f1f;
+    border-bottom-color: #303030;
+  }
+
+  .detail-drawer .ant-descriptions-item-label {
+    color: #d9d9d9;
+    background: #1f1f1f;
+    border-right-color: #303030;
+  }
+
+  .detail-drawer .ant-descriptions-bordered .ant-descriptions-view {
+    border-color: #303030;
+  }
+}

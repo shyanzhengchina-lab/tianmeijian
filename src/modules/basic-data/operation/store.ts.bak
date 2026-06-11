@@ -1,0 +1,382 @@
+/**
+ * 工序主数据模块Zustand Store
+ * 管理工序的本地状态和API调用
+ * 保持与现有数据结构完全一致
+ */
+import { create } from 'zustand';
+import { operationApi } from './api';
+import { DEFAULT_OPERATIONS } from './types';
+import type {
+  Operation,
+  OperationQuery,
+  CreateOperationDTO,
+  UpdateOperationDTO,
+  OperationBatchAction,
+} from './types';
+import type { PaginationState } from '../../../shared/types/common';
+
+interface OperationStore {
+  // State
+  operations: Operation[];
+  selectedIds: string[];
+  currentOperation: Operation | null;
+  filters: OperationQuery;
+  pagination: PaginationState;
+  loading: boolean;
+  error: string | null;
+  statistics: {
+    totalCount: number;
+    draftCount: number;
+    activeCount: number;
+    obsoleteCount: number;
+    disabledCount: number;
+    categoryStats: Record<string, number>;
+    bottleneckCount: number;
+    qcPointCount: number;
+  } | null;
+
+  // Actions
+  loadOperations: (query?: OperationQuery) => Promise<void>;
+  loadAllOperations: () => Promise<void>;
+  loadStatistics: () => Promise<void>;
+  createOperation: (data: CreateOperationDTO) => Promise<void>;
+  updateOperation: (data: UpdateOperationDTO) => Promise<void>;
+  deleteOperations: (ids: string[]) => Promise<void>;
+  batchOperations: (action: OperationBatchAction) => Promise<void>;
+  activateOperation: (id: string) => Promise<void>;
+  deactivateOperation: (id: string) => Promise<void>;
+  obsoleteOperation: (id: string) => Promise<void>;
+  updateStatus: (ids: string[], status: 'DRAFT' | 'ACTIVE' | 'OBSOLETE' | 'DISABLED') => Promise<void>;
+  copyOperation: (id: string, newOpCode: string, newOpName: string) => Promise<void>;
+
+  // State setters
+  setFilters: (filters: Partial<OperationQuery>) => void;
+  setSelectedIds: (ids: string[]) => void;
+  setCurrentOperation: (operation: Operation | null) => void;
+  setPagination: (pagination: Partial<PaginationState>) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  reset: () => void;
+}
+
+// 创建Zustand Store
+export const useOperationStore = create<OperationStore>()(
+  (set, get) => ({
+    // 初始状态
+    operations: DEFAULT_OPERATIONS,
+    selectedIds: [],
+    currentOperation: null,
+    filters: {},
+    pagination: {
+      current: 1,
+      pageSize: 15,
+      total: DEFAULT_OPERATIONS.length,
+    },
+    loading: false,
+    error: null,
+    statistics: null,
+
+    // Actions
+    loadOperations: async (query?: OperationQuery) => {
+      set({ loading: true, error: null });
+
+      try {
+        const { filters: currentFilters, pagination: currentPagination } = get();
+        const finalQuery: OperationQuery = {
+          ...currentFilters,
+          ...query,
+          current: query?.current || currentPagination.current,
+          pageSize: query?.pageSize || currentPagination.pageSize,
+        };
+
+        const result = await operationApi.getOperations(finalQuery);
+
+        set({
+          operations: result.list,
+          pagination: {
+            current: result.current,
+            pageSize: result.pageSize,
+            total: result.total,
+          },
+          loading: false,
+        });
+      } catch (error: any) {
+        set({
+          error: error?.message || '加载工序列表失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    loadAllOperations: async () => {
+      try {
+        const operations = await operationApi.getAllOperations();
+        set({ operations });
+      } catch (error: any) {
+        console.error('加载所有工序失败:', error);
+        set({ error: error?.message || '加载工序列表失败' });
+      }
+    },
+
+    loadStatistics: async () => {
+      try {
+        const statistics = await operationApi.getStatistics();
+        set({ statistics });
+      } catch (error: any) {
+        console.error('加载工序统计失败:', error);
+      }
+    },
+
+    createOperation: async (data: CreateOperationDTO) => {
+      set({ loading: true, error: null });
+
+      try {
+        const newOperation = await operationApi.createOperation(data);
+
+        set(state => ({
+          operations: [newOperation, ...state.operations],
+          pagination: { ...state.pagination, total: state.pagination.total + 1 },
+          loading: false
+        }));
+
+        // 更新统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '创建工序失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    updateOperation: async (data: UpdateOperationDTO) => {
+      set({ loading: true, error: null });
+
+      try {
+        const updatedOperation = await operationApi.updateOperation(data);
+
+        set(state => ({
+          operations: state.operations.map(op => op.id === data.id ? updatedOperation : op),
+          loading: false
+        }));
+      } catch (error: any) {
+        set({
+          error: error?.message || '更新工序失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    deleteOperations: async (ids: string[]) => {
+      set({ loading: true, error: null });
+
+      try {
+        await operationApi.deleteOperations(ids);
+
+        set(state => ({
+          operations: state.operations.filter(op => !ids.includes(op.id)),
+          pagination: { ...state.pagination, total: state.pagination.total - ids.length },
+          selectedIds: [],
+          loading: false
+        }));
+
+        // 更新统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '删除工序失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    batchOperations: async (action: OperationBatchAction) => {
+      set({ loading: true, error: null });
+
+      try {
+        await operationApi.batchOperations(action);
+
+        // 重新加载列表
+        await get().loadOperations();
+        // 重新加载统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '批量操作失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    activateOperation: async (id: string) => {
+      set({ loading: true, error: null });
+
+      try {
+        await operationApi.activateOperation(id);
+
+        set(state => ({
+          operations: state.operations.map(op =>
+            op.id === id ? { ...op, status: 'ACTIVE' } : op
+          ),
+          loading: false
+        }));
+
+        // 更新统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '生效工序失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    deactivateOperation: async (id: string) => {
+      set({ loading: true, error: null });
+
+      try {
+        await operationApi.deactivateOperation(id);
+
+        set(state => ({
+          operations: state.operations.map(op =>
+            op.id === id ? { ...op, status: 'DISABLED' } : op
+          ),
+          loading: false
+        }));
+
+        // 更新统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '停用工序失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    obsoleteOperation: async (id: string) => {
+      set({ loading: true, error: null });
+
+      try {
+        await operationApi.obsoleteOperation(id);
+
+        set(state => ({
+          operations: state.operations.map(op =>
+            op.id === id ? { ...op, status: 'OBSOLETE' } : op
+          ),
+          loading: false
+        }));
+
+        // 更新统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '作废工序失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    updateStatus: async (ids: string[], status: 'DRAFT' | 'ACTIVE' | 'OBSOLETE' | 'DISABLED') => {
+      set({ loading: true, error: null });
+
+      try {
+        await operationApi.updateStatus(ids, status);
+
+        set(state => ({
+          operations: state.operations.map(operation =>
+            ids.includes(operation.id) ? { ...operation, status } : operation
+          ),
+          loading: false
+        }));
+
+        // 更新统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '更新状态失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    copyOperation: async (id: string, newOpCode: string, newOpName: string) => {
+      set({ loading: true, error: null });
+
+      try {
+        const newOperation = await operationApi.copyOperation(id, newOpCode, newOpName);
+
+        set(state => ({
+          operations: [newOperation, ...state.operations],
+          pagination: { ...state.pagination, total: state.pagination.total + 1 },
+          loading: false
+        }));
+
+        // 更新统计
+        await get().loadStatistics();
+      } catch (error: any) {
+        set({
+          error: error?.message || '复制工序失败',
+          loading: false,
+        });
+        throw error;
+      }
+    },
+
+    // State setters
+    setFilters: (filters: Partial<OperationQuery>) => {
+      set(state => ({
+        filters: { ...state.filters, ...filters },
+        pagination: { ...state.pagination, current: 1 }
+      }));
+    },
+
+    setSelectedIds: (ids: string[]) => {
+      set({ selectedIds: ids });
+    },
+
+    setCurrentOperation: (operation: Operation | null) => {
+      set({ currentOperation: operation });
+    },
+
+    setPagination: (pagination: Partial<PaginationState>) => {
+      set(state => ({
+        pagination: { ...state.pagination, ...pagination }
+      }));
+    },
+
+    setLoading: (loading: boolean) => {
+      set({ loading });
+    },
+
+    setError: (error: string | null) => {
+      set({ error });
+    },
+
+    reset: () => {
+      set({
+        operations: DEFAULT_OPERATIONS,
+        selectedIds: [],
+        currentOperation: null,
+        filters: {},
+        pagination: {
+          current: 1,
+          pageSize: 15,
+          total: DEFAULT_OPERATIONS.length,
+        },
+        loading: false,
+        error: null,
+        statistics: null,
+      });
+    },
+  })
+);

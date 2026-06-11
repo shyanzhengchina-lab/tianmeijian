@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1677ff" />
+    <meta name="description" content="YonBIP/SY 医疗器械 生产执行系统" />
+    <title>YonBIP/SY · 医疗器械生产执行系统</title>
+    <!-- 数据版本检测：版本不符时清除所有生产数据，在 React 启动前执行 -->
+    <script>
+      (function () {
+        var CLEAR_VERSION = 'v20260606_e';
+        var VERSION_KEY   = 'bip_data_version';
+        var USER_CLEARED  = 'bip_user_cleared';
+        if (localStorage.getItem(VERSION_KEY) !== CLEAR_VERSION) {
+          // 删除所有 bip_ 前缀的键（保留 bip_user_cleared）
+          // 保护名单：这些 bip_ 键不能被清除（登录态、工厂选择、用户信息）
+          var KEEP_KEYS = [USER_CLEARED, 'bip_cur_factory', 'bip_login_user', 'bip_auth_token'];
+          // mes_user / mes_token 不以 bip_ 开头，不在 bip_ 清除循环中，已安全
+          var toRemove = [];
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.startsWith('bip_') && KEEP_KEYS.indexOf(k) === -1) toRemove.push(k);
+          }
+          toRemove.forEach(function(k) { localStorage.removeItem(k); });
+          // 删除其他生产相关键
+          // 注意：mes_user / mes_token 不在清除列表中，保留登录态
+          ['production_orders_v2','fg_receipts','sales_shipments',
+           'udi_records','udi_pi_rule','udi_di_map'].forEach(function(k) {
+            localStorage.removeItem(k);
+          });
+          // 写入空数组，防止 useLocalStorage 读到旧数据
+          ['bip_production_orders','bip_work_orders',
+           'bip_task_orders','bip_float_tickets',
+           'bip_ebr_records'].forEach(function(k) {
+            localStorage.setItem(k, '[]');
+          });
+          // 清除完毕后设置用户清空标志，防止 API 重新写入
+          localStorage.setItem(USER_CLEARED, '1');
+          // 不在这里写版本号——让 mesStore.ts 的 ensureVersion() 完成后续初始化
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>请启用 JavaScript 以运行此应用。</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>

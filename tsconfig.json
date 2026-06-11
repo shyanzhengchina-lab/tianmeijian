@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/api/*": ["shared/api/*"],
+      "@/shared/*": ["shared/*"],
+      "@/modules/*": ["modules/*"],
+      "@/components/*": ["shared/components/*"],
+      "@/hooks/*": ["shared/hooks/*"],
+      "@/stores/*": ["stores/*"],
+      "@/utils/*": ["shared/utils/*"],
+      "@/types/*": ["shared/types/*"]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

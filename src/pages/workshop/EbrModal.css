@@ -1,0 +1,410 @@
+/* ================================================================
+   EBR 电子批生产记录弹窗样式
+   ================================================================ */
+
+.ebr-modal .ant-modal-content {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ebr-modal .ant-modal-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+}
+
+.ebr-modal .ant-modal-body {
+  padding: 0;
+}
+
+.ebr-modal-title {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d2939;
+}
+
+/* 顶部工序信息栏 */
+.ebr-top-info {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 10px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e8ecf0;
+  font-size: 13px;
+  color: #4a5568;
+  flex-wrap: wrap;
+}
+
+.ebr-top-info strong {
+  color: #1d2939;
+}
+
+/* Steps 区域 */
+.ebr-modal .ant-steps {
+  padding: 12px 20px 0;
+}
+
+/* 内容区域 */
+.ebr-content-area {
+  padding: 0 20px;
+  min-height: 320px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+/* ── 阶段通用头 ── */
+.ebr-stage-content {
+  padding-bottom: 8px;
+}
+
+.ebr-stage-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 4px solid currentColor;
+}
+
+.ebr-stage-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-right: 12px;
+}
+
+.ebr-stage-desc {
+  font-size: 12px;
+  color: #888;
+}
+
+/* ── 前清场检查清单 ── */
+.ebr-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ebr-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+  transition: border-color 0.2s;
+}
+
+.ebr-check-row:hover {
+  border-color: #d9d9d9;
+}
+
+.ebr-check-index {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #1677ff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ebr-check-label {
+  flex: 1;
+  font-size: 13px;
+  color: #1d2939;
+}
+
+.ebr-check-select .ant-select-selector {
+  min-width: 120px;
+}
+
+/* 拍照上传 */
+.ebr-photo-section {
+  margin-top: 4px;
+}
+
+.ebr-photo-label {
+  font-size: 13px;
+  color: #4a5568;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.ebr-photo-area {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ebr-photo-thumb {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e8ecf0;
+}
+
+/* 完成度进度条 */
+.ebr-completion-badge {
+  margin-top: 12px;
+}
+
+/* ── 进站确认 ── */
+.ebr-info-card {
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e8ecf0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.ebr-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.ebr-info-label {
+  width: 70px;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.ebr-info-val {
+  color: #1d2939;
+  font-weight: 500;
+}
+
+.ebr-info-val.blue {
+  color: #1677ff;
+}
+
+.ebr-checkbox-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  transition: border-color 0.2s;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.ebr-checkbox-row:hover {
+  border-color: #d9d9d9;
+}
+
+/* ── 物料确认 ── */
+.ebr-mat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ebr-mat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ebr-mat-label {
+  font-size: 12px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.ebr-mat-scan-result {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #389e0d;
+}
+
+/* ── 首件确认 ── */
+.ebr-first-piece {
+  /* container */
+}
+
+.ebr-first-piece-guide {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.ebr-guide-step {
+  background: #e6f4ff;
+  color: #1677ff;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ebr-first-piece-table {
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.ebr-first-piece-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.ebr-result-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2939;
+}
+
+.ebr-first-piece-pass-badge {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #389e0d;
+  font-weight: 600;
+}
+
+/* ── 报工出站 ── */
+.ebr-report-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ebr-summary-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+}
+
+.ebr-summary-item.green .ebr-summary-val { color: #52c41a; }
+.ebr-summary-item.blue .ebr-summary-val  { color: #1677ff; }
+
+.ebr-summary-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d2939;
+}
+
+.ebr-summary-label {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.ebr-report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ebr-report-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ebr-report-label {
+  font-size: 12px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.ebr-report-input {
+  padding: 6px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1d2939;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ebr-report-input:focus {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+}
+
+.ebr-report-textarea {
+  padding: 6px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1d2939;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.ebr-report-textarea:focus {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+}
+
+.ebr-report-next-op {
+  display: flex;
+  align-items: center;
+}
+
+.ebr-report-confirm-box {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #fffbe6;
+  border: 1px solid #ffe58f;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #614700;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* ── 底部按钮区 ── */
+.ebr-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.ebr-footer-center {
+  flex: 1;
+  text-align: center;
+}

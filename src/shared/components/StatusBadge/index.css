@@ -1,0 +1,95 @@
+/**
+ * 状态标签组件样式
+ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  transition: all 0.3s;
+}
+
+.status-badge.small {
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.status-badge.large {
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.status-badge:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 状态颜色变体 */
+.status-badge-success {
+  background: #f6ffed;
+  border-color: #b7eb8f;
+  color: #52c41a;
+}
+
+.status-badge-error {
+  background: #fff1f0;
+  border-color: #ffa39e;
+  color: #ff4d4f;
+}
+
+.status-badge-warning {
+  background: #fffbe6;
+  border-color: #ffe58f;
+  color: #faad14;
+}
+
+.status-badge-info {
+  background: #e6f7ff;
+  border-color: #91caff;
+  color: #1677ff;
+}
+
+.status-badge-default {
+  background: #f5f5f5;
+  border-color: #d9d9d9;
+  color: #8c8c8c;
+}
+
+/* 暗色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .status-badge-success {
+    background: #162312;
+    border-color: #237804;
+    color: #52c41a;
+  }
+
+  .status-badge-error {
+    background: #2a1215;
+    border-color: #8c0a00;
+    color: #ff4d4f;
+  }
+
+  .status-badge-warning {
+    background: #2b2111;
+    border-color: #874d00;
+    color: #faad14;
+  }
+
+  .status-badge-info {
+    background: #111d26;
+    border-color: #061178;
+    color: #1677ff;
+  }
+
+  .status-badge-default {
+    background: #1f1f1f;
+    border-color: #434343;
+    color: #8c8c8c;
+  }
+}

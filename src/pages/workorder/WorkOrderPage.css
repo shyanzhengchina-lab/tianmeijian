@@ -1,0 +1,634 @@
+/* ===== 生产工单页面样式 - 明亮清爽版 ===== */
+
+.wo-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f5f7fa;
+  color: #1d2939;
+  overflow: hidden;
+}
+
+.wo-page-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d2939;
+  padding: 12px 16px 10px;
+  background: #fff;
+  border-bottom: 1px solid #e8ecf0;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* ── Tabs ── */
+.wo-tabs-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wo-tabs-wrap .ant-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wo-tabs-wrap .ant-tabs-content-holder {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wo-tabs-wrap .ant-tabs-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wo-tabs-wrap .ant-tabs-tabpane {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Antd Tabs 亮色 */
+.wo-tabs-wrap .ant-tabs-nav { background: #fff; border-bottom: 1px solid #e8ecf0; margin: 0 !important; padding: 0 16px; }
+.wo-tabs-wrap .ant-tabs-tab { color: #667085 !important; }
+.wo-tabs-wrap .ant-tabs-tab-active .ant-tabs-tab-btn { color: #1677ff !important; font-weight: 600; }
+.wo-tabs-wrap .ant-tabs-ink-bar { background: #1677ff !important; }
+
+/* ── KPI ── */
+.wo-kpi-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px 8px;
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid #e8ecf0;
+  flex-wrap: wrap;
+}
+
+.wo-kpi {
+  background: #f8faff;
+  border: 1px solid #e2eaff;
+  border-radius: 8px;
+  padding: 5px 14px;
+  text-align: center;
+  min-width: 56px;
+  transition: box-shadow 0.2s;
+}
+
+.wo-kpi:hover {
+  box-shadow: 0 2px 8px rgba(22,119,255,0.12);
+}
+
+.wo-kpi-val {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.wo-kpi-label {
+  font-size: 11px;
+  color: #8a94a6;
+  margin-top: 1px;
+}
+
+/* ── 工具栏 ── */
+.wo-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8ecf0;
+  flex-shrink: 0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── 列表 ── */
+.wo-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wo-list::-webkit-scrollbar { width: 5px; }
+.wo-list::-webkit-scrollbar-track { background: #f0f2f5; }
+.wo-list::-webkit-scrollbar-thumb { background: #c8d0dc; border-radius: 3px; }
+
+/* ── 工单卡片 ── */
+.wo-card {
+  display: flex;
+  background: #fff;
+  border: 1px solid #e8ecf0;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.wo-card:hover {
+  border-color: #91caff;
+  box-shadow: 0 4px 16px rgba(22,119,255,0.1);
+  transform: translateY(-1px);
+}
+
+.wo-card-accent {
+  width: 4px;
+  flex-shrink: 0;
+}
+
+.wo-card-body {
+  flex: 1;
+  padding: 10px 14px;
+  min-width: 0;
+}
+
+.wo-row1, .wo-row2, .wo-row3, .wo-row4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+.wo-no {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2939;
+}
+
+.wo-ref {
+  font-size: 11px;
+  color: #98a2b3;
+}
+
+.wo-batch-tag {
+  font-size: 11px;
+  color: #1677ff;
+  background: #e6f4ff;
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+
+.wo-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+  border: 1px solid currentColor;
+  margin-left: auto;
+}
+
+.wo-product {
+  font-size: 12px;
+  color: #4a5568;
+}
+
+.wo-pill {
+  font-size: 11px;
+  color: #667085;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ec;
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.wo-pill.green b { color: #389e0d; }
+.wo-pill.red b { color: #cf1322; }
+
+.wo-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.wo-progress-track {
+  flex: 1;
+  height: 5px;
+  background: #f0f2f5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.wo-progress-fill {
+  height: 100%;
+  background: #52c41a;
+  border-radius: 3px;
+  transition: width 0.5s;
+}
+
+.wo-progress-pct {
+  font-size: 11px;
+  color: #389e0d;
+  min-width: 32px;
+  text-align: right;
+}
+
+.wo-meta {
+  font-size: 11px;
+  color: #98a2b3;
+}
+
+.wo-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  gap: 6px;
+  border-left: 1px solid #f0f2f5;
+  background: #fafbfc;
+}
+
+/* ── PAD工业风格任务卡片操作按钮区 ── */
+.task-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  gap: 6px;
+  border-left: 2px solid #e8ecf0;
+  background: #f5f7fa;
+  min-width: 64px;
+}
+
+/* PAD大按钮基础样式 */
+.pad-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  gap: 3px;
+  font-family: inherit;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pad-action-btn .anticon {
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+}
+
+.pad-action-btn span:not(.anticon) {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.pad-action-btn:active {
+  transform: scale(0.91);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.20);
+  filter: brightness(0.9);
+}
+
+.pad-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.22);
+  filter: brightness(1.06);
+}
+
+/* 各操作按钮颜色 */
+.pad-btn-detail {
+  background: linear-gradient(145deg, #4096ff, #1677ff);
+}
+
+.pad-btn-send {
+  background: linear-gradient(145deg, #69b1ff, #1677ff);
+}
+
+.pad-btn-start {
+  background: linear-gradient(145deg, #73d13d, #52c41a);
+}
+
+.pad-btn-report {
+  background: linear-gradient(145deg, #69b1ff, #1677ff);
+}
+
+.pad-btn-pause {
+  background: linear-gradient(145deg, #ffd666, #faad14);
+}
+
+.pad-btn-done {
+  background: linear-gradient(145deg, #36cfc9, #13c2c2);
+}
+
+.pad-btn-pad {
+  background: linear-gradient(145deg, #b37feb, #722ed1);
+}
+
+/* ── 详情抽屉 ── */
+.wd-section {
+  background: #f8fafc;
+  border: 1px solid #e8ecf0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.wd-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #667085;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wd-row {
+  display: flex;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.wd-row:last-child { border-bottom: none; }
+
+.wd-label {
+  width: 80px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #98a2b3;
+}
+
+.wd-val {
+  font-size: 12px;
+  color: #344054;
+}
+
+.wd-qty-card {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #e8ecf0;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+
+.wd-qty-card.wd-qty-green { background: #f6ffed; border-color: #b7eb8f; }
+
+.wd-qty-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d2939;
+}
+
+.wd-qty-card.wd-qty-green .wd-qty-val { color: #389e0d; }
+
+.wd-qty-label {
+  font-size: 11px;
+  color: #98a2b3;
+  margin-top: 2px;
+}
+
+/* ── 任务单行 ── */
+.task-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.task-row:last-child { border-bottom: none; }
+
+.task-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.task-body { flex: 1; }
+
+.task-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.task-no {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d2939;
+}
+
+.task-status {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.task-row2, .task-row3, .task-row4 {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+
+.task-meta {
+  font-size: 11px;
+  color: #98a2b3;
+}
+
+.task-meta.green { color: #389e0d; font-weight: 600; }
+
+.task-scope {
+  font-size: 11px;
+  color: #667085;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ec;
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+/* ── 浮票行 ── */
+.ft-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.ft-row:last-child { border-bottom: none; }
+
+.ft-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ft-row-no {
+  font-size: 12px;
+  color: #344054;
+}
+
+.ft-row-status {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ft-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ft-row-op {
+  font-size: 11px;
+  color: #389e0d;
+}
+
+.ft-row-time {
+  font-size: 11px;
+  color: #98a2b3;
+}
+
+/* Antd Select 亮色 */
+.wo-page .ant-select-selector {
+  background: #fff !important;
+  border-color: #d0d5dd !important;
+  color: #344054 !important;
+}
+.wo-page .ant-select-arrow { color: #98a2b3 !important; }
+
+/* ── 班次徽章 ── */
+.shift-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* ── 工艺路径标签 ── */
+.routing-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  color: #531dab;
+  background: #f9f0ff;
+  border: 1px solid #d3adf7;
+}
+
+/* ── 独立工单标识 ── */
+.wo-independent-tag {
+  font-size: 10px;
+  color: #52c41a;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+
+/* ── 关键工序高亮 ── */
+.step-key {
+  background: #fff7e6 !important;
+  color: #d46b08 !important;
+  border-color: #ffd591 !important;
+}
+
+/* ── 设备卡片 ── */
+.equip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.equip-row:last-child { border-bottom: none; }
+
+.equip-name {
+  font-size: 12px;
+  color: #1d2939;
+  font-weight: 500;
+}
+
+.equip-status-normal  { color: #52c41a; }
+.equip-status-maintain{ color: #faad14; }
+.equip-status-fault   { color: #ff4d4f; }
+.equip-status-idle    { color: #8c8c8c; }
+
+/* ── PAD工位卡片 ── */
+.pad-station-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.pad-station-row:last-child { border-bottom: none; }
+
+.pad-station-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1677ff;
+  min-width: 110px;
+}
+
+.pad-station-loc {
+  font-size: 11px;
+  color: #98a2b3;
+}
+
+/* ── 班次快捷筛选条 ── */
+.shift-filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8ecf0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.shift-filter-chip {
+  padding: 4px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+/* ── 任务单派工摘要卡 ── */
+.task-dispatch-card {
+  background: #f0f7ff;
+  border: 1px solid #bae0ff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+/* ── 进度数字样式 ── */
+.wo-meta.green { color: #389e0d; font-weight: 600; }
+.wo-meta.red   { color: #cf1322; font-weight: 600; }

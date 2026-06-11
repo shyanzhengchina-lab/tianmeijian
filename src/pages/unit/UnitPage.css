@@ -1,0 +1,235 @@
+/* ══════════════════════════════════════════════
+   计量单位页面 v2  —— 仿 YonSuite 左树右表风格
+   ══════════════════════════════════════════════ */
+
+/* 整体容器：左树 + 右主区 */
+.unit-page-v2 {
+  display: flex;
+  gap: 0;
+  height: calc(100vh - 115px);   /* 顶栏50 + 底栏50 + 面包屑 + padding */
+  background: #f0f2f5;
+  overflow: hidden;
+}
+
+/* ── 左侧树面板 ─────────────────────────────── */
+.unit-tree-panel {
+  width: 210px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-right: 1px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tree-search-box {
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.tree-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0 12px;
+}
+
+.tree-scroll::-webkit-scrollbar { width: 4px; }
+.tree-scroll::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 2px; }
+
+/* Tree 样式覆盖 */
+.unit-group-tree .ant-tree-node-content-wrapper {
+  border-radius: 0 !important;
+  padding: 3px 12px !important;
+  font-size: 13px;
+}
+
+.unit-group-tree .ant-tree-node-selected {
+  background: #e6f4ff !important;
+  color: #1677FF;
+  font-weight: 600;
+  border-left: 3px solid #1677FF;
+}
+
+.unit-group-tree .ant-tree-node-content-wrapper:hover {
+  background: #f5f5f5 !important;
+}
+
+/* ── 右侧主面板 ────────────────────────────── */
+.unit-main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* ── 搜索栏 ────────────────────────────────── */
+.unit-search-bar {
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+.search-label {
+  font-size: 13px;
+  color: #555;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.selected-tag-row {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ── 工具栏 ────────────────────────────────── */
+.unit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.toolbar-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.toolbar-right-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* 红色新建按钮 */
+.btn-primary-red {
+  background: #E60012 !important;
+  border-color: #E60012 !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  height: 28px !important;
+  font-size: 13px !important;
+}
+
+.btn-primary-red:hover {
+  background: #cc0010 !important;
+  border-color: #cc0010 !important;
+}
+
+/* 普通工具栏按钮 */
+.toolbar-btn {
+  height: 28px !important;
+  font-size: 12px !important;
+  color: #555 !important;
+  border-color: #d9d9d9 !important;
+}
+
+.toolbar-btn:hover {
+  color: #1677FF !important;
+  border-color: #1677FF !important;
+}
+
+/* ── 表格区 ────────────────────────────────── */
+.unit-table-wrap {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.unit-data-table {
+  height: 100%;
+}
+
+/* 表头 */
+.unit-data-table .ant-table-thead > tr > th {
+  background: #fafafa !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  padding: 9px 12px !important;
+  border-bottom: 1px solid #e8e8e8 !important;
+  white-space: nowrap;
+}
+
+/* 行 */
+.unit-data-table .ant-table-tbody > tr > td {
+  font-size: 13px !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid #f5f5f5 !important;
+}
+
+.unit-data-table .ant-table-tbody > tr:hover > td {
+  background: #f0f6ff !important;
+}
+
+/* 禁用行 */
+.unit-data-table .row-disabled td {
+  color: #bbb !important;
+  background: #fafafa !important;
+}
+
+/* 启用状态标签 */
+.status-tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.status-active {
+  color: #389e0d;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+}
+
+.status-disabled {
+  color: #8c8c8c;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+}
+
+/* 分页 */
+.unit-data-table .ant-pagination {
+  margin: 0 !important;
+}
+
+/* Divider in action column */
+.ant-table .ant-divider-vertical {
+  height: 12px;
+  border-color: #e0e0e0;
+}
+
+/* ── 响应式 ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .unit-page-v2 {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .unit-tree-panel {
+    width: 100%;
+    max-height: 180px;
+    border-right: none;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  .unit-main-panel {
+    min-height: 400px;
+  }
+}

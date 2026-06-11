@@ -1,0 +1,19 @@
+
+> webapp@0.1.0 build
+> react-scripts build
+
+(node:5460) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Creating an optimized production build...
+Failed to compile.
+
+TS2724: '"../types"' has no exported member named 'EmployeeStatistics'. Did you mean 'EmployeeStatus'?
+  [0m [90m  6 |[39m [36mimport[39m { create } [36mfrom[39m [32m'zustand'[39m[33m;[39m
+   [90m  7 |[39m [36mimport[39m { persist } [36mfrom[39m [32m'zustand/middleware'[39m[33m;[39m
+  [31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m type { [33mEmployee[39m[33m,[39m [33mEmployeeQuery[39m[33m,[39m [33mEmployeeStatistics[39m[33m,[39m [33mEmployeeStatusAction[39m } [36mfrom[39m [32m'../types'[39m[33m;[39m
+   [90m    |[39m                                        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+   [90m  9 |[39m [36mimport[39m { employeeApi } [36mfrom[39m [32m'../api/employeeApi'[39m[33m;[39m
+   [90m 10 |[39m
+   [90m 11 |[39m [90m/**[39m[0m
+
+

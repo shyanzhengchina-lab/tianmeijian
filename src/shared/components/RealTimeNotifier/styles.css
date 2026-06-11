@@ -1,0 +1,173 @@
+/**
+ * 实时通知组件样式
+ */
+
+.real-time-notifier {
+  display: inline-block;
+}
+
+.real-time-notifier .notification-button {
+  position: relative;
+}
+
+.notification-dropdown-menu {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.notification-dropdown-menu .notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.notification-dropdown-menu .notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-dropdown-menu .notification-item {
+  transition: all 0.3s ease;
+}
+
+.notification-dropdown-menu .notification-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.notification-dropdown-menu .notification-item.unread {
+  border-left: 3px solid #1677ff;
+  background: linear-gradient(to right, rgba(22, 119, 255, 0.05), transparent);
+}
+
+.notification-dropdown-menu .notification-item.read {
+  opacity: 0.7;
+}
+
+.notification-dropdown-menu .notification-item.read:hover {
+  opacity: 1;
+}
+
+.notification-dropdown-menu .notification-item .ant-list-item-meta-title {
+  margin-bottom: 4px;
+}
+
+.notification-dropdown-menu .notification-item .ant-list-item-meta-description {
+  font-size: 13px;
+}
+
+.online-status-indicator {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.online-status-indicator .status-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.realtime-update-indicator {
+  padding: 8px 12px;
+  background: #f0f9ff;
+  border: 1px solid #bae7ff;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+/* 滚动条样式 */
+.notification-dropdown-menu .notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-dropdown-menu .notification-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.notification-dropdown-menu .notification-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.notification-dropdown-menu .notification-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .notification-dropdown-menu {
+    width: 320px !important;
+  }
+
+  .notification-dropdown-menu .notification-list {
+    max-height: 300px;
+  }
+}
+
+/* 动画效果 */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-dropdown-menu .notification-item {
+  animation: slideIn 0.3s ease;
+}
+
+/* 徽章样式 */
+.real-time-notifier .ant-badge-count {
+  box-shadow: 0 0 0 1px #fff;
+}
+
+.real-time-notifier .ant-badge-count,
+.real-time-notifier .ant-badge-dot {
+  top: 0;
+  right: 0;
+  transform: translate(25%, -25%);
+}
+
+/* 暗色主题支持 */
+[data-theme='dark'] .notification-dropdown-menu {
+  background: #1f1f1f;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .notification-dropdown-menu .notification-header {
+  background: #2a2a2a;
+  border-bottom: 1px solid #303030;
+}
+
+[data-theme='dark'] .online-status-indicator {
+  background: #2a2a2a;
+}
+
+[data-theme='dark'] .realtime-update-indicator {
+  background: #0a1628;
+  border-color: #0960bd;
+}

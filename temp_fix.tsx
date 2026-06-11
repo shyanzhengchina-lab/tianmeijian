@@ -1,0 +1,1 @@
+                    {filter.label} {filter.value !== '' && `(${query.filter === filter.value ? 0 : '0'})`}
