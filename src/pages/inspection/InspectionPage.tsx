@@ -716,7 +716,7 @@ const AssignModal: React.FC<AssignModalProps> = ({ task, open, onClose, onSave }
 // ─── 主页面 ──────────────────────────────────────────────────────────────────
 
 const InspectionPage: React.FC = () => {
-  const [tasks, setTasks]       = useLocalStorage<InspectionTask[]>('bip_inspection_tasks', mockInspectionTasks);
+  const [tasks, setTasks]       = useLocalStorage<InspectionTask[]>('bip_inspection_tasks', []);
   const [searchText, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'ALL'>('ALL');
   const [typeFilter, setTypeFilter]     = useState<SchemeType | 'ALL'>('ALL');
@@ -733,30 +733,34 @@ const InspectionPage: React.FC = () => {
       if (apiList.length > 0) {
         const mapped: InspectionTask[] = apiList.map((item: any) => ({
           id: `api-${item.id}`,
-          taskNo: item.taskNo ?? `QC-${item.id}`,
+          // compat路由返回双字段（ioCode & taskNo / io_type & taskType等）
+          taskNo: item.taskNo   ?? item.ioCode   ?? item.io_code   ?? `QC-${item.id}`,
           schemeId: '',
-          schemeCode: item.taskType ?? 'IQC',
-          schemeType: (item.taskType as SchemeType) ?? 'IQC',
-          schemeName: item.taskType ?? 'IQC',
+          schemeCode: item.taskType ?? item.schemeType ?? 'IQC',
+          schemeType: (item.schemeType ?? item.taskType ?? 'IQC') as SchemeType,
+          schemeName: item.taskType ?? item.schemeType ?? 'IQC',
           sourceType: 'MATERIAL' as const,
-          sourceNo: item.sourceNo ?? '',
-          batchNo: item.batchNo ?? '',
-          woNo: item.sourceNo ?? '',
-          materialCode: item.materialCode ?? '',
-          materialName: item.materialName ?? '',
-          totalQty: Number(item.quantity ?? 0),
-          sampleQty: Number(item.sampleQuantity ?? 0),
+          sourceNo: item.sourceNo ?? item.woCode ?? item.wo_code ?? '',
+          batchNo: item.batchNo  ?? item.batch_no ?? '',
+          woNo:    item.sourceNo ?? item.woCode   ?? item.wo_code  ?? '',
+          materialCode: item.materialCode ?? item.material_code ?? '',
+          materialName: item.materialName ?? item.material_name ?? '',
+          totalQty: Number(item.quantity ?? item.sampleQuantity ?? item.sample_qty ?? 0),
+          sampleQty: Number(item.sampleQuantity ?? item.quantity ?? item.sample_qty ?? 0),
           priority: 'C' as 'A' | 'B' | 'C',
           inspectorId: item.inspectorId ? String(item.inspectorId) : undefined,
-          inspectorName: item.inspectorName ?? undefined,
-          completeTime: item.completeTime ?? undefined,
+          inspectorName: item.inspectorName ?? item.inspector_name ?? undefined,
+          completeTime: item.completeTime ?? item.inspect_time ?? undefined,
           status: (item.status as TaskStatus) ?? 'PENDING',
-          conclusion: (item.result === 'PASS' ? 'PASS' : item.result === 'FAIL' ? 'FAIL' : undefined) as Conclusion | undefined,
+          conclusion: (item.result === 'PASS' || item.overallResult === 'PASS' || item.overall_result === 'PASS'
+            ? 'PASS'
+            : (item.result === 'FAIL' || item.overallResult === 'FAIL' || item.overall_result === 'FAIL'
+              ? 'FAIL' : undefined)) as Conclusion | undefined,
           releaseStatus: 'PENDING' as ReleaseStatus,
           disposition: 'NONE' as Disposition,
           items: [],
           remark: item.remark ?? '',
-          createdAt: item.createTime ?? new Date().toLocaleString(),
+          createdAt: item.createTime ?? item.create_time ?? new Date().toLocaleString(),
         }));
         setTasks(mapped);  // API-first REPLACE
       }

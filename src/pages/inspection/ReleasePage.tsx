@@ -450,7 +450,7 @@ const ReleaseCard: React.FC<ReleaseCardProps> = ({ release, onView, onApprove })
 // ─── 主页面 ───────────────────────────────────────────────────────────────────
 
 const ReleasePage: React.FC = () => {
-  const [releases, setReleases] = useLocalStorage<QualityRelease[]>('bip_quality_releases', mockQualityReleases);
+  const [releases, setReleases] = useLocalStorage<QualityRelease[]>('bip_quality_releases', []);
   const [searchText, setSearch]     = useState('');
   const [typeFilter, setTypeFilter] = useState<ReleaseType | 'ALL'>('ALL');
   const [concFilter, setConcFilter] = useState<ReleaseConclusion | 'ALL'>('ALL');
@@ -466,17 +466,21 @@ const ReleasePage: React.FC = () => {
       if (apiList.length > 0) {
         const mapped: QualityRelease[] = apiList.map((item: any) => ({
           id: `api-${item.id}`,
+          // compat路由返回双字段（releaseNo & id，releaseType，conclusion/status等）
           releaseNo: item.releaseNo ?? `REL-${item.id}`,
           releaseType: (['SEMI_FINISHED','FINISHED','STERILE','MATERIAL'].includes(item.releaseType ?? '')
             ? item.releaseType : 'FINISHED') as ReleaseType,
           taskId: item.taskId ? String(item.taskId) : undefined,
-          batchNo: item.batchNo ?? '',
+          batchNo: item.batchNo ?? item.batch_no ?? '',
+          materialCode: item.materialCode ?? item.material_code ?? '',
+          materialName: item.materialName ?? item.material_name ?? '',
           inspectRecordIds: [],
-          conclusion: (['RELEASED','REJECTED','HOLD'].includes(item.status ?? '')
-            ? item.status : 'HOLD') as ReleaseConclusion,
-          qaName: item.approverName ?? '',
-          releaseTime: item.approveTime ?? '',
-          createdAt: item.createTime ?? new Date().toLocaleString(),
+          conclusion: (['RELEASED','REJECTED','HOLD'].includes(item.conclusion ?? item.status ?? '')
+            ? (item.conclusion ?? item.status)
+            : 'HOLD') as ReleaseConclusion,
+          qaName: item.qaName ?? item.approverName ?? item.approver_name ?? '',
+          releaseTime: item.releaseTime ?? item.approveTime ?? item.approve_time ?? '',
+          createdAt: item.createdAt ?? item.createTime ?? item.create_time ?? new Date().toLocaleString(),
           remark: item.remark ?? '',
         }));
         setReleases(mapped);  // API-first REPLACE

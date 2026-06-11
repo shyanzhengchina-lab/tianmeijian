@@ -58,24 +58,26 @@ const API_TO_CATEGORY: Record<string, QcItemCategory> = {
 };
 
 function mapApiToQcItem(item: InspectionItemRecord): QcItem {
+  // 后端compat路由返回双字段（item_code & code / item_name & name 等），全兼容
+  const raw = item as any;
   return {
-    id:            String(item.id ?? ''),
-    itemCode:      item.code ?? '',
-    itemName:      item.name ?? '',
-    category:      API_TO_CATEGORY[item.category ?? ''] ?? 'SIZE',
+    id:            String(raw.id ?? ''),
+    itemCode:      raw.itemCode   ?? raw.item_code  ?? raw.code  ?? '',
+    itemName:      raw.itemName   ?? raw.item_name  ?? raw.name  ?? '',
+    category:      API_TO_CATEGORY[raw.itemType ?? raw.item_type ?? raw.category ?? ''] ?? 'APPEARANCE',
     standardType:  'NUMERIC' as const,
-    standardValue: item.standard ?? '',
-    minValue:      item.minValue ?? undefined,
-    maxValue:      item.maxValue ?? undefined,
-    unit:          item.unit ?? '',
-    instrumentType: item.method ?? '',
-    isCritical:    item.isKeyItem === 1,
+    standardValue: raw.specText   ?? raw.spec_text  ?? raw.standard ?? '',
+    minValue:      raw.specMin    ?? raw.spec_min   ?? raw.minValue   ?? undefined,
+    maxValue:      raw.specMax    ?? raw.spec_max   ?? raw.maxValue   ?? undefined,
+    unit:          raw.unitName   ?? raw.unit_name  ?? raw.unit  ?? '',
+    instrumentType: raw.testMethod ?? raw.test_method ?? raw.method ?? '',
+    isCritical:    raw.isKeyItem === 1,
     isRequired:    true,
     applyTypes:    [],
-    status:        (item.status === 1 ? 'ACTIVE' : 'INACTIVE') as QcItemStatus,
+    status:        (raw.status === 1 ? 'ACTIVE' : raw.status === 0 ? 'INACTIVE' : 'ACTIVE') as QcItemStatus,
     version:       'V1.0',
-    createdAt:     item.createTime ?? '',
-    updatedAt:     item.updateTime ?? '',
+    createdAt:     raw.createTime ?? raw.create_time ?? '',
+    updatedAt:     raw.updateTime ?? raw.update_time ?? raw.createTime ?? '',
   };
 }
 
@@ -102,7 +104,7 @@ function initEdit(base?: QcItem): EditItem {
 type QuickFilter = 'ALL' | 'ACTIVE' | 'CRITICAL' | 'REFERENCED';
 
 const QcItemPage: React.FC = () => {
-  const [items, setItems] = useLocalStorage<QcItem[]>('bip_qc_items', mockQcItems);
+  const [items, setItems] = useLocalStorage<QcItem[]>('bip_qc_items', []);
   const [apiSaving, setApiSaving] = useState(false);
 
   // ── 从后端加载质检项目（API-first replace）─────────────────

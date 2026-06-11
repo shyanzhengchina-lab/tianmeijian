@@ -1447,14 +1447,12 @@ interface ProductionOrderPageProps {
 }
 
 const ProductionOrderPage: React.FC<ProductionOrderPageProps> = ({ onNavigateToWO }) => {
-  const [pos, setPos] = useLocalStorage<ProductionOrder[]>(STORE_KEYS.PRODUCTION_ORDERS, [...mockProductionOrders]);
-  const [wos, setWos] = useLocalStorage<WorkOrder[]>(STORE_KEYS.WORK_ORDERS, [...mockWorkOrders]);
+  const [pos, setPos] = useLocalStorage<ProductionOrder[]>(STORE_KEYS.PRODUCTION_ORDERS, []);
+  const [wos, setWos] = useLocalStorage<WorkOrder[]>(STORE_KEYS.WORK_ORDERS, []);
   const [apiLoading, setApiLoading] = useState(false);
 
   // ── 从后端加载生产订单 ─────────────────────────────────────────
   const loadFromApi = useCallback(async () => {
-    // 用户已主动清空，跳过 API 加载，防止后端数据再次覆盖
-    if (isUserCleared()) return;
     setApiLoading(true);
     try {
       const [poResp, woResp] = await Promise.all([
@@ -1464,67 +1462,67 @@ const ProductionOrderPage: React.FC<ProductionOrderPageProps> = ({ onNavigateToW
       const apiPos: any[] = poResp.data ?? [];
       const apiWos: any[] = woResp.data ?? [];
       if (apiPos.length > 0) {
-        const mapped: ProductionOrder[] = apiPos.map((item: any) => ({
-          id: item.id?.toString() ?? item.orderNo,
-          orderNo: item.orderNo ?? '',
-          soNo: item.customerCode ?? '',
-          productCode: item.customerCode ?? 'FG001',
-          productName: item.customerName ?? '',
-          productSpec: '',
-          bomVersion: '',
-          routingCode: '',
-          totalQty: item.totalQuantity ?? 0,
-          completedQty: item.completedQuantity ?? 0,
-          scrapQty: 0,
-          deliveryDate: item.deliveryDate ?? '',
-          priority: (['LOW', 'NORMAL', 'HIGH', 'URGENT'][((item.priority ?? 2) - 1)] ?? 'NORMAL') as ProductionOrder['priority'],
-          status: (['OPEN', 'OPEN', 'IN_PROGRESS', 'COMPLETED', 'CLOSED'][(item.priority ?? 1)] ?? item.status ?? 'OPEN') as any,
-          isAudited: item.status === 'RELEASED' || item.status === 'IN_PROGRESS' || item.status === 'COMPLETED',
-          remark: item.remark ?? '',
-          createdAt: item.createTime ? item.createTime.slice(0, 10) : '',
-          createdBy: item.createBy ?? 'admin',
-        }));
-        // Map backend status correctly
+        // compat路由返回: orderNo(=wo_code), productCode, productName, totalQuantity(=plan_qty),
+        // completedQuantity(=actual_qty), batchNo, priority(数字1-4), status(字符串OPEN/IN_PROGRESS...)
         const statusMap: Record<string, ProductionOrder['status']> = {
-          DRAFT: 'OPEN', RELEASED: 'RELEASED', IN_PROGRESS: 'IN_PROGRESS',
-          COMPLETED: 'COMPLETED', CLOSED: 'CLOSED',
+          OPEN: 'OPEN', DRAFT: 'OPEN', RELEASED: 'RELEASED',
+          IN_PROGRESS: 'IN_PROGRESS', PAUSED: 'IN_PROGRESS',
+          COMPLETED: 'COMPLETED', CLOSED: 'CLOSED', CANCELLED: 'CLOSED',
         };
-        mapped.forEach(po => {
-          const apiItem = apiPos.find(a => a.orderNo === po.orderNo);
-          if (apiItem) po.status = statusMap[apiItem.status] ?? 'OPEN';
-        });
+        const priorityMap: Record<number, ProductionOrder['priority']> = {
+          1:'URGENT', 2:'HIGH', 3:'NORMAL', 4:'LOW',
+        };
+        const mapped: ProductionOrder[] = apiPos.map((item: any) => ({
+          id: String(item.id ?? item.orderNo),
+          orderNo: item.orderNo ?? item.woCode ?? item.wo_code ?? '',
+          soNo: item.batchNo ?? '',
+          productCode: item.productCode ?? item.customerCode ?? 'FG001',
+          productName: item.productName ?? item.customerName ?? '',
+          productSpec: item.spec ?? '',
+          bomVersion: item.bomVersion ?? '',
+          routingCode: item.routeCode ?? '',
+          totalQty: Number(item.totalQuantity ?? item.planQty ?? 0),
+          completedQty: Number(item.completedQuantity ?? item.actualQty ?? 0),
+          scrapQty: 0,
+          deliveryDate: item.deliveryDate ?? item.planEnd ?? '',
+          priority: priorityMap[item.priority] ?? 'NORMAL',
+          status: statusMap[item.status] ?? 'OPEN',
+          isAudited: ['RELEASED','IN_PROGRESS','COMPLETED'].includes(item.status ?? ''),
+          remark: item.remark ?? '',
+          createdAt: (item.createTime ?? item.create_time ?? '').slice(0, 10),
+          createdBy: item.createBy ?? item.create_by ?? 'admin',
+        }));
         setPos(mapped);
       }
       if (apiWos.length > 0) {
-        const mappedWos: WorkOrder[] = apiWos.map((item: any) => ({
-          id: item.id?.toString() ?? item.workOrderNo,
-          woNo: item.workOrderNo ?? '',
-          poId: item.orderId?.toString() ?? '',
-          poNo: item.orderNo ?? '',
-          batchNo: item.workOrderNo ?? '',
-          productCode: item.materialCode ?? '',
-          productName: item.materialName ?? '',
-          productSpec: item.spec ?? '',
-          bomVersion: item.bomVersion ?? '',
-          routingCode: '',
-          routingName: '',
-          planQty: item.planQuantity ?? 0,
-          actualQty: item.completedQuantity ?? 0,
-          scrapQty: item.unqualifiedQuantity ?? 0,
-          status: (['CREATED', 'CREATED', 'RELEASED', 'IN_PROGRESS', 'COMPLETED', 'CLOSED'][0] as any),
-          priority: 'NORMAL',
-          progressPct: item.progress ?? 0,
-          createdAt: item.createTime ? item.createTime.slice(0, 10) : '',
-          createdBy: item.createBy ?? 'admin',
-        }));
+        // compat路由返回: workOrderNo(=wo_code), planQuantity(=plan_qty), completedQuantity(=actual_qty),
+        // materialCode(=product_code), materialName, progress
         const woStatusMap: Record<string, WorkOrder['status']> = {
-          DRAFT: 'CREATED', RELEASED: 'RELEASED', IN_PROGRESS: 'IN_PROGRESS',
+          OPEN: 'CREATED', DRAFT: 'CREATED', RELEASED: 'RELEASED',
+          IN_PROGRESS: 'IN_PROGRESS', PAUSED: 'IN_PROGRESS',
           COMPLETED: 'COMPLETED', CLOSED: 'CLOSED',
         };
-        mappedWos.forEach(wo => {
-          const apiItem = apiWos.find((a: any) => a.workOrderNo === wo.woNo);
-          if (apiItem) wo.status = woStatusMap[apiItem.status] ?? 'CREATED';
-        });
+        const mappedWos: WorkOrder[] = apiWos.map((item: any) => ({
+          id: String(item.id ?? item.workOrderNo),
+          woNo: item.workOrderNo ?? item.woCode ?? item.wo_code ?? '',
+          poId: String(item.orderId ?? item.id ?? ''),
+          poNo: item.orderNo ?? item.workOrderNo ?? '',
+          batchNo: item.batchNo ?? item.batch_no ?? item.workOrderNo ?? '',
+          productCode: item.materialCode ?? item.productCode ?? '',
+          productName: item.materialName ?? item.productName ?? '',
+          productSpec: item.spec ?? '',
+          bomVersion: item.bomVersion ?? '',
+          routingCode: item.routeCode ?? '',
+          routingName: '',
+          planQty: Number(item.planQuantity ?? item.planQty ?? 0),
+          actualQty: Number(item.completedQuantity ?? item.actualQty ?? 0),
+          scrapQty: Number(item.unqualifiedQuantity ?? 0),
+          status: woStatusMap[item.status] ?? 'CREATED',
+          priority: 'NORMAL',
+          progressPct: Number(item.progress ?? 0),
+          createdAt: (item.createTime ?? item.create_time ?? '').slice(0, 10),
+          createdBy: item.createBy ?? item.create_by ?? 'admin',
+        }));
         setWos(mappedWos);
       }
     } catch { /* graceful fallback to mock */ } finally {
