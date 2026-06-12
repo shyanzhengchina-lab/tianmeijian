@@ -111,45 +111,53 @@ function countQcAndKeyOps(routing: ProcessRouting): { qc: number; key: number } 
 }
 
 // ── 将后端 ProcessRoutingRecord 映射为前端 ProcessRouting ──────────────
-function mapApiToRouting(r: ProcessRoutingRecord): ProcessRouting {
+function mapApiToRouting(r: any): ProcessRouting {
   return {
-    id:           String(r.id ?? ''),
-    routingCode:  r.routingCode  ?? '',
-    routingName:  r.routingName  ?? '',
-    productCode:  r.productCode  ?? '',
-    productName:  r.productName  ?? '',
-    productModel: r.productModel ?? '',
-    version:      r.version      ?? 'V1.0',
-    isDefault:    (r.isDefault ?? 0) === 1,
-    status:       (r.status ?? 'DRAFT') as RoutingStatus,
-    remark:       r.description  ?? '',
-    createdBy:    r.createBy     ?? '',
-    createdAt:    r.createTime   ? r.createTime.slice(0, 10) : '',
-    updatedAt:    r.updateTime   ? r.updateTime.slice(0, 10) : '',
-    groups:       [],  // 步骤在详情页按需加载
+    id:             String(r.id ?? ''),
+    // 后端新版返回 routingCode；旧版返回 routeCode / code
+    routingCode:    r.routingCode  ?? r.routeCode  ?? r.code  ?? '',
+    routingName:    r.routingName  ?? r.routeName  ?? r.name  ?? '',
+    productCode:    r.productCode  ?? '',
+    productName:    r.productName  ?? '',
+    productModel:   r.productModel ?? '',
+    version:        r.version      ?? 'V1.0',
+    isDefault:      r.isDefault != null ? Boolean(r.isDefault) : true,
+    status:         (r.status ?? r.routeStatus ?? 'DRAFT') as RoutingStatus,
+    workshop:       r.workshop     ?? '',
+    productLine:    r.productLine  ?? '',
+    applicableSpec: r.applicableSpec ?? '',
+    remark:         r.remark ?? r.description ?? '',
+    auditBy:        r.auditBy  ?? '',
+    auditAt:        r.auditAt  ?? '',
+    auditRemark:    r.auditRemark ?? '',
+    disableReason:  r.disableReason ?? '',
+    createdBy:      r.createdBy ?? r.createBy ?? '',
+    createdAt:      r.createdAt ?? (r.createTime ? r.createTime.slice(0, 10) : ''),
+    updatedAt:      r.updatedAt ?? (r.updateTime ? r.updateTime.slice(0, 10) : ''),
+    groups:         [],  // 步骤在详情页按需加载
   };
 }
 
 // ── 将后端 RoutingStep 列表转为 groups（每步一个 serialGroup）─────────
 function buildGroupsFromSteps(steps: any[]): ProcessRouting['groups'] {
   if (!steps || steps.length === 0) return [];
-  const sorted = [...steps].sort((a, b) => (a.stepNo ?? 0) - (b.stepNo ?? 0));
+  const sorted = [...steps].sort((a, b) => (a.stepNo ?? a.step_no ?? 0) - (b.stepNo ?? b.step_no ?? 0));
   return sorted.map((s, idx) => ({
-    id: `G${s.id}`,
-    seq: (idx + 1) * 10,
+    id: `G${s.id ?? idx}`,
+    seq: s.stepNo ?? s.step_no ?? (idx + 1) * 10,
     steps: [{
-      id:            `S${s.id}`,
-      opId:          `op-${s.id}`,
-      opCode:        s.stepCode  ?? `STEP-${s.stepNo ?? idx + 1}`,
-      opName:        s.stepName  ?? '',
-      opShort:       s.stepName  ?? '',
-      workCenter:    '',
-      stdTimeMin:    0,
-      isKeyOp:       s.stepType === 'KEY',
-      isQcPoint:     s.stepType === 'QC',
-      isReportPoint: (s.reportPoint ?? 0) === 1,
-      phaseCount:    0,
-      remark:        s.description ?? '',
+      id:            `S${s.id ?? idx}`,
+      opId:          s.opId   ?? `op-${s.id ?? idx}`,
+      opCode:        s.opCode ?? s.stepCode  ?? `STEP-${s.stepNo ?? idx + 1}`,
+      opName:        s.opName ?? s.stepName  ?? '',
+      opShort:       s.opShort ?? s.opName ?? s.stepName ?? '',
+      workCenter:    s.workCenter ?? s.work_center ?? '',
+      stdTimeMin:    Number(s.stdTimeMin ?? s.stdTime ?? s.std_time ?? 0),
+      isKeyOp:       Boolean(s.isKeyOp ?? s.isKeyProcess ?? s.isKeyStep ?? (s.stepType === 'KEY')),
+      isQcPoint:     Boolean(s.isQcPoint ?? s.requireQc ?? s.require_qc ?? (s.stepType === 'QC')),
+      isReportPoint: Boolean(s.isReportPoint ?? s.requireEbr ?? s.require_ebr ?? s.reportPoint ?? true),
+      phaseCount:    Number(s.phaseCount ?? s.phase_count ?? 1),
+      remark:        s.remark ?? s.description ?? '',
     }],
   }));
 }
