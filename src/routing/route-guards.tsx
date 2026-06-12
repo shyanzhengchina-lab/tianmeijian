@@ -11,12 +11,16 @@ import { useAuthStore } from '../shared/stores/authStore';
 import { useRbacStore } from '../shared/stores/rbacStore';
 
 /**
- * 兼容判断：authStore.isAuthenticated 或 localStorage mes_user 均视为已登录
+ * 兼容判断：authStore.isAuthenticated 或 localStorage mes_user+mes_token 均视为已登录
+ * 优先级：authStore > localStorage
  */
 const isLoggedIn = (isAuthenticated: boolean): boolean => {
   if (isAuthenticated) return true;
   try {
-    return !!localStorage.getItem('mes_user');
+    // 只要 mes_user 存在即认为已登录（token 由各 API 请求自行携带）
+    const user = localStorage.getItem('mes_user');
+    const token = localStorage.getItem('mes_token');
+    return !!(user && token);
   } catch {
     return false;
   }
@@ -48,6 +52,7 @@ const hasFactory = (): boolean => {
 /**
  * 路由守卫 Hook
  * 检查用户权限和登录状态
+ * 注意：只使用 localStorage 判断，避免 Zustand store 初始化延迟导致闪退
  */
 export const useRouteGuard = () => {
   const navigate = useNavigate();
@@ -55,32 +60,32 @@ export const useRouteGuard = () => {
   const { isAuthenticated } = useAuthStore();
   const { hasPermission } = useRbacStore();
 
-  const authenticated = isLoggedIn(isAuthenticated);
+  // 直接读 localStorage，不依赖 Zustand 初始化时序
+  const authenticated = !!(
+    isAuthenticated ||
+    (localStorage.getItem('mes_user') && localStorage.getItem('mes_token'))
+  );
 
   useEffect(() => {
-    // 检查登录状态
+    // 未登录 → 跳登录页
     if (!authenticated) {
-      message.warning('请先登录');
-      navigate('/login', { state: { from: location.pathname } });
+      navigate('/login', { replace: true, state: { from: location.pathname } });
       return;
     }
 
-    // 查找当前路由配置
+    // 路由权限检查
     const currentRoute = flatRoutes.find(route => route.path === location.pathname);
     if (currentRoute?.permission && !hasPermission(currentRoute.permission, 'view')) {
-      message.error('您没有访问该页面的权限');
-      navigate('/403');
+      navigate('/403', { replace: true });
       return;
     }
 
-    // 检查多工厂切换
-    // 注意：/select-factory 路由尚未注册页面组件，
-    // 未选工厂时回退到 /login 让用户重新登录（登录时会写入工厂ID）
+    // 工厂检查
     if (!hasFactory() && location.pathname !== '/select-factory') {
-      navigate('/login');
+      navigate('/login', { replace: true });
       return;
     }
-  }, [location.pathname, authenticated, hasPermission, navigate]);
+  }, [location.pathname]);   // 只监听 path 变化，去掉 authenticated 依赖避免循环
 };
 
 /**
