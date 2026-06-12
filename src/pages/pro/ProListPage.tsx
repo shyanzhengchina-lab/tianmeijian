@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Table, Button, Input, Select, Space, Tag, Popconfirm, message,
-  Row, Col, Modal, Form, Tooltip, Badge, Divider,
+  Row, Col, Modal, Form, Tooltip, Badge, Divider, Tabs, Alert,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -9,7 +9,9 @@ import {
   SearchOutlined, ReloadOutlined, EditOutlined, CopyOutlined,
   ApartmentOutlined, ExclamationCircleOutlined, EyeOutlined,
   AuditOutlined, RollbackOutlined, PlayCircleOutlined,
-  ClockCircleOutlined, BranchesOutlined,
+  ClockCircleOutlined, BranchesOutlined, SafetyCertificateOutlined,
+  ThunderboltOutlined, InfoCircleOutlined, AimOutlined,
+  PartitionOutlined,
 } from '@ant-design/icons';
 import {
   ProcessRouting, RoutingStatus, ROUTING_STATUS_MAP,
@@ -30,6 +32,82 @@ import './ProPage.css';
 
 interface ProListPageProps {
   onViewDetail: (routing: ProcessRouting) => void;
+}
+
+// ── 工厂/车间维度配置 ─────────────────────────────────────────────────
+const FACTORY_OPTIONS = [
+  { key: 'ALL',  label: '全部工厂',    color: '#1677FF' },
+  { key: 'NJ',   label: '南京工厂',    color: '#C8000A', sub: '天美健' },
+  { key: 'LS',   label: '溧水工厂',    color: '#7B3FA0', sub: '每日营养' },
+];
+
+const WORKSHOP_OPTIONS = [
+  { key: 'ALL', label: '全部车间', icon: '🏭' },
+  { key: 'GD',  label: '固体车间', icon: '💊', color: '#1677FF',   dosage: '片剂/粉剂' },
+  { key: 'RN',  label: '软胶囊车间', icon: '🔵', color: '#722ED1', dosage: '软胶囊' },
+  { key: 'YQ',  label: '液体车间', icon: '🧪', color: '#13C2C2',   dosage: '口服液' },
+  { key: 'WB',  label: '外包车间', icon: '📦', color: '#FA8C16',   dosage: '赋码包装' },
+];
+
+// ── 编码规则参考数据 ──────────────────────────────────────────────────
+const ENCODING_RULES = {
+  factory:  [
+    { code: 'NJ', name: '南京工厂',   fullName: '天美健大自然生物工程（南京）' },
+    { code: 'LS', name: '溧水工厂',   fullName: '每日营养（溧水）' },
+  ],
+  workshop: [
+    { code: 'GD', name: '固体车间',   dosage: 'TAB/PWD',   color: '#1677FF' },
+    { code: 'RN', name: '软胶囊车间', dosage: 'SGC',        color: '#722ED1' },
+    { code: 'YQ', name: '液体车间',   dosage: 'LIQ',        color: '#13C2C2' },
+    { code: 'WB', name: '外包车间',   dosage: '—',          color: '#FA8C16' },
+  ],
+  dosage: [
+    { code: 'TAB', name: '片剂',   eg: 'NJ-GD-TAB-001' },
+    { code: 'SGC', name: '软胶囊', eg: 'NJ-RN-SGC-001' },
+    { code: 'PWD', name: '粉剂',   eg: 'LS-GD-PWD-001' },
+    { code: 'LIQ', name: '口服液', eg: 'LS-YQ-LIQ-001' },
+  ],
+  ops: [
+    { code: 'GD-01', name: '称量配料', workshop: '固体车间' },
+    { code: 'GD-02', name: '混合',     workshop: '固体车间' },
+    { code: 'GD-03', name: '制粒',     workshop: '固体车间' },
+    { code: 'GD-04', name: '干燥',     workshop: '固体车间' },
+    { code: 'GD-05', name: '压片',     workshop: '固体车间' },
+    { code: 'GD-06', name: '铝塑包装', workshop: '固体车间' },
+    { code: 'RN-01', name: '化胶',     workshop: '软胶囊车间' },
+    { code: 'RN-03', name: '压丸',     workshop: '软胶囊车间' },
+    { code: 'YQ-03', name: '灌装',     workshop: '液体车间' },
+    { code: 'YQ-04', name: '灭菌',     workshop: '液体车间' },
+    { code: 'WB-03', name: '赋码关联', workshop: '外包车间' },
+  ],
+};
+
+// ── GMP关键控制点说明 ─────────────────────────────────────────────────
+const GMP_NOTES = [
+  { icon: '🔑', text: 'F0值≥8min（口服液灭菌强制控制点，低于下限强制报废不得返工）', color: '#FF4D4F' },
+  { icon: '⚡', text: '瓶颈工序（压片/压丸/灌装）：OPC UA / Modbus TCP 实时采集，不可跳过', color: '#FA8C16' },
+  { icon: '📊', text: '物料平衡率标准：96.0~102.0%（全工序必须在EBR中计算并电子签名）', color: '#1677FF' },
+  { icon: '✍️', text: 'ALCOA+合规：原始数据不可修改，全流程审计追踪，支持偏差溯源', color: '#52C41A' },
+];
+
+// ── 从路径编码解析工厂/车间 ──────────────────────────────────────────
+function parseRoutingCode(code: string): { factory: string; workshop: string; dosage: string } {
+  const parts = code.split('-');
+  return {
+    factory:  parts[0] ?? '',
+    workshop: parts[1] ?? '',
+    dosage:   parts[2] ?? '',
+  };
+}
+
+// ── 统计路径中QC点和瓶颈工序数量 ─────────────────────────────────────
+function countQcAndKeyOps(routing: ProcessRouting): { qc: number; key: number } {
+  let qc = 0; let key = 0;
+  routing.groups.forEach(g => g.steps.forEach(s => {
+    if (s.isQcPoint) qc++;
+    if (s.isKeyOp)   key++;
+  }));
+  return { qc, key };
 }
 
 // ── 将后端 ProcessRoutingRecord 映射为前端 ProcessRouting ──────────────
@@ -76,13 +154,246 @@ function buildGroupsFromSteps(steps: any[]): ProcessRouting['groups'] {
   }));
 }
 
+// ── 编码规则展示面板 ──────────────────────────────────────────────────
+const EncodingRulesPanel: React.FC<{ visible: boolean; onClose: () => void }> = ({ visible, onClose }) => (
+  <Modal
+    title={
+      <span>
+        <InfoCircleOutlined style={{ color: '#1677FF', marginRight: 8 }} />
+        工艺路线编码规则 — 天美健双工厂
+      </span>
+    }
+    open={visible}
+    onCancel={onClose}
+    footer={<Button onClick={onClose}>关闭</Button>}
+    width={760}
+  >
+    {/* 编码结构 */}
+    <div style={{ background: '#f6f8ff', borderRadius: 8, padding: '12px 16px', marginBottom: 16, border: '1px solid #d0e0ff' }}>
+      <div style={{ fontWeight: 600, color: '#1677FF', marginBottom: 8, fontSize: 13 }}>
+        📐 编码结构：[工厂]-[车间]-[剂型]-[流水号]
+      </div>
+      <div style={{ fontFamily: 'monospace', fontSize: 16, letterSpacing: 2, color: '#1a1a2e', marginBottom: 6 }}>
+        <span style={{ background: '#C8000A', color: '#fff', borderRadius: 4, padding: '2px 8px', marginRight: 4 }}>NJ</span>
+        <span style={{ color: '#aaa' }}>-</span>
+        <span style={{ background: '#1677FF', color: '#fff', borderRadius: 4, padding: '2px 8px', margin: '0 4px' }}>GD</span>
+        <span style={{ color: '#aaa' }}>-</span>
+        <span style={{ background: '#52C41A', color: '#fff', borderRadius: 4, padding: '2px 8px', margin: '0 4px' }}>TAB</span>
+        <span style={{ color: '#aaa' }}>-</span>
+        <span style={{ background: '#FA8C16', color: '#fff', borderRadius: 4, padding: '2px 8px', margin: '0 4px' }}>001</span>
+      </div>
+      <div style={{ fontSize: 11, color: '#666' }}>示例：NJ-GD-TAB-001 = 南京工厂·固体车间·片剂·第1条路线</div>
+    </div>
+
+    <Row gutter={16}>
+      {/* 工厂代码 */}
+      <Col span={12}>
+        <div style={{ fontWeight: 600, marginBottom: 8, color: '#333' }}>🏭 工厂代码</div>
+        <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#fafafa' }}>
+              <th style={{ padding: '4px 8px', border: '1px solid #f0f0f0', textAlign: 'left' }}>代码</th>
+              <th style={{ padding: '4px 8px', border: '1px solid #f0f0f0', textAlign: 'left' }}>工厂</th>
+              <th style={{ padding: '4px 8px', border: '1px solid #f0f0f0', textAlign: 'left' }}>全称</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ENCODING_RULES.factory.map(f => (
+              <tr key={f.code}>
+                <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}>
+                  <Tag color={f.code === 'NJ' ? 'red' : 'purple'}>{f.code}</Tag>
+                </td>
+                <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}>{f.name}</td>
+                <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0', color: '#888' }}>{f.fullName}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Col>
+      {/* 车间代码 */}
+      <Col span={12}>
+        <div style={{ fontWeight: 600, marginBottom: 8, color: '#333' }}>🏗 车间代码</div>
+        <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#fafafa' }}>
+              <th style={{ padding: '4px 8px', border: '1px solid #f0f0f0', textAlign: 'left' }}>代码</th>
+              <th style={{ padding: '4px 8px', border: '1px solid #f0f0f0', textAlign: 'left' }}>车间</th>
+              <th style={{ padding: '4px 8px', border: '1px solid #f0f0f0', textAlign: 'left' }}>剂型</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ENCODING_RULES.workshop.map(w => (
+              <tr key={w.code}>
+                <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}>
+                  <Tag color={w.code === 'GD' ? 'blue' : w.code === 'RN' ? 'purple' : w.code === 'YQ' ? 'cyan' : 'orange'}>{w.code}</Tag>
+                </td>
+                <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0' }}>{w.name}</td>
+                <td style={{ padding: '4px 8px', border: '1px solid #f0f0f0', color: '#888' }}>{w.dosage}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Col>
+    </Row>
+
+    <div style={{ marginTop: 16 }}>
+      <div style={{ fontWeight: 600, marginBottom: 8, color: '#333' }}>💊 剂型代码</div>
+      <Row gutter={8}>
+        {ENCODING_RULES.dosage.map(d => (
+          <Col span={6} key={d.code}>
+            <div style={{ border: '1px solid #f0f0f0', borderRadius: 6, padding: '8px 10px', background: '#fafafa' }}>
+              <div style={{ fontWeight: 700, color: '#1677FF', fontFamily: 'monospace' }}>{d.code}</div>
+              <div style={{ fontSize: 12, color: '#333' }}>{d.name}</div>
+              <div style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>例：{d.eg}</div>
+            </div>
+          </Col>
+        ))}
+      </Row>
+    </div>
+
+    <div style={{ marginTop: 16 }}>
+      <div style={{ fontWeight: 600, marginBottom: 8, color: '#333' }}>🔧 工序编码（[车间代码]-[2位流水号]）</div>
+      <Row gutter={8}>
+        {ENCODING_RULES.ops.map(op => (
+          <Col span={8} key={op.code}>
+            <div style={{ fontSize: 12, padding: '3px 0', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <Tag style={{ fontFamily: 'monospace', minWidth: 52, textAlign: 'center' }}>{op.code}</Tag>
+              <span style={{ color: '#555' }}>{op.name}</span>
+            </div>
+          </Col>
+        ))}
+      </Row>
+    </div>
+
+    {/* GMP关键提示 */}
+    <div style={{ marginTop: 16, background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 8, padding: '12px 16px' }}>
+      <div style={{ fontWeight: 600, color: '#FA8C16', marginBottom: 8 }}>⚠️ GMP关键控制要点</div>
+      {GMP_NOTES.map((n, i) => (
+        <div key={i} style={{ fontSize: 12, color: '#555', marginBottom: 4, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <span>{n.icon}</span>
+          <span>{n.text}</span>
+        </div>
+      ))}
+    </div>
+  </Modal>
+);
+
+// ── 工厂/车间快速过滤栏 ───────────────────────────────────────────────
+const FactoryWorkshopFilter: React.FC<{
+  factoryFilter: string;
+  workshopFilter: string;
+  onFactoryChange: (f: string) => void;
+  onWorkshopChange: (w: string) => void;
+  counts: Record<string, number>;
+}> = ({ factoryFilter, workshopFilter, onFactoryChange, onWorkshopChange, counts }) => (
+  <div style={{
+    background: '#fff',
+    borderBottom: '1px solid #f0f0f0',
+    padding: '8px 16px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 12,
+    alignItems: 'center',
+  }}>
+    {/* 工厂 Tabs */}
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+      <span style={{ fontSize: 11, color: '#aaa', marginRight: 4 }}>工厂：</span>
+      {FACTORY_OPTIONS.map(f => {
+        const active = factoryFilter === f.key;
+        const cnt = counts[`factory_${f.key}`] ?? 0;
+        return (
+          <button
+            key={f.key}
+            onClick={() => onFactoryChange(f.key)}
+            style={{
+              border: `1px solid ${active ? f.color : '#d9d9d9'}`,
+              borderRadius: 16,
+              padding: '2px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+              background: active ? f.color : '#fff',
+              color: active ? '#fff' : '#555',
+              fontWeight: active ? 600 : 400,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              transition: 'all 0.2s',
+            }}
+          >
+            {f.label}
+            {f.key !== 'ALL' && (
+              <span style={{
+                background: active ? 'rgba(255,255,255,0.3)' : '#f0f0f0',
+                borderRadius: 8,
+                padding: '0 5px',
+                fontSize: 10,
+                minWidth: 16,
+                textAlign: 'center',
+              }}>{cnt}</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+
+    <div style={{ height: 20, width: 1, background: '#e8e8e8' }} />
+
+    {/* 车间 Tabs */}
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 11, color: '#aaa', marginRight: 4 }}>车间：</span>
+      {WORKSHOP_OPTIONS.map(w => {
+        const active = workshopFilter === w.key;
+        const cnt = counts[`ws_${w.key}`] ?? 0;
+        return (
+          <button
+            key={w.key}
+            onClick={() => onWorkshopChange(w.key)}
+            style={{
+              border: `1px solid ${active && w.color ? w.color : '#d9d9d9'}`,
+              borderRadius: 16,
+              padding: '2px 10px',
+              fontSize: 12,
+              cursor: 'pointer',
+              background: active && w.color ? w.color : '#fff',
+              color: active ? (w.color ? '#fff' : '#333') : '#555',
+              fontWeight: active ? 600 : 400,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              transition: 'all 0.2s',
+            }}
+          >
+            {w.icon} {w.label}
+            {w.key !== 'ALL' && (
+              <span style={{
+                background: active ? 'rgba(255,255,255,0.3)' : '#f0f0f0',
+                borderRadius: 8,
+                padding: '0 5px',
+                fontSize: 10,
+                minWidth: 16,
+                textAlign: 'center',
+              }}>{cnt}</span>
+            )}
+            {w.key !== 'ALL' && w.dosage && (
+              <span style={{ fontSize: 10, opacity: 0.7 }}>({w.dosage})</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
+
 const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
   const [routings, setRoutings]             = useState<ProcessRouting[]>([]);
   const [apiLoading, setApiLoading]         = useState(false);
   const [searchCode, setSearchCode]         = useState('');
   const [searchName, setSearchName]         = useState('');
   const [filterStatus, setFilterStatus]     = useState<string | undefined>();
+  const [factoryFilter, setFactoryFilter]   = useState<string>('ALL');
+  const [workshopFilter, setWorkshopFilter] = useState<string>('ALL');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [showEncodingRules, setShowEncodingRules] = useState(false);
 
   // 产品物料下拉（用于新建路径时选择关联产品）
   const [materials, setMaterials]           = useState<{ code: string; name: string; spec: string }[]>([]);
@@ -137,15 +448,31 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
     loadMaterials();
   }, [loadFromApi, loadMaterials]);
 
-  // ── 过滤 ────────────────────────────────────────────────────────────
+  // ── 工厂/车间维度统计 ────────────────────────────────────────────────
+  const filterCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    routings.forEach(r => {
+      const { factory, workshop } = parseRoutingCode(r.routingCode);
+      counts[`factory_${factory}`] = (counts[`factory_${factory}`] ?? 0) + 1;
+      counts[`ws_${workshop}`]     = (counts[`ws_${workshop}`]     ?? 0) + 1;
+    });
+    counts['factory_ALL'] = routings.length;
+    counts['ws_ALL']      = routings.length;
+    return counts;
+  }, [routings]);
+
+  // ── 综合过滤 ─────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return routings.filter(r => {
-      const codeMatch   = !searchCode   || r.routingCode.toLowerCase().includes(searchCode.toLowerCase());
-      const nameMatch   = !searchName   || r.routingName.includes(searchName) || r.productName.includes(searchName);
-      const statusMatch = !filterStatus || r.status === filterStatus;
-      return codeMatch && nameMatch && statusMatch;
+      const { factory, workshop } = parseRoutingCode(r.routingCode);
+      const codeMatch     = !searchCode   || r.routingCode.toLowerCase().includes(searchCode.toLowerCase());
+      const nameMatch     = !searchName   || r.routingName.includes(searchName) || r.productName.includes(searchName);
+      const statusMatch   = !filterStatus || r.status === filterStatus;
+      const factoryMatch  = factoryFilter  === 'ALL' || factory  === factoryFilter;
+      const workshopMatch = workshopFilter === 'ALL' || workshop === workshopFilter;
+      return codeMatch && nameMatch && statusMatch && factoryMatch && workshopMatch;
     });
-  }, [routings, searchCode, searchName, filterStatus]);
+  }, [routings, searchCode, searchName, filterStatus, factoryFilter, workshopFilter]);
 
   // ── 统计卡片 ────────────────────────────────────────────────────────
   const stats = useMemo(() => ({
@@ -268,7 +595,7 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
     }).catch((err: any) => { if (err?.errorFields) return; });
   };
 
-  // ── 状态流转（提交审核 / 审核通过驳回 / 反审核 / 停用 / 启用 / 废止）全部调用后端 updateProcessRouting
+  // ── 状态流转全部调用后端 updateProcessRouting
   const patchStatus = async (r: ProcessRouting, patch: Partial<ProcessRoutingRecord>) => {
     try {
       await updateProcessRouting(Number(r.id), patch);
@@ -281,7 +608,6 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
   // ── 提交审核 ─────────────────────────────────────────────────────────
   const handleSubmitAudit = async (r: ProcessRouting) => {
     if (r.groups.length === 0) {
-      // 从后端检查是否有步骤
       try {
         const resp = await getRoutingStepList({ routingId: Number(r.id) }) as any;
         const steps = resp?.data ?? resp ?? [];
@@ -295,7 +621,7 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
     message.success('已提交审核，等待质量工程师审核');
   };
 
-  // ── 审核通过（生效） ─────────────────────────────────────────────────
+  // ── 审核通过 ─────────────────────────────────────────────────────────
   const openAuditModal = (r: ProcessRouting) => {
     setAuditTarget(r);
     auditForm.resetFields();
@@ -304,7 +630,6 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
 
   const handleAuditPass = () => {
     auditForm.validateFields().then(async values => {
-      const now = new Date().toISOString().slice(0, 10);
       await patchStatus(auditTarget!, {
         status:      'ACTIVE',
         description: auditTarget!.remark,
@@ -333,7 +658,7 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
     message.info('已反审核，路径退回草稿状态');
   };
 
-  // ── 停用 ────────────────────────────────────────────────────────────
+  // ── 停用 ─────────────────────────────────────────────────────────────
   const openDisableModal = (r: ProcessRouting) => {
     setDisableTarget(r);
     disableForm.resetFields();
@@ -384,19 +709,60 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
       render: (_: any, __: any, i: number) => <span style={{ color: '#bbb', fontSize: 12 }}>{i + 1}</span>,
     },
     {
-      title: '工艺路径编码', dataIndex: 'routingCode', width: 180,
-      render: (v: string, r: ProcessRouting) => (
-        <span className="code-link" onClick={() => handleViewDetail(r)}>
-          <BranchesOutlined style={{ marginRight: 4, fontSize: 12 }} />{v}
-        </span>
-      ),
+      title: '工艺路径编码', dataIndex: 'routingCode', width: 190,
+      render: (v: string, r: ProcessRouting) => {
+        const { factory, workshop } = parseRoutingCode(v);
+        const factoryColor = factory === 'NJ' ? '#C8000A' : factory === 'LS' ? '#7B3FA0' : '#666';
+        const wsOption = WORKSHOP_OPTIONS.find(w => w.key === workshop);
+        return (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span
+                className="code-link"
+                onClick={() => handleViewDetail(r)}
+                style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700 }}
+              >
+                <BranchesOutlined style={{ marginRight: 4, fontSize: 12 }} />{v}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 3, marginTop: 2 }}>
+              {factory && (
+                <span style={{
+                  fontSize: 10, padding: '0 5px', borderRadius: 8,
+                  background: factoryColor + '15', color: factoryColor,
+                  border: `1px solid ${factoryColor}30`,
+                }}>
+                  {factory === 'NJ' ? '南京' : factory === 'LS' ? '溧水' : factory}
+                </span>
+              )}
+              {wsOption && wsOption.key !== 'ALL' && (
+                <span style={{
+                  fontSize: 10, padding: '0 5px', borderRadius: 8,
+                  background: (wsOption.color ?? '#666') + '15',
+                  color: wsOption.color ?? '#666',
+                  border: `1px solid ${wsOption.color ?? '#666'}30`,
+                }}>
+                  {wsOption.icon}{wsOption.label}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      },
     },
     {
-      title: '工艺路径名称', dataIndex: 'routingName', width: 200,
+      title: '工艺路径名称 / 产品', dataIndex: 'routingName', width: 210,
       render: (v: string, r: ProcessRouting) => (
         <div>
           <div style={{ fontWeight: 500, fontSize: 13, color: '#1a1a2e' }}>{v}</div>
-          <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{r.productName} · {r.productModel}</div>
+          <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>
+            {r.productName} · {r.productModel}
+          </div>
+          {r.workshop && (
+            <div style={{ fontSize: 10, color: '#999', marginTop: 1 }}>
+              <PartitionOutlined style={{ fontSize: 10 }} /> {r.workshop}
+            </div>
+          )}
         </div>
       ),
     },
@@ -426,29 +792,75 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
       },
     },
     {
-      title: '工序步骤', width: 90, align: 'center' as const,
+      title: '工序 / QC / 瓶颈', width: 120, align: 'center' as const,
       render: (_: any, r: ProcessRouting) => {
         const total    = countAllSteps(r.groups);
         const parallel = r.groups.filter(g => g.steps.length > 1).length;
+        const { qc, key } = countQcAndKeyOps(r);
         return (
           <div style={{ textAlign: 'center' }}>
-            <span style={{ color: total > 0 ? '#1677FF' : '#ccc', fontWeight: 700, fontSize: 14 }}>
-              {total > 0 ? total : '—'}
-            </span>
+            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {/* 工序步骤数 */}
+              <Tooltip title="工序步骤数">
+                <span style={{
+                  fontSize: 11, padding: '1px 6px', borderRadius: 8,
+                  background: total > 0 ? '#e6f7ff' : '#f5f5f5',
+                  color: total > 0 ? '#1677FF' : '#ccc',
+                  border: '1px solid ' + (total > 0 ? '#91d5ff' : '#e8e8e8'),
+                  fontWeight: 700,
+                }}>
+                  <ApartmentOutlined style={{ fontSize: 9, marginRight: 2 }} />
+                  {total > 0 ? total : '—'}步
+                </span>
+              </Tooltip>
+
+              {/* QC控制点数 */}
+              {qc > 0 && (
+                <Tooltip title={`${qc}个QC控制点`}>
+                  <span style={{
+                    fontSize: 11, padding: '1px 6px', borderRadius: 8,
+                    background: '#fff7e6', color: '#FA8C16',
+                    border: '1px solid #ffd591', fontWeight: 700,
+                  }}>
+                    <SafetyCertificateOutlined style={{ fontSize: 9, marginRight: 2 }} />
+                    {qc}QC
+                  </span>
+                </Tooltip>
+              )}
+
+              {/* 瓶颈工序 */}
+              {key > 0 && (
+                <Tooltip title={`${key}个瓶颈/关键工序`}>
+                  <span style={{
+                    fontSize: 11, padding: '1px 6px', borderRadius: 8,
+                    background: '#fff2f0', color: '#FF4D4F',
+                    border: '1px solid #ffccc7', fontWeight: 700,
+                  }}>
+                    <ThunderboltOutlined style={{ fontSize: 9, marginRight: 2 }} />
+                    {key}关键
+                  </span>
+                </Tooltip>
+              )}
+            </div>
             {parallel > 0 && (
-              <div style={{ fontSize: 10, color: '#722ED1' }}>{parallel}组并行</div>
+              <div style={{ fontSize: 10, color: '#722ED1', marginTop: 2 }}>{parallel}组并行</div>
             )}
           </div>
         );
       },
     },
     {
-      title: '总工时(分)', width: 100, align: 'center' as const,
+      title: '总工时(分)', width: 90, align: 'center' as const,
       render: (_: any, r: ProcessRouting) => {
         const t = calcTotalTime(r.groups);
-        return t > 0
-          ? <span style={{ color: '#333', fontWeight: 500 }}>{t.toFixed(1)}</span>
-          : <span style={{ color: '#ccc' }}>—</span>;
+        if (t <= 0) return <span style={{ color: '#ccc' }}>—</span>;
+        const hrs = Math.floor(t / 60);
+        const mins = t % 60;
+        return (
+          <Tooltip title={hrs > 0 ? `约${hrs}h${mins > 0 ? mins + 'min' : ''}` : undefined}>
+            <span style={{ color: '#333', fontWeight: 500 }}>{t.toFixed(0)}</span>
+          </Tooltip>
+        );
       },
     },
     {
@@ -564,6 +976,48 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
 
   return (
     <div className="pro-page">
+      {/* ── 工厂/车间维度过滤栏 ── */}
+      <FactoryWorkshopFilter
+        factoryFilter={factoryFilter}
+        workshopFilter={workshopFilter}
+        onFactoryChange={f => { setFactoryFilter(f); setWorkshopFilter('ALL'); }}
+        onWorkshopChange={setWorkshopFilter}
+        counts={filterCounts}
+      />
+
+      {/* ── GMP关键提示横幅 ── */}
+      <div style={{
+        background: 'linear-gradient(90deg, #fff7e6 0%, #fff 100%)',
+        borderBottom: '1px solid #ffd591',
+        padding: '6px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        flexWrap: 'wrap',
+        flexShrink: 0,
+      }}>
+        <span style={{ fontSize: 11, color: '#FA8C16', fontWeight: 600, whiteSpace: 'nowrap' }}>
+          ⚠️ GMP关键要点：
+        </span>
+        <span style={{ fontSize: 11, color: '#555' }}>
+          🔑 液体车间：F0值≥8min为强制控制点，低于下限强制报废
+        </span>
+        <span style={{ fontSize: 11, color: '#555' }}>
+          ⚡ 瓶颈工序（压片/压丸/灌装）实时OPC UA/Modbus采集
+        </span>
+        <span style={{ fontSize: 11, color: '#555' }}>
+          📊 全工序物料平衡率标准：96.0~102.0%（EBR电子签名）
+        </span>
+        <Button
+          type="link" size="small"
+          icon={<InfoCircleOutlined />}
+          style={{ fontSize: 11, padding: '0 4px', color: '#1677FF' }}
+          onClick={() => setShowEncodingRules(true)}
+        >
+          查看编码规则
+        </Button>
+      </div>
+
       {/* ── 统计卡片 ── */}
       <div className="pro-stats-bar">
         <div
@@ -642,10 +1096,28 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
           </Col>
           <Col>
             <Button size="small" icon={<ReloadOutlined />} loading={apiLoading}
-              onClick={() => { setSearchCode(''); setSearchName(''); setFilterStatus(undefined); loadFromApi(); }}>
+              onClick={() => {
+                setSearchCode(''); setSearchName(''); setFilterStatus(undefined);
+                setFactoryFilter('ALL'); setWorkshopFilter('ALL');
+                loadFromApi();
+              }}>
               刷新
             </Button>
           </Col>
+          {(factoryFilter !== 'ALL' || workshopFilter !== 'ALL') && (
+            <Col>
+              <Tag
+                closable
+                onClose={() => { setFactoryFilter('ALL'); setWorkshopFilter('ALL'); }}
+                color="blue"
+                style={{ fontSize: 11 }}
+              >
+                {factoryFilter !== 'ALL' ? `工厂: ${factoryFilter}` : ''}
+                {factoryFilter !== 'ALL' && workshopFilter !== 'ALL' ? ' · ' : ''}
+                {workshopFilter !== 'ALL' ? `车间: ${workshopFilter}` : ''}
+              </Tag>
+            </Col>
+          )}
         </Row>
       </div>
 
@@ -664,9 +1136,17 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
               批量删除
             </Button>
           </Popconfirm>
+          <Button
+            size="small"
+            icon={<InfoCircleOutlined />}
+            onClick={() => setShowEncodingRules(true)}
+            style={{ color: '#1677FF', borderColor: '#1677FF' }}
+          >
+            编码规则参考
+          </Button>
         </div>
         <div style={{ fontSize: 12, color: '#888' }}>
-          共 <strong style={{ color: '#333' }}>{filtered.length}</strong> 条
+          显示 <strong style={{ color: '#333' }}>{filtered.length}</strong> / {routings.length} 条
           {hasSelected && <span style={{ marginLeft: 8, color: '#1677FF' }}>已选 {selectedRowKeys.length} 条</span>}
         </div>
       </div>
@@ -681,11 +1161,17 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
           loading={apiLoading}
           rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
           pagination={{ pageSize: 20, showTotal: (t) => `共${t}条`, showSizeChanger: true, size: 'small' }}
-          scroll={{ x: 1300 }}
+          scroll={{ x: 1350 }}
           size="small"
           rowClassName={(r) => r.status === 'DISABLED' ? 'row-disabled' : r.status === 'OBSOLETE' ? 'row-obsolete' : ''}
         />
       </div>
+
+      {/* ══ 编码规则参考弹窗 ══ */}
+      <EncodingRulesPanel
+        visible={showEncodingRules}
+        onClose={() => setShowEncodingRules(false)}
+      />
 
       {/* ══ 新建 / 编辑 弹窗 ══ */}
       <Modal
@@ -701,11 +1187,27 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
         destroyOnClose
       >
         <Form form={form} layout="vertical" size="middle" style={{ marginTop: 16 }}>
+          {/* 编码规则提示 */}
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 16, fontSize: 11 }}
+            message={
+              <span>
+                编码规则：<strong>[工厂]-[车间]-[剂型]-[流水号]</strong>，
+                如 <code>NJ-GD-TAB-001</code>（南京·固体车间·片剂·001）
+                <Button type="link" size="small" style={{ fontSize: 11, padding: '0 4px' }}
+                  onClick={() => setShowEncodingRules(true)}>
+                  完整规则 →
+                </Button>
+              </span>
+            }
+          />
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="routingCode" label="工艺路径编码"
                 rules={[{ required: true, message: '请输入编码' }]}>
-                <Input placeholder="如：RT-RKQ-STD-001" />
+                <Input placeholder="如：NJ-GD-TAB-001" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -717,7 +1219,7 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
             <Col span={24}>
               <Form.Item name="routingName" label="工艺路径名称"
                 rules={[{ required: true, message: '请输入名称' }]}>
-                <Input placeholder="如：机用根管锉标准工艺路径" />
+                <Input placeholder="如：南京固体车间-维C咀嚼片工艺路线" />
               </Form.Item>
             </Col>
             <Col span={24}>
@@ -743,7 +1245,7 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
             </Col>
             <Col span={12}>
               <Form.Item name="productModel" label="产品型号/规格">
-                <Input placeholder="如：#25/04锥/25mm" />
+                <Input placeholder="如：0.5g×60片/瓶" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -753,7 +1255,7 @@ const ProListPage: React.FC<ProListPageProps> = ({ onViewDetail }) => {
             </Col>
             <Col span={12}>
               <Form.Item name="applicableSpec" label="适用规格范围">
-                <Input placeholder="如：#15~#40 / 04锥~06锥" />
+                <Input placeholder="如：片剂 0.5g×60片 | 瓶装" />
               </Form.Item>
             </Col>
             <Col span={24}>

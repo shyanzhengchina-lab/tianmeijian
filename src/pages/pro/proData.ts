@@ -94,6 +94,17 @@ export const canEdit        = (s: RoutingStatus) => s === 'DRAFT' || s === 'DISA
 export const canDelete      = (s: RoutingStatus) => s === 'DRAFT';
 export const canConfigSteps = (s: RoutingStatus) => s === 'DRAFT' || s === 'DISABLED';
 
+// ── 扩展接口：天美健 GMP 工艺路线额外字段 ────────────────────────────
+export interface ProcessRoutingExt extends ProcessRouting {
+  factoryCode?: string;       // NJ | LS
+  factoryName?: string;       // 南京工厂 | 溧水工厂
+  workshopType?: string;      // 固体车间 | 软胶囊车间 | 液体车间 | 外包车间
+  dosageForm?: string;        // 片剂 | 软胶囊 | 粉剂 | 口服液
+  qcPointCount?: number;      // QC控制点数量
+  yieldStd?: string;          // 收率标准范围
+  balanceStd?: string;        // 物料平衡率标准
+}
+
 // ── Mock 数据辅助 ────────────────────────────────────────────────────
 const step = (
   id: string, opId: string, opCode: string, opName: string, opShort: string,
@@ -113,159 +124,252 @@ const parallelGroup = (id: string, seq: number, label: string, steps: RoutingOpS
   id, seq, label, steps,
 });
 
-// ── Mock 工艺路径数据 ────────────────────────────────────────────────
+// ── 天美健保健品工艺路径 Mock 数据（覆盖南京+溧水双工厂）────────────
+// 工艺路线编码规则：[工厂]-[车间]-[剂型]-[流水号]
+//   工厂: NJ=南京天美健  LS=溧水每日营养
+//   车间: GD=固体  RN=软胶囊  YQ=液体  WB=外包
+//   剂型: TAB=片剂  SGC=软胶囊  PWD=粉剂  LIQ=口服液
+// 工序编码规则：[车间代码]-[2位流水号]  例：GD-01
 export const mockRoutings: ProcessRouting[] = [
 
   // ── R001：机用根管锉标准路径 V2.1（已生效）
-  //    串行：磨削 → [热处理 ‖ PVD涂层（并行）] → 激光打标 → 超声清洗 → 成品检验 → EO灭菌 → 包装
+
+  // ══════════════════════════════════════════════════════════════════════
+  // NJ-GD-TAB-001：南京工厂 固体车间 维C咀嚼片 工艺路线 V1.0【已生效】
+  // 工序：称量配料→混合→制粒→干燥→压片(瓶颈)→[包衣(可选)]→铝塑包装→外包装→赋码关联
+  // ══════════════════════════════════════════════════════════════════════
   {
-    id: 'R001',
-    routingCode: 'RT-RKQ-STD-001',
-    routingName: '机用根管锉标准工艺路径',
-    productCode: 'FG-RKQ-2504-25',
-    productName: '机用根管锉',
-    productModel: '#25/04锥/25mm',
-    version: 'V2.1',
+    id: 'TMJ-R001',
+    routingCode: 'NJ-GD-TAB-001',
+    routingName: '南京固体车间-维C咀嚼片工艺路线',
+    productCode: 'PROD-TAB-025',
+    productName: '维C咀嚼片',
+    productModel: '0.5g×60片/瓶',
+    version: 'V1.0',
     isDefault: true,
-    status: 'ACTIVE',
-    workshop: '精密加工车间',
-    productLine: '根管锉A线',
-    applicableSpec: '#15~#40 / 04锥~06锥 / 21mm~31mm',
-    remark: '根管锉标准生产工艺路径，符合ISO 3630-1，全流程PAD电子化执行',
-    auditBy: '王质量总监',
+    status: 'ACTIVE' as const,
+    workshop: '南京工厂·固体车间',
+    productLine: '片剂生产线',
+    applicableSpec: '片剂 0.5g×60片 | 瓶装',
+    remark: '维C咀嚼片标准工艺路线，遵循GMP合规要求，全流程电子批记录，物料平衡率96.0~102.0%',
+    auditBy: '孔翠萍(QA)',
+    auditAt: '2026-01-10',
+    auditRemark: '工艺参数已按2026年版GMP规范核对，压片工序为瓶颈，硬度50~80N，脆碎度≤1%',
+    createdBy: '王建国',
+    createdAt: '2026-01-01',
+    updatedAt: '2026-01-10',
+    groups: [
+      serialGroup('TMJ-G0101', 10, step('TMJ-S0101','op-gd01','GD-01','称量配料','称量','GD-配料室',180,false,true,true,4,'按BOM四重核对；电子签名；误差±1%；EBR记录点')),
+      serialGroup('TMJ-G0102', 20, step('TMJ-S0102','op-gd02','GD-02','混合','混合','GD-混合间',120,false,true,true,3,'三维混合机SBH-200；混合均匀性RSD≤5%；QC取样5点位')),
+      serialGroup('TMJ-G0103', 30, step('TMJ-S0103','op-gd03','GD-03','制粒','制粒','GD-制粒间',180,false,true,true,4,'湿法制粒GHL-300；终点电流判断；粒度分布QC控制')),
+      serialGroup('TMJ-G0104', 40, step('TMJ-S0104','op-gd04','GD-04','干燥','干燥','GD-干燥间',240,false,true,true,3,'流化床FG-120；干燥失重≤3.0%；温度控制60±5℃')),
+      serialGroup('TMJ-G0105', 50, step('TMJ-S0105','op-gd05','GD-05','压片','压片','GD-压片间',480,true, true, true, 5,'⚡瓶颈工序：高速压片机GZPS-83；片重差异±7.5%；硬度50~80N；脆碎度≤1.0%；OPC UA实时采集')),
+      serialGroup('TMJ-G0105B',55, step('TMJ-S0105B','op-gd05b','GD-05B','包衣(可选)','包衣','GD-包衣间',120,false,false,true,3,'可选工序：高效包衣机BG-150；包衣增重2~4%；外观检查')),
+      serialGroup('TMJ-G0106', 60, step('TMJ-S0106','op-gd06','GD-06','铝塑包装','铝塑','GD-包装间',240,false,true, true, 4,'铝塑泡罩DPH-260；密封性100%检查；批号打印核对；收率≥98%')),
+      serialGroup('TMJ-G0107', 70, step('TMJ-S0107','op-gd07','GD-07','外包装','外包','GD-外包间',180,false,false,true, 3,'自动装盒机ZH-120；装盒装箱；收率96.0~100.0%；EBR终结点')),
+      serialGroup('TMJ-G0108', 80, step('TMJ-S0108','op-wb03','WB-03','赋码关联','赋码','WB-赋码区',60, false,false,true, 2,'GS1-128三级码：产品码→箱码→托盘码关联；追溯链闭合')),
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // NJ-RN-SGC-001：南京工厂 软胶囊车间 钙维生素D软胶囊 工艺路线 V1.0【已生效】
+  // 工序：化胶→配料/内容物→压丸(瓶颈)→干燥→拣丸→包装→赋码关联
+  // ══════════════════════════════════════════════════════════════════════
+  {
+    id: 'TMJ-R002',
+    routingCode: 'NJ-RN-SGC-001',
+    routingName: '南京软胶囊车间-钙维D软胶囊工艺路线',
+    productCode: 'PROD-CAP-026',
+    productName: '钙维生素D软胶囊',
+    productModel: '1.0g×60粒/瓶',
+    version: 'V1.0',
+    isDefault: true,
+    status: 'ACTIVE' as const,
+    workshop: '南京工厂·软胶囊车间',
+    productLine: '软胶囊生产线',
+    applicableSpec: '软胶囊 1.0g×60粒 | 瓶装',
+    remark: '软胶囊标准工艺路线；化胶/压丸温度精控；干燥时长24~72h；物料平衡率96.0~102.0%',
+    auditBy: '孔翠萍(QA)',
+    auditAt: '2026-01-10',
+    auditRemark: '化胶粘度、压丸装量差异、胶皮厚度为关键控制点，符合GMP要求',
+    createdBy: '赵明辉',
+    createdAt: '2026-01-01',
+    updatedAt: '2026-01-10',
+    groups: [
+      serialGroup('TMJ-G0201', 10, step('TMJ-S0201','op-rn01','RN-01','化胶','化胶','RN-化胶间',240,false,true, true, 4,'全自动胶罐ZHJG-1；明胶+甘油+纯化水配比；粘度3000~5000mPa·s；温度60~70℃；Modbus RTU采集')),
+      serialGroup('TMJ-G0202', 20, step('TMJ-S0202','op-rn02','RN-02','配料/内容物','配料','RN-配料间',120,false,true, true, 3,'配料罐PYG-200；内容物按BOM四重核对；混合均匀性检查')),
+      serialGroup('TMJ-G0203', 30, step('TMJ-S0203','op-rn03','RN-03','压丸','压丸','RN-压丸间',600,true, true, true, 6,'⚡瓶颈工序：软胶囊机YWJ250-IIIA；装量差异±10%；胶皮厚度0.75±0.05mm；私有协议采集；25万粒/h')),
+      serialGroup('TMJ-G0204', 40, step('TMJ-S0204','op-rn04','RN-04','干燥','干燥','RN-干燥间',2880,false,true, true, 4,'干燥转笼ZG-10；时长24~72h；温度18~25℃；水分≤9.0%；每8h记录')),
+      serialGroup('TMJ-G0205', 50, step('TMJ-S0205','op-rn05','RN-05','拣丸','拣丸','RN-拣丸间',120,false,true, true, 3,'拣丸台逐粒检查；外观圆整无气泡；密封性目视检查；AQL抽样')),
+      serialGroup('TMJ-G0206', 60, step('TMJ-S0206','op-rn06','RN-06','包装','包装','RN-包装间',180,false,false,true, 3,'自动数粒装瓶；装盒装箱；物料平衡计算；收率96.0~100.0%')),
+      serialGroup('TMJ-G0207', 70, step('TMJ-S0207','op-wb03','WB-03','赋码关联','赋码','WB-赋码区',60, false,false,true, 2,'GS1-128三级码关联；追溯链闭合')),
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // NJ-RN-SGC-002：南京工厂 软胶囊车间 鱼油软胶囊 工艺路线 V1.0【已生效】
+  // ══════════════════════════════════════════════════════════════════════
+  {
+    id: 'TMJ-R003',
+    routingCode: 'NJ-RN-SGC-002',
+    routingName: '南京软胶囊车间-鱼油软胶囊工艺路线',
+    productCode: 'PROD-FIS-029',
+    productName: '鱼油软胶囊',
+    productModel: '1.0g×60粒/瓶',
+    version: 'V1.0',
+    isDefault: true,
+    status: 'ACTIVE' as const,
+    workshop: '南京工厂·软胶囊车间',
+    productLine: '软胶囊生产线',
+    applicableSpec: '软胶囊 1.0g×60粒 | 瓶装',
+    remark: '鱼油软胶囊工艺路线；鱼油氧化敏感，全程氮气保护；EPA+DHA含量检测为关键控制点',
+    auditBy: '孔翠萍(QA)',
     auditAt: '2026-01-15',
-    auditRemark: '工艺参数已验证，符合GMP要求，准予生效',
-    createdBy: '陈工长',
-    createdAt: '2026-01-10',
-    updatedAt: '2026-04-01',
-    groups: [
-      serialGroup('G001', 10, step('S001', 'op-001', 'OP-CUT-001', '数控磨削', '磨削', 'WC-GRIND-01', 4.5, true, true, true, 8, '瓶颈工序，锥度/直径精度关键控制点')),
-      parallelGroup('G002', 20, '同步热处理与涂层', [
-        step('S002', 'op-002', 'OP-HT-001',   '热处理定型', '热处理', 'WC-HT-01',   3.0, true,  true,  true,  6, '记忆合金相变激活，每炉独立批次号'),
-        step('S003', 'op-003', 'OP-COAT-001', 'PVD涂层',    '涂层',   'WC-COAT-01', 2.5, false, true,  true,  5, 'TiN/TiCN 0.5μm涂层'),
-      ]),
-      serialGroup('G003', 30, step('S004', 'op-004', 'OP-MARK-001', '激光打标', '打标', 'WC-LASER-01', 0.5, false, false, false, 4)),
-      serialGroup('G004', 40, step('S005', 'op-005', 'OP-CLN-001',  '超声清洗', '清洗', 'WC-CLEAN-01', 1.5, false, true,  false, 5, '三段清洗')),
-      serialGroup('G005', 50, step('S006', 'op-006', 'OP-QC-001',   '成品检验', '检验', 'WC-QC-01',    2.0, true,  true,  true,  7, 'OQC出厂终检，AQL抽样')),
-      serialGroup('G006', 60, step('S007', 'op-007', 'OP-STER-001', 'EO灭菌',   '灭菌', 'WC-STER-01',  4.0, false, true,  true,  4)),
-      serialGroup('G007', 70, step('S008', 'op-008', 'OP-PACK-001', '无菌包装', '包装', 'WC-PACK-01',  1.0, false, false, true,  5, '吸塑热封+UDI赋码')),
-    ],
-  },
-
-  // ── R002：#30/06锥专用路径 V1.0（待审核）── 全串行
-  {
-    id: 'R002',
-    routingCode: 'RT-RKQ-3006-002',
-    routingName: '#30/06锥根管锉工艺路径',
-    productCode: 'FG-RKQ-3006-21',
-    productName: '机用根管锉',
-    productModel: '#30/06锥/21mm',
-    version: 'V1.0',
-    isDefault: false,
-    status: 'PENDING',
-    workshop: '精密加工车间',
-    productLine: '根管锉A线',
-    applicableSpec: '#30 / 06锥度 / 21mm',
-    remark: '基于标准路径，#30/06锥磨削参数调整，热处理温度提高5℃',
-    createdBy: '李娜',
-    createdAt: '2026-02-20',
-    updatedAt: '2026-04-10',
-    groups: [
-      serialGroup('G101', 10, step('S101', 'op-001', 'OP-CUT-001', '数控磨削',   '磨削',   'WC-GRIND-01', 5.0, true,  true,  true,  8, '#30/06锥磨削参数：转速3200rpm')),
-      serialGroup('G102', 20, step('S102', 'op-002', 'OP-HT-001',  '热处理定型', '热处理', 'WC-HT-01',    3.5, true,  true,  true,  6, '热处理温度较标准路径+5℃')),
-      serialGroup('G103', 30, step('S103', 'op-003', 'OP-COAT-001','PVD涂层',    '涂层',   'WC-COAT-01',  2.5, false, true,  true,  5)),
-      serialGroup('G104', 40, step('S104', 'op-005', 'OP-CLN-001', '超声清洗',   '清洗',   'WC-CLEAN-01', 1.5, false, true,  false, 5)),
-      serialGroup('G105', 50, step('S105', 'op-006', 'OP-QC-001',  '成品检验',   '检验',   'WC-QC-01',    2.0, true,  true,  true,  7)),
-      serialGroup('G106', 60, step('S106', 'op-007', 'OP-STER-001','EO灭菌',     '灭菌',   'WC-STER-01',  4.0, false, true,  true,  4)),
-      serialGroup('G107', 70, step('S107', 'op-008', 'OP-PACK-001','无菌包装',   '包装',   'WC-PACK-01',  1.0, false, false, true,  5)),
-    ],
-  },
-
-  // ── R005：机用根管锉 #26/04锥/25mm 标准工艺路径 V1.0（已生效）
-  //    基于Excel《产品-机用根管锉》工艺路径定义，全串行14步
-  //    工序：机床成型→清洗一→尾部修整→尖部修整→研磨一→热处理→清洗二
-  //          →刻线→组装→环规适配→测量长度→装限位块→检测合格→半成品入库
-  {
-    id: 'R005',
-    routingCode: 'RT-RKQ-STD-002',
-    routingName: '机用根管锉标准工艺路径V2（#26/04锥）',
-    productCode: 'FG-RKQ-2504-26',
-    productName: '机用根管锉',
-    productModel: '#26/04锥/25mm',
-    version: 'V1.0',
-    isDefault: true,
-    status: 'ACTIVE',
-    workshop: '精密加工车间',
-    productLine: '根管锉B线',
-    applicableSpec: '#26 / 04锥度 / 25mm',
-    remark: '机用根管锉#26/04锥/25mm完整生产工艺路径，含机床成型、研磨、热处理、组装、检测全流程；符合ISO 3630-1，全流程PAD电子化执行',
-    auditBy: '王质量总监',
-    auditAt: '2026-04-01',
-    auditRemark: '工艺路径参数已按Excel《产品-机用根管锉》规范核对，符合GMP要求，准予生效',
-    createdBy: '陈工长',
-    createdAt: '2026-03-15',
-    updatedAt: '2026-04-20',
-    groups: [
-      serialGroup('G501', 10,  step('S501', 'op-011', 'OP-JC-001',   '机床成型',   '机床成型', 'WC-GRIND-01',  5.0, true,  true,  true,  8, '瓶颈工序：镍钛丝磨削成型，首件检验产品尺寸；含前清场+进站+物料一致确认(镍钛丝批号)+首件确认(产品尺寸)+数据采集+报工+出站')),
-      serialGroup('G502', 20,  step('S502', 'op-012', 'OP-QX1-001',  '清洗一',     '清洗一',   'WC-CLEAN-01',  1.5, false, false, true,  6, '机床成型后超声波清洗；含前清场+进站+后清场+报工+出站；物料一致确认/首件确认/数据采集/自检均不适用(×)')),
-      serialGroup('G503', 30,  step('S503', 'op-013', 'OP-WBX-001',  '尾部修整',   '尾修',     'WC-GRIND-01',  2.0, false, true,  true,  7, '修整产品尾部；首件确认检验长度及尾部外观；含前清场+进站+首件确认(长度/尾部外观)+后清场+报工+出站')),
-      serialGroup('G504', 40,  step('S504', 'op-014', 'OP-JPX-001',  '尖部修整',   '尖修',     'WC-GRIND-01',  2.0, false, false, true,  6, '修整产品尖部；物料/首件/数据/自检均不适用(×)；含前清场+进站+后清场+报工+出站')),
-      serialGroup('G505', 50,  step('S505', 'op-015', 'OP-YM1-001',  '研磨一',     '研磨一',   'WC-GRIND-01',  3.0, false, true,  true,  7, '工作部研磨成形；自检QC检验(尺寸+外观)，形成《机床成型检验记录》/《超声波清洗检验记录》，关联设备编号；含前清场+进站+自检+后清场+报工+出站')),
-      serialGroup('G506', 60,  step('S506', 'op-016', 'OP-RCL-001',  '热处理',     '热处理',   'WC-HT-01',    120.0, true, true,  true,  8, '瓶颈工序：镍钛丝记忆合金相变激活热处理定型；热处理不体现在批记录中；含前清场+进站+后清场+报工+出站')),
-      serialGroup('G507', 70,  step('S507', 'op-017', 'OP-QX2-001',  '清洗二',     '清洗二',   'WC-CLEAN-01',  1.5, false, true,  true,  7, '热处理后超声波清洗；QC进行自检(尺寸+外观)，形成《超声波清洗检验记录》，关联检测设备，此记录不体现在批记录中')),
-      serialGroup('G508', 80,  step('S508', 'op-018', 'OP-KX-001',   '刻线',       '刻线',     'WC-GRIND-01',  2.0, false, false, true,  7, '工作部深度刻线标识；首件确认刻线尺寸和数量；含前清场+进站+首件确认(刻线尺寸/数量)+数据采集+后清场+报工+出站')),
-      serialGroup('G509', 90,  step('S509', 'op-019', 'OP-ZZ-001',   '组装',       '组装',     'WC-ASM-01',    1.0, false, true,  true,  8, '锉针与手柄组装；物料一致确认(手柄批号)；首件确认(产品总长+手柄可靠性拉拔力测试，需记录检测设备)；含前清场+进站+物料一致确认+首件确认+数据采集+后清场+报工+出站')),
-      serialGroup('G510', 100, step('S510', 'op-020', 'OP-HG-001',   '环规适配',   '环规',     'WC-RING-01',   2.5, false, true,  true,  6, '使用标准环规检验工作部锥度精度；物料/首件/数据/自检均不适用(×)；含前清场+进站+后清场+报工+出站')),
-      serialGroup('G511', 110, step('S511', 'op-021', 'OP-CL-001',   '测量长度',   '测长',     'WC-QC-01',     1.5, false, true,  true,  6, '测量产品总长度；物料/首件/数据/自检均不适用(×)；含前清场+进站+后清场+报工+出站')),
-      serialGroup('G512', 120, step('S512', 'op-022', 'OP-XWK-001',  '装限位块',   '限位块',   'WC-ASM-01',    0.5, false, false, true,  6, '安装橡胶限位块；物料一致确认(限位块批次号)；含前清场+进站+物料一致确认+后清场+报工+出站')),
-      serialGroup('G513', 130, step('S513', 'op-023', 'OP-JCHE-001', '检测合格',   '检测合格', 'WC-QC-01',     3.0, true,  true,  false, 5, '瓶颈工序：QC半成品综合检验；AQL抽样；检验项：外观+尺寸+颜色标识；关联检测设备；前清场/进站/物料/首件/数据均不适用')),
-      serialGroup('G514', 140, step('S514', 'op-024', 'OP-BCR-001',  '半成品入库', '半成品库', 'WC-STORE-01',  0.5, false, false, true,  4, '完成所有工序后由QC逐批次抽检，形成《半成品检验记录》；检验项：尺寸+颜色标识+外观+连接强度+抗扭强度+抗弯强度；前清场/进站/物料/首件/数据/后清场均不适用')),
-    ],
-  },
-
-  // ── R003：简化路径（草稿，无步骤）
-  {
-    id: 'R003',
-    routingCode: 'RT-RKQ-MINI-003',
-    routingName: '根管锉简化工艺路径（试制）',
-    productCode: 'FG-RKQ-4004-21',
-    productName: '机用根管锉',
-    productModel: '#40/04锥/21mm',
-    version: 'V1.0',
-    isDefault: false,
-    status: 'DRAFT',
-    workshop: '精密加工车间',
-    productLine: '根管锉A线',
-    remark: '试制品简化路径，不含灭菌步骤，仅用于内部测试',
-    createdBy: '王工长',
-    createdAt: '2026-03-01',
-    updatedAt: '2026-04-15',
-    groups: [],
-  },
-
-  // ── R004：旧版路径（已停用）
-  {
-    id: 'R004',
-    routingCode: 'RT-RKQ-OLD-004',
-    routingName: '机用根管锉旧版工艺路径',
-    productCode: 'FG-RKQ-2504-25',
-    productName: '机用根管锉',
-    productModel: '#25/04锥/25mm',
-    version: 'V1.5',
-    isDefault: false,
-    status: 'DISABLED',
-    workshop: '精密加工车间',
-    productLine: '根管锉A线',
-    remark: '旧版工艺，V2.1版本发布后停用',
-    disableReason: 'V2.1版本已生效，本路径不再使用',
-    auditBy: '王质量总监',
-    auditAt: '2025-12-01',
-    createdBy: '陈工长',
-    createdAt: '2025-06-01',
+    auditRemark: '鱼油批次追溯至挪威EPAX，氧化值检测合格后方可投产',
+    createdBy: '赵明辉',
+    createdAt: '2026-01-05',
     updatedAt: '2026-01-15',
     groups: [
-      serialGroup('G401', 10, step('S401', 'op-001', 'OP-CUT-001', '数控磨削', '磨削', 'WC-GRIND-01', 5.0, true, true, true, 8)),
-      serialGroup('G402', 20, step('S402', 'op-006', 'OP-QC-001',  '成品检验', '检验', 'WC-QC-01',    2.0, true, true, true, 7)),
+      serialGroup('TMJ-G0301', 10, step('TMJ-S0301','op-rn01','RN-01','化胶','化胶','RN-化胶间',240,false,true, true, 4,'明胶+甘油配方；粘度3000~5000mPa·s；温度60~70℃')),
+      serialGroup('TMJ-G0302', 20, step('TMJ-S0302','op-rn02','RN-02','配料/内容物','配料','RN-配料间',120,false,true, true, 3,'鱼油内容物；充氮保护；EPA+DHA含量初检≥30%；过氧化值检测')),
+      serialGroup('TMJ-G0303', 30, step('TMJ-S0303','op-rn03','RN-03','压丸','压丸','RN-压丸间',600,true, true, true, 6,'⚡瓶颈工序：YWJ250-IIIA；装量差异±10%；胶皮厚度0.80±0.05mm（鱼油专用厚胶皮）')),
+      serialGroup('TMJ-G0304', 40, step('TMJ-S0304','op-rn04','RN-04','干燥','干燥','RN-干燥间',2880,false,true, true, 4,'时长48~72h；水分≤9.0%；低温干燥防止鱼油氧化')),
+      serialGroup('TMJ-G0305', 50, step('TMJ-S0305','op-rn05','RN-05','拣丸','拣丸','RN-拣丸间',120,false,true, true, 3,'外观圆整；无异味；密封性抽检')),
+      serialGroup('TMJ-G0306', 60, step('TMJ-S0306','op-rn06','RN-06','包装','包装','RN-包装间',180,false,false,true, 3,'装瓶装盒；充氮封盖延长保质期')),
+      serialGroup('TMJ-G0307', 70, step('TMJ-S0307','op-wb03','WB-03','赋码关联','赋码','WB-赋码区',60, false,false,true, 2,'三级码关联；追溯至鱼油原料批次')),
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LS-GD-PWD-001：溧水工厂 固体车间 乳清蛋白粉 工艺路线 V1.0【已生效】
+  // 工序：称量配料→混合→分装(瓶颈)→外包装→赋码关联
+  // ══════════════════════════════════════════════════════════════════════
+  {
+    id: 'TMJ-R004',
+    routingCode: 'LS-GD-PWD-001',
+    routingName: '溧水固体车间-乳清蛋白粉工艺路线',
+    productCode: 'PROD-PWD-027',
+    productName: '乳清蛋白粉',
+    productModel: '10g×30袋/盒',
+    version: 'V1.0',
+    isDefault: true,
+    status: 'ACTIVE' as const,
+    workshop: '溧水工厂·固体车间',
+    productLine: '粉剂分装线',
+    applicableSpec: '粉剂 10g×30袋 | 盒装',
+    remark: '乳清蛋白粉分装工艺路线；分装装量差异±5%；封口密封性100%检查；物料平衡率96.0~102.0%',
+    auditBy: '孔翠萍(QA)',
+    auditAt: '2026-01-10',
+    auditRemark: '溧水工厂粉剂分装线，混合均匀性和分装精度为关键控制点',
+    createdBy: '刘志强',
+    createdAt: '2026-01-01',
+    updatedAt: '2026-01-10',
+    groups: [
+      serialGroup('TMJ-G0401', 10, step('TMJ-S0401','op-ls-gd01','GD-01','称量配料','称量','LS-配料室',120,false,true, true, 3,'电子秤四重核对；蛋白粉吸湿敏感，防潮操作间')),
+      serialGroup('TMJ-G0402', 20, step('TMJ-S0402','op-ls-gd02','GD-02','混合','混合','LS-混合间',90, false,true, true, 3,'V型混合机VH-100；5点位取样；混合均匀性RSD≤5%；100L/批')),
+      serialGroup('TMJ-G0403', 30, step('TMJ-S0403','op-ls-gd03','GD-03','分装','分装','LS-分装间',360,true, true, true, 5,'⚡瓶颈工序：自动分装机FB-10；装量差异±5%；封口温度180±10℃；密封性抽检')),
+      serialGroup('TMJ-G0404', 40, step('TMJ-S0404','op-ls-gd04','GD-04','外包装','外包','LS-外包间',120,false,false,true, 3,'装盒装箱；收率96.0~100.0%；EBR终结点')),
+      serialGroup('TMJ-G0405', 50, step('TMJ-S0405','op-wb03','WB-03','赋码关联','赋码','WB-赋码区',60, false,false,true, 2,'三级码关联；溧水工厂RFID追溯')),
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LS-YQ-LIQ-001：溧水工厂 液体车间 葡萄糖酸锌口服液 工艺路线 V1.0【已生效】
+  // 工序：称量配料→配制/混合→灌装(瓶颈)→灭菌(瓶颈/关键)→灯检→外包装→赋码关联
+  // ══════════════════════════════════════════════════════════════════════
+  {
+    id: 'TMJ-R005',
+    routingCode: 'LS-YQ-LIQ-001',
+    routingName: '溧水液体车间-葡萄糖酸锌口服液工艺路线',
+    productCode: 'PROD-LIQ-028',
+    productName: '葡萄糖酸锌口服液',
+    productModel: '10ml×30支/盒',
+    version: 'V1.0',
+    isDefault: true,
+    status: 'ACTIVE' as const,
+    workshop: '溧水工厂·液体车间',
+    productLine: '口服液灌装线',
+    applicableSpec: '口服液 10ml×30支 | 盒装',
+    remark: '葡萄糖酸锌口服液工艺路线；灭菌F0值≥8min为强制控制点；F0值低于下限强制报废不得返工',
+    auditBy: '孔翠萍(QA)',
+    auditAt: '2026-01-10',
+    auditRemark: '灭菌工序为关键控制点，Modbus TCP实时F0值监控，低于8min强制报废并生成偏差单',
+    createdBy: '孙建国',
+    createdAt: '2026-01-01',
+    updatedAt: '2026-01-10',
+    groups: [
+      serialGroup('TMJ-G0501', 10, step('TMJ-S0501','op-ls-yq01','YQ-01','称量配料','称量','LS-YQ-配料室',90, false,true, true, 3,'液体原料称量；近效期预警；葡萄糖酸锌溶解检查')),
+      serialGroup('TMJ-G0502', 20, step('TMJ-S0502','op-ls-yq02','YQ-02','配制/混合','配制','LS-YQ-配制间',180,false,true, true, 4,'配料罐HSPY-500；pH 3.5~5.5；相对密度1.02~1.08；Modbus TCP实时监控；500L/批')),
+      serialGroup('TMJ-G0503', 30, step('TMJ-S0503','op-ls-yq03','YQ-03','灌装','灌装','LS-YQ-灌装间',360,true, true, true, 5,'⚡瓶颈工序：液体灌装线XZKGS32；装量差异±5%；OPC UA实时采集；200瓶/min；不合格品强制锁定')),
+      serialGroup('TMJ-G0504', 40, step('TMJ-S0504','op-ls-yq04','YQ-04','灭菌','灭菌','LS-YQ-灭菌间',240,true, true, true, 6,'🔑关键控制点：灭菌系统SG-2.0；F0值≥8min；121~123℃；Modbus TCP实时采集；F0<8min强制报废不得返工；2000L/批')),
+      serialGroup('TMJ-G0505', 50, step('TMJ-S0505','op-ls-yq05','YQ-05','灯检','灯检','LS-YQ-灯检台',120,false,true, true, 3,'逐瓶灯检；无可见异物；破瓶/变色品剔除；AQL抽样抽检')),
+      serialGroup('TMJ-G0506', 60, step('TMJ-S0506','op-ls-yq06','YQ-06','外包装','外包','LS-YQ-外包间',120,false,false,true, 3,'贴标喷码装箱；收率96.0~100.0%；EBR终结点')),
+      serialGroup('TMJ-G0507', 70, step('TMJ-S0507','op-wb03','WB-03','赋码关联','赋码','WB-赋码区',60, false,false,true, 2,'三级码关联；F0值数据随批记录归档')),
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LS-YQ-LIQ-002：胶原蛋白口服液 工艺路线 V1.0【待审核】
+  // ══════════════════════════════════════════════════════════════════════
+  {
+    id: 'TMJ-R006',
+    routingCode: 'LS-YQ-LIQ-002',
+    routingName: '溧水液体车间-胶原蛋白口服液工艺路线',
+    productCode: 'PROD-COL-030',
+    productName: '胶原蛋白口服液',
+    productModel: '50ml×8瓶/盒',
+    version: 'V1.0',
+    isDefault: true,
+    status: 'PENDING' as const,
+    workshop: '溧水工厂·液体车间',
+    productLine: '口服液灌装线',
+    applicableSpec: '口服液 50ml×8瓶 | 盒装',
+    remark: '胶原蛋白口服液工艺路线（待审核）；大规格灌装；胶原蛋白肽分子量检测为关键控制点',
+    createdBy: '孙建国',
+    createdAt: '2026-03-01',
+    updatedAt: '2026-03-15',
+    groups: [
+      serialGroup('TMJ-G0601', 10, step('TMJ-S0601','op-ls-yq01','YQ-01','称量配料','称量','LS-YQ-配料室',120,false,true, true, 3,'胶原蛋白肽称量；分子量≤1000Da验证')),
+      serialGroup('TMJ-G0602', 20, step('TMJ-S0602','op-ls-yq02','YQ-02','配制/混合','配制','LS-YQ-配制间',240,false,true, true, 4,'胶原肽溶解度检查；pH 3.5~5.0；稳定性观察30min')),
+      serialGroup('TMJ-G0603', 30, step('TMJ-S0603','op-ls-yq03','YQ-03','灌装','灌装','LS-YQ-灌装间',480,true, true, true, 5,'⚡瓶颈工序：大规格50ml灌装；装量差异±3%；密封性检查')),
+      serialGroup('TMJ-G0604', 40, step('TMJ-S0604','op-ls-yq04','YQ-04','灭菌','灭菌','LS-YQ-灭菌间',300,true, true, true, 6,'F0值≥8min；121℃灭菌；需验证大规格瓶F0传热效果')),
+      serialGroup('TMJ-G0605', 50, step('TMJ-S0605','op-ls-yq05','YQ-05','灯检','灯检','LS-YQ-灯检台',180,false,true, true, 3,'逐瓶灯检；胶原液透明度检查')),
+      serialGroup('TMJ-G0606', 60, step('TMJ-S0606','op-ls-yq06','YQ-06','外包装','外包','LS-YQ-外包间',180,false,false,true, 3,'礼盒包装；8瓶/盒；高端包材检查')),
+      serialGroup('TMJ-G0607', 70, step('TMJ-S0607','op-wb03','WB-03','赋码关联','赋码','WB-赋码区',60, false,false,true, 2,'三级码关联')),
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // NJ-GD-TAB-002：维C咀嚼片 旧版 V0.9【已停用】（保留用于历史对比）
+  // ══════════════════════════════════════════════════════════════════════
+  {
+    id: 'TMJ-R007',
+    routingCode: 'NJ-GD-TAB-001-V09',
+    routingName: '南京固体车间-维C咀嚼片工艺路线(旧版)',
+    productCode: 'PROD-TAB-025',
+    productName: '维C咀嚼片',
+    productModel: '0.5g×60片/瓶',
+    version: 'V0.9',
+    isDefault: false,
+    status: 'DISABLED' as const,
+    workshop: '南京工厂·固体车间',
+    productLine: '片剂生产线',
+    applicableSpec: '片剂 0.5g×60片 | 瓶装',
+    remark: '旧版工艺路线，V1.0版本生效后停用；主要差异：旧版包含手工包衣，新版改用自动包衣机',
+    disableReason: 'V1.0版本已生效，自动包衣机BG-150投产，本路径不再使用',
+    auditBy: '孔翠萍(QA)',
+    auditAt: '2025-12-01',
+    createdBy: '王建国',
+    createdAt: '2025-06-01',
+    updatedAt: '2026-01-10',
+    groups: [
+      serialGroup('TMJ-G0701', 10, step('TMJ-S0701','op-gd01','GD-01','称量配料','称量','GD-配料室',180,false,true, true, 4)),
+      serialGroup('TMJ-G0702', 20, step('TMJ-S0702','op-gd02','GD-02','混合','混合','GD-混合间',150,false,true, true, 3,'旧版混合时间偏长')),
+      serialGroup('TMJ-G0703', 30, step('TMJ-S0703','op-gd03','GD-03','制粒','制粒','GD-制粒间',180,false,true, true, 4)),
+      serialGroup('TMJ-G0704', 40, step('TMJ-S0704','op-gd04','GD-04','干燥','干燥','GD-干燥间',300,false,true, true, 3,'旧版干燥时间300min（新版优化至240min）')),
+      serialGroup('TMJ-G0705', 50, step('TMJ-S0705','op-gd05','GD-05','压片','压片','GD-压片间',480,true, true, true, 5)),
+      serialGroup('TMJ-G0706', 60, step('TMJ-S0706','op-gd06','GD-06','铝塑包装','铝塑','GD-包装间',240,false,true, true, 4)),
+      serialGroup('TMJ-G0707', 70, step('TMJ-S0707','op-gd07','GD-07','外包装','外包','GD-外包间',180,false,false,true, 3)),
     ],
   },
 ];
