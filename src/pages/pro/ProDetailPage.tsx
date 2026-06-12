@@ -46,23 +46,25 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
       const steps: any[] = Array.isArray(resp?.data) ? resp.data :
                            Array.isArray(resp)        ? resp : [];
       if (steps.length === 0) return;
-      const sorted = [...steps].sort((a, b) => (a.stepNo ?? 0) - (b.stepNo ?? 0));
+      const sorted = [...steps].sort((a, b) =>
+        (a.stepNo ?? a.step_no ?? 0) - (b.stepNo ?? b.step_no ?? 0)
+      );
       const groups: RoutingGroup[] = sorted.map((s, idx) => ({
-        id:  `G${s.id}`,
-        seq: (idx + 1) * 10,
+        id:  `G${s.id ?? idx}`,
+        seq: s.stepNo ?? s.step_no ?? (idx + 1) * 10,
         steps: [{
-          id:            `S${s.id}`,
-          opId:          `op-${s.id}`,
-          opCode:        s.stepCode  ?? `STEP-${s.stepNo}`,
-          opName:        s.stepName  ?? '',
-          opShort:       s.stepName  ?? '',
-          workCenter:    '',
-          stdTimeMin:    0,
-          isKeyOp:       s.stepType === 'KEY',
-          isQcPoint:     s.stepType === 'QC',
-          isReportPoint: (s.reportPoint ?? 0) === 1,
-          phaseCount:    0,
-          remark:        s.description ?? '',
+          id:            `S${s.id ?? idx}`,
+          opId:          s.opId   ?? `op-${s.id ?? idx}`,
+          opCode:        s.opCode ?? s.stepCode  ?? `STEP-${s.stepNo ?? idx + 1}`,
+          opName:        s.opName ?? s.stepName  ?? '',
+          opShort:       s.opShort ?? s.opName ?? s.stepName ?? '',
+          workCenter:    s.workCenter ?? s.work_center ?? '',
+          stdTimeMin:    Number(s.stdTimeMin ?? s.stdTime ?? s.std_time ?? 0),
+          isKeyOp:       Boolean(s.isKeyOp ?? s.isKeyProcess ?? s.isKeyStep ?? (s.stepType === 'KEY')),
+          isQcPoint:     Boolean(s.isQcPoint ?? s.requireQc ?? s.require_qc ?? (s.stepType === 'QC')),
+          isReportPoint: Boolean(s.isReportPoint ?? s.requireEbr ?? s.require_ebr ?? s.reportPoint ?? true),
+          phaseCount:    Number(s.phaseCount ?? s.phase_count ?? 1),
+          remark:        s.remark ?? s.description ?? '',
         }],
       }));
       setRoutingData(prev => ({ ...prev, groups }));
@@ -70,11 +72,10 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
   }, [routing.id]);
 
   useEffect(() => {
-    // Only reload from API if groups were not pre-loaded by ProListPage
-    if (routing.groups.length === 0) {
-      loadStepsFromApi();
-    }
-  }, [routing.groups.length, loadStepsFromApi]);
+    // Always reload from API to get full step details (opCode/opName/workCenter/etc.)
+    // ProListPage only passes empty groups[], so we always need API call here
+    loadStepsFromApi();
+  }, [loadStepsFromApi]);
 
   // 选中状态：groupId + stepId
   const [selectedGroupId, setSelectedGroupId] = useState('');
