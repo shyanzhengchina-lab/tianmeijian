@@ -87,6 +87,10 @@ const TracePage = lazy(() => import('./pages/trace/TracePage'));
 const GmpPage = lazy(() => import('./pages/gmp/GmpPage'));
 const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
 const UrgentOrderPage = lazy(() => import('./pages/production/UrgentOrderPage'));
+// 新增：GMP增强模块
+const OperationArchivePage = lazy(() => import('./pages/operation/OperationArchivePage'));
+const CleanupManagePage = lazy(() => import('./pages/gmp/CleanupManagePage'));
+const EbrEnhancedPage = lazy(() => import('./pages/ebr/EbrEnhancedPage'));
 
 
 // 配置dayjs中文
@@ -324,6 +328,9 @@ const App: React.FC = () => {
       case 'gmp-hygiene':      return ['GMP合规', '卫生管理记录'];
       case 'gmp-deviation':    return ['GMP合规', '偏差处理'];
       case 'gmp-capa':         return ['GMP合规', 'CAPA管理'];
+      case 'operation-archive': return ['基础资料', '工序档案(GMP增强版)'];
+      case 'cleanup-manage':    return ['GMP合规', '清场管理'];
+      case 'ebr-enhanced':      return ['电子批记录', 'EBR增强版'];
       case 'fg-receipt':       return ['仓储管理', '成品入库'];
       case 'sales-shipment':   return ['仓储管理', '成品出库'];
       case 'reports':          return ['数据报表'];
@@ -382,6 +389,10 @@ const App: React.FC = () => {
       case 'gmp-deviation':
       case 'gmp-capa':
         return <PageWrapper><GmpPage subPage={currentPage} /></PageWrapper>;
+      // GMP增强模块
+      case 'operation-archive': return <PageWrapper><OperationArchivePage /></PageWrapper>;
+      case 'cleanup-manage':    return <PageWrapper><CleanupManagePage /></PageWrapper>;
+      case 'ebr-enhanced':      return <PageWrapper><EbrEnhancedPage /></PageWrapper>;
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
       // 数据报表
