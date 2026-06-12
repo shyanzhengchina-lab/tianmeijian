@@ -95,6 +95,7 @@ const menuItems = [
       { key: 'work-order',       label: '生产工单',  icon: <OrderedListOutlined /> },
       { key: 'task-order',       label: '生产任务单', icon: <ScheduleOutlined /> },
       { key: 'floatticket',      label: '生产浮票',  icon: <FileTextOutlined /> },
+      { key: 'urgent-order',     label: '插单管理',  icon: <ThunderboltOutlined /> },
     ],
   },
   {
@@ -126,6 +127,7 @@ const menuItems = [
     group: '质量管理',
     children: [
       { key: 'inspection', label: '质检工作台', icon: <SolutionOutlined /> },
+      { key: 'mrb',        label: 'MRB不合格品评审', icon: <WarningOutlined /> },
       { key: 'release',    label: '质量放行',   icon: <SettingOutlined /> },
     ],
   },
@@ -187,6 +189,9 @@ const menuItems = [
     icon: <BarChartOutlined />,
     label: '数据报表',
     group: '数据报表',
+    children: [
+      { key: 'reports', label: '报表中心', icon: <BarChartOutlined /> },
+    ],
   },
   {
     key: 'system',
@@ -284,7 +289,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'ebr-list':         '批记录管理',
     'equip-usage':        '设备使用批记录',
     'material-balance':   '物料平衡表',
-    reports:            '数据报表',
     'system-org':         '组织机构管理',
     permission:           '权限管理',
     'material-issuance':  '领料单管理',
@@ -296,7 +300,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'gmp-hygiene':        '卫生管理记录',
     'gmp-deviation':      '偏差处理',
     'gmp-capa':           'CAPA管理',
-    'fg-receipt':         '成品入库',
+    mrb:              'MRB不合格品评审',
+    'urgent-order':   '插单管理',
+    reports:          '数据报表中心',
+    'fg-receipt':     '成品入库',
     'sales-shipment':     '成品出库',
   };
 

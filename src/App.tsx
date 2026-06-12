@@ -85,6 +85,8 @@ const SalesShipmentPage = lazy(() => import('./pages/udi/SalesShipmentPage'));
 // 保健品新增模块
 const TracePage = lazy(() => import('./pages/trace/TracePage'));
 const GmpPage = lazy(() => import('./pages/gmp/GmpPage'));
+const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
+const UrgentOrderPage = lazy(() => import('./pages/production/UrgentOrderPage'));
 
 
 // 配置dayjs中文
@@ -326,6 +328,9 @@ const App: React.FC = () => {
       case 'gmp-capa':         return ['GMP合规', 'CAPA管理'];
       case 'fg-receipt':       return ['仓储管理', '成品入库'];
       case 'sales-shipment':   return ['仓储管理', '成品出库'];
+      case 'reports':          return ['数据报表'];
+      case 'urgent-order':     return ['生产管理', '插单管理'];
+      case 'mrb':              return ['质量管理', 'MRB不合格品评审'];
       default:                  return [];
     }
   };
@@ -355,7 +360,7 @@ const App: React.FC = () => {
       case 'task-order':        return <PageWrapper><TaskOrderPageNew /></PageWrapper>;
       case 'workorder':         return <PageWrapper><WorkOrderListPageNew /></PageWrapper>;
       case 'inspection':        return <PageWrapper><InspectionPage /></PageWrapper>;
-      // MRB已替换：保健品不使用MRB评审流程
+      case 'mrb':               return <PageWrapper><MrbPage /></PageWrapper>;
       case 'release':           return <PageWrapper><ReleasePage /></PageWrapper>;
       case 'pad-execution':     return <PageWrapper><PadIndex /></PageWrapper>;
       case 'pad-taskpool':      return <PageWrapper><PadTaskPoolPage onNavigate={handlePageChange} /></PageWrapper>;
@@ -381,6 +386,10 @@ const App: React.FC = () => {
         return <PageWrapper><GmpPage subPage={currentPage} /></PageWrapper>;
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
+      // 数据报表
+      case 'reports':             return <PageWrapper><ReportsPage /></PageWrapper>;
+      // 插单管理
+      case 'urgent-order':        return <PageWrapper><UrgentOrderPage /></PageWrapper>;
       default:
         return (
           <div style={{
