@@ -709,65 +709,230 @@ router.put('/operations/:id', authMiddleware, async (req, res) => {
 });
 
 // ── 工艺路线 /process-routings/* ─────────────────────────────
+// 完整字段 SELECT 片段（前端 mapApiToRouting 需要的所有字段）
+const ROUTING_SELECT = `
+  id,
+  route_code  AS routingCode,  route_code  AS routeCode,  route_code  AS code,
+  route_name  AS routingName,  route_name  AS routeName,  route_name  AS name,
+  material_id AS materialId,
+  factory_code   AS factoryCode,
+  workshop_type  AS workshopType,
+  CASE route_status
+    WHEN 'ACTIVE'   THEN 'ACTIVE'
+    WHEN 'PENDING'  THEN 'PENDING'
+    WHEN 'INACTIVE' THEN 'DISABLED'
+    WHEN 'DISABLED' THEN 'DISABLED'
+    WHEN 'DRAFT'    THEN 'DRAFT'
+    WHEN 'OBSOLETE' THEN 'OBSOLETE'
+    ELSE 'DRAFT'
+  END AS status,
+  route_status AS routeStatus,
+  IFNULL(version,'V1.0')       AS version,
+  IFNULL(is_default,1)         AS isDefault,
+  IFNULL(product_code,'')      AS productCode,
+  IFNULL(product_name,'')      AS productName,
+  IFNULL(product_model,'')     AS productModel,
+  IFNULL(workshop,'')          AS workshop,
+  IFNULL(product_line,'')      AS productLine,
+  IFNULL(applicable_spec,'')   AS applicableSpec,
+  IFNULL(remark,'')            AS remark,
+  IFNULL(audit_by,'')          AS auditBy,
+  IFNULL(audit_at,'')          AS auditAt,
+  IFNULL(audit_remark,'')      AS auditRemark,
+  IFNULL(disable_reason,'')    AS disableReason,
+  IFNULL(created_by,'')        AS createdBy,
+  DATE_FORMAT(create_time,'%Y-%m-%d') AS createdAt,
+  DATE_FORMAT(update_time,'%Y-%m-%d') AS updatedAt
+`;
+
+// 完整字段 SELECT 片段（工序步骤）
+const STEP_SELECT = `
+  rs.id,
+  rs.route_id   AS routingId,    rs.route_id  AS routeId,
+  rs.step_no    AS stepNo,
+  rs.op_id      AS opId,
+  rs.op_code    AS opCode,
+  IFNULL(rs.op_name, rs.op_code)   AS opName,
+  IFNULL(rs.op_short, rs.op_code)  AS opShort,
+  IFNULL(rs.work_center,'')        AS workCenter,
+  IFNULL(rs.std_time,0)            AS stdTimeMin,
+  IFNULL(rs.std_time,0)            AS stdTime,
+  IFNULL(rs.is_key_step,0)         AS isKeyOp,
+  IFNULL(rs.is_key_step,0)         AS isKeyProcess,
+  IFNULL(rs.is_key_step,0)         AS isKeyStep,
+  IFNULL(rs.require_qc,0)          AS isQcPoint,
+  IFNULL(rs.require_qc,0)          AS requireQc,
+  IFNULL(rs.require_ebr,1)         AS isReportPoint,
+  IFNULL(rs.require_ebr,1)         AS requireEbr,
+  IFNULL(rs.phase_count,1)         AS phaseCount,
+  IFNULL(rs.remark,'')             AS remark,
+  rs.wc_id AS wcId
+`;
+
 router.get('/process-routings/list', authMiddleware, async (req, res) => {
   try {
-    const [rows] = await db.execute(`SELECT id, route_code as routeCode, route_code as code,
-      route_name as routeName, route_name as name, material_id as materialId,
-      factory_code as factoryCode, workshop_type as workshopType,
-      route_status as routeStatus, route_status as status, version
-      FROM base_process_routing WHERE deleted=0 ORDER BY id`);
+    const { status, routingCode } = req.query;
+    let sql = `SELECT ${ROUTING_SELECT} FROM base_process_routing WHERE deleted=0`;
+    const params = [];
+    if (status)      { sql += ' AND route_status=?'; params.push(status); }
+    if (routingCode) { sql += ' AND route_code LIKE ?'; params.push(`%${routingCode}%`); }
+    sql += ' ORDER BY id';
+    const [rows] = await db.execute(sql, params);
     ok(res, rows);
   } catch (e) { fail(res, e.message, 500); }
 });
+
 router.get('/process-routings/page', authMiddleware, async (req, res) => {
   try {
-    const { current=1, pageSize=20 } = req.query;
+    const { current=1, pageSize=20, status, routingCode } = req.query;
     const offset = (Number(current)-1)*Number(pageSize);
-    const [rows] = await db.execute(`SELECT id, route_code as routeCode, route_code as code,
-      route_name as routeName, route_name as name, factory_code as factoryCode,
-      workshop_type as workshopType, route_status as status, version
-      FROM base_process_routing WHERE deleted=0 ORDER BY id LIMIT ? OFFSET ?`, [Number(pageSize),offset]);
-    const [[cnt]] = await db.execute('SELECT COUNT(*) as total FROM base_process_routing WHERE deleted=0');
+    let where = 'WHERE deleted=0';
+    const params = [];
+    if (status)      { where += ' AND route_status=?'; params.push(status); }
+    if (routingCode) { where += ' AND route_code LIKE ?'; params.push(`%${routingCode}%`); }
+    const [rows] = await db.execute(
+      `SELECT ${ROUTING_SELECT} FROM base_process_routing ${where} ORDER BY id LIMIT ? OFFSET ?`,
+      [...params, Number(pageSize), offset]);
+    const [[cnt]] = await db.execute(`SELECT COUNT(*) as total FROM base_process_routing ${where}`, params);
     ok(res, { list:rows, total:cnt.total, current:Number(current), pageSize:Number(pageSize) });
   } catch (e) { fail(res, e.message, 500); }
 });
+
+// ── 工序步骤独立查询（前端 /api/routing-steps/list?routingId=X）────
+router.get('/routing-steps/list', authMiddleware, async (req, res) => {
+  try {
+    const { routingId, routeId } = req.query;
+    const rid = routingId || routeId;
+    if (!rid) { ok(res, []); return; }
+    const [steps] = await db.execute(
+      `SELECT ${STEP_SELECT} FROM base_routing_step rs
+       WHERE rs.route_id=? AND rs.deleted=0 ORDER BY rs.step_no`,
+      [rid]);
+    ok(res, steps);
+  } catch (e) { fail(res, e.message, 500); }
+});
+
 router.get('/process-routings/:id', authMiddleware, async (req, res) => {
   try {
-    const [[route]] = await db.execute(`SELECT id, route_code as routeCode, route_code as code,
-      route_name as routeName, route_name as name, material_id as materialId,
-      factory_code as factoryCode, workshop_type as workshopType, route_status as status, version
-      FROM base_process_routing WHERE id=? AND deleted=0`, [req.params.id]);
+    const [[route]] = await db.execute(
+      `SELECT ${ROUTING_SELECT} FROM base_process_routing WHERE id=? AND deleted=0`,
+      [req.params.id]);
     if (!route) return ok(res, null);
-    const [steps] = await db.execute(`SELECT rs.id, rs.route_id as routingId, rs.route_id as routeId, rs.step_no as stepNo,
-      rs.op_id as opId, rs.op_code as opCode, IFNULL(rs.op_name, rs.op_code) as opName,
-      IFNULL(rs.std_time,0) as stdTime, IFNULL(rs.is_key_step,0) as isKeyProcess,
-      IFNULL(rs.is_key_step,0) as isKeyStep, IFNULL(rs.require_qc,0) as requireQc,
-      IFNULL(rs.require_ebr,0) as requireEbr, rs.wc_id as wcId
-      FROM base_routing_step rs
-      WHERE rs.route_id=? AND rs.deleted=0 ORDER BY rs.step_no`, [req.params.id]);
+    const [steps] = await db.execute(
+      `SELECT ${STEP_SELECT} FROM base_routing_step rs
+       WHERE rs.route_id=? AND rs.deleted=0 ORDER BY rs.step_no`,
+      [req.params.id]);
     ok(res, { ...route, steps });
   } catch (e) { fail(res, e.message, 500); }
 });
+
 router.post('/process-routings', authMiddleware, async (req, res) => {
   try {
-    const { routeCode, code, routeName, name, materialId, factoryCode, workshopType, version='1.0', steps=[] } = req.body;
-    const [r] = await db.execute('INSERT INTO base_process_routing (route_code,route_name,material_id,factory_code,workshop_type,version) VALUES (?,?,?,?,?,?)',
-      [routeCode||code, routeName||name, materialId||null, factoryCode||'NJ', workshopType||'', version]);
+    const {
+      routingCode, routeCode, code,
+      routingName, routeName, name,
+      materialId, factoryCode, workshopType,
+      version='V1.0', productCode, productName, productModel,
+      workshop, productLine, applicableSpec, remark,
+      auditBy, auditAt, auditRemark, createdBy, isDefault=1,
+      steps=[]
+    } = req.body;
+    const rc = routingCode||routeCode||code;
+    const rn = routingName||routeName||name;
+    const [r] = await db.execute(
+      `INSERT INTO base_process_routing
+       (route_code,route_name,material_id,factory_code,workshop_type,version,
+        product_code,product_name,product_model,workshop,product_line,applicable_spec,
+        remark,audit_by,audit_at,audit_remark,created_by,is_default)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [rc, rn, materialId||null, factoryCode||'NJ', workshopType||'', version,
+       productCode||'', productName||'', productModel||'',
+       workshop||'', productLine||'', applicableSpec||'',
+       remark||'', auditBy||'', auditAt||'', auditRemark||'',
+       createdBy||'', isDefault?1:0]);
     const routeId = r.insertId;
     for (let i=0; i<steps.length; i++) {
       const s = steps[i];
-      await db.execute('INSERT INTO base_routing_step (route_id,step_no,op_id,op_code,op_name,std_time,is_key_step) VALUES (?,?,?,?,?,?,?)',
-        [routeId, s.stepNo||i+1, s.opId||null, s.opCode||'', s.opName||'', s.stdTime||0, s.isKeyProcess||s.isKeyStep||0]);
+      await db.execute(
+        `INSERT INTO base_routing_step
+         (route_id,step_no,op_id,op_code,op_name,op_short,work_center,std_time,is_key_step,require_qc,require_ebr,phase_count,remark)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [routeId, s.stepNo||s.seq||(i+1)*10,
+         s.opId||null, s.opCode||'', s.opName||'', s.opShort||'',
+         s.workCenter||s.work_center||'',
+         s.stdTimeMin||s.stdTime||0,
+         s.isKeyOp||s.isKeyProcess||s.isKeyStep||0,
+         s.isQcPoint||s.requireQc||0,
+         s.isReportPoint||s.requireEbr||1,
+         s.phaseCount||1,
+         s.remark||'']);
     }
     ok(res, { id: routeId });
   } catch (e) { fail(res, e.message, 400); }
 });
+
 router.put('/process-routings/:id', authMiddleware, async (req, res) => {
   try {
-    const { routeName, name, version } = req.body;
-    await db.execute('UPDATE base_process_routing SET route_name=?,version=?,update_time=NOW() WHERE id=?',
-      [routeName||name, version||'1.0', req.params.id]);
+    const {
+      routingName, routeName, name, version, status, routeStatus,
+      productCode, productName, productModel, workshop, productLine,
+      applicableSpec, remark, auditBy, auditAt, auditRemark,
+      disableReason, isDefault
+    } = req.body;
+    // 反向映射前端 status → DB route_status
+    const statusMap = { ACTIVE:'ACTIVE', PENDING:'PENDING', DISABLED:'INACTIVE', DRAFT:'DRAFT', OBSOLETE:'OBSOLETE' };
+    const newStatus = statusMap[status||routeStatus] || undefined;
+    const sets = [
+      'route_name=?', 'version=?', 'update_time=NOW()',
+      'product_code=?', 'product_name=?', 'product_model=?',
+      'workshop=?', 'product_line=?', 'applicable_spec=?',
+      'remark=?', 'audit_by=?', 'audit_at=?', 'audit_remark=?',
+      'disable_reason=?', 'is_default=?',
+    ];
+    const vals = [
+      routingName||routeName||name, version||'V1.0',
+      productCode||'', productName||'', productModel||'',
+      workshop||'', productLine||'', applicableSpec||'',
+      remark||'', auditBy||'', auditAt||'', auditRemark||'',
+      disableReason||'', isDefault!=null ? (isDefault?1:0) : 1,
+    ];
+    if (newStatus) { sets.push('route_status=?'); vals.push(newStatus); }
+    vals.push(req.params.id);
+    await db.execute(`UPDATE base_process_routing SET ${sets.join(',')} WHERE id=?`, vals);
     ok(res, { id: Number(req.params.id) });
+  } catch (e) { fail(res, e.message, 400); }
+});
+
+// 状态专用 PATCH（提交审核/撤审/生效/停用/废止）
+router.patch('/process-routings/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const { status, auditBy, auditAt, auditRemark, disableReason } = req.body;
+    const statusMap = { ACTIVE:'ACTIVE', PENDING:'PENDING', DISABLED:'INACTIVE', DRAFT:'DRAFT', OBSOLETE:'OBSOLETE' };
+    const dbStatus = statusMap[status] || status;
+    await db.execute(
+      `UPDATE base_process_routing SET route_status=?,
+       audit_by=IFNULL(?,audit_by), audit_at=IFNULL(?,audit_at),
+       audit_remark=IFNULL(?,audit_remark), disable_reason=IFNULL(?,disable_reason),
+       update_time=NOW() WHERE id=?`,
+      [dbStatus, auditBy||null, auditAt||null, auditRemark||null, disableReason||null, req.params.id]);
+    ok(res, { id: Number(req.params.id) });
+  } catch (e) { fail(res, e.message, 400); }
+});
+
+router.delete('/process-routings/batch', authMiddleware, async (req, res) => {
+  try {
+    const ids = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) { ok(res, {}); return; }
+    const ph = ids.map(() => '?').join(',');
+    await db.execute(`UPDATE base_process_routing SET deleted=1 WHERE id IN (${ph})`, ids);
+    ok(res, {});
+  } catch (e) { fail(res, e.message, 400); }
+});
+
+router.delete('/process-routings/:id', authMiddleware, async (req, res) => {
+  try {
+    await db.execute('UPDATE base_process_routing SET deleted=1 WHERE id=?', [req.params.id]);
+    ok(res, {});
   } catch (e) { fail(res, e.message, 400); }
 });
 
