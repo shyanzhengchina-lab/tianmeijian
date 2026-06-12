@@ -17,7 +17,7 @@ import {
   ProcessRouting, RoutingGroup, RoutingOpStep,
   ROUTING_STATUS_MAP, calcTotalTime, countAllSteps, canConfigSteps,
 } from './proData';
-import { mockOperations, Operation, OP_CATEGORY_MAP, PHASE_TYPE_MAP } from '../operation/operationData';
+import { mockOperations, Operation, OP_CATEGORY_MAP, PHASE_TYPE_MAP, findOperationByCode, findOperationByName, generateDefaultPhases } from '../operation/operationData';
 import { getOperationList } from '../../api/operations';
 import {
   RoutingStepRecord,
@@ -348,7 +348,10 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
 
   // ── 预览工序主数据 ───────────────────────────────────────────────
   const handlePreviewOp = (opId: string) => {
-    const op = allOperations.find(o => o.id === opId);
+    // 多策略查找：opId → opCode → opName
+    const step = routingData.groups.flatMap(g => g.steps).find(s => s.opId === opId);
+    const op = allOperations.find(o => o.id === opId)
+      ?? (step ? findOperationByCode(step.opCode) ?? findOperationByName(step.opName) : undefined);
     if (op) { setPreviewOp(op); setPreviewDrawerOpen(true); }
   };
 
@@ -624,7 +627,16 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
       );
     }
 
-    const op = allOperations.find(o => o.id === currentStep.opId);
+    // 多策略查找工序主数据：① opId精确匹配 → ② opCode匹配 → ③ opName模糊匹配 → ④ 自动生成默认阶段
+    const op: Operation | undefined =
+      allOperations.find(o => o.id === currentStep.opId) ??
+      findOperationByCode(currentStep.opCode) ??
+      findOperationByName(currentStep.opName);
+    // op找不到时用自动生成的默认阶段
+    const phases = op?.phases?.length
+      ? op.phases
+      : generateDefaultPhases(currentStep.opName, currentStep.isQcPoint, currentStep.isKeyOp);
+    const isAutoPhase = !op;
 
     return (
       <>
@@ -672,12 +684,13 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
         </div>
 
         <div className="stage-config-body">
-          <div style={{ marginBottom: 12, color: '#888', fontSize: 12 }}>
-            以下为工序主数据定义的阶段（只读预览），如需修改请在工序主数据中维护。
+          <div style={{ marginBottom: 12, color: '#888', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isAutoPhase
+              ? <><span style={{ color: '#fa8c16', fontWeight: 500 }}>⚡ 自动生成阶段</span><span style={{ color: '#bbb' }}>— 工序主数据未配置，已按GMP规范自动生成标准阶段。如需定制请在工序主数据中维护。</span></>
+              : <span>以下为工序主数据定义的阶段（只读预览），如需修改请在工序主数据中维护。</span>
+            }
           </div>
-          {!op
-            ? <div style={{ textAlign: 'center', color: '#ccc', padding: 40 }}>未找到对应工序主数据</div>
-            : op.phases.map((phase, idx) => {
+          {phases.map((phase, idx) => {
               const typeInfo = PHASE_TYPE_MAP[phase.phaseType];
               return (
                 <div key={phase.phaseCode} className="stage-card enabled">
@@ -695,6 +708,11 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
                       <span style={{ fontFamily: 'monospace', color: '#bbb' }}>{phase.phaseCode}</span>
                     </div>
                   </div>
+                  {phase.remark && (
+                    <div style={{ padding: '4px 12px', background: '#fffbe6', borderBottom: '1px solid #ffe58f', fontSize: 11, color: '#874d00' }}>
+                      <ExclamationCircleOutlined style={{ marginRight: 4 }} />{phase.remark}
+                    </div>
+                  )}
                   {phase.fields.length > 0 && (
                     <div className="stage-card-body">
                       <div className="stage-fields-title">采集字段（{phase.fields.length}个）：</div>
@@ -706,6 +724,7 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
                           {f.stdValue && <span style={{ color: '#1677FF', fontSize: 11 }}>标准：{f.stdValue}</span>}
                           {f.required && <Tag color="red" style={{ fontSize: 10, padding: '0 4px' }}>必填</Tag>}
                           {f.inputType && <Tag style={{ fontSize: 10, padding: '0 4px' }}>{f.inputType}</Tag>}
+                          {f.instrument && <Tooltip title={`量具：${f.instrument}`}><Tag color="purple" style={{ fontSize: 10, padding: '0 4px' }}>{f.instrument}</Tag></Tooltip>}
                         </div>
                       ))}
                       {phase.linkedDoc && (
