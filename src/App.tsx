@@ -93,6 +93,11 @@ const CleanupManagePage = lazy(() => import('./pages/gmp/CleanupManagePage'));
 const EbrEnhancedPage = lazy(() => import('./pages/ebr/EbrEnhancedPage'));
 // 新增：批包装记录EBR（1:1复刻）
 const BatchPackagingEbrPage = lazy(() => import('./pages/ebr/BatchPackagingEbrPage'));
+// 新增：PRD完善模块（批记录审批工作流/物料平衡计算引擎/称量防错/生产前再确认）
+const EbrWorkflowPage = lazy(() => import('./pages/ebr/EbrWorkflowPage'));
+const MaterialBalanceEnginePage = lazy(() => import('./pages/ebr/MaterialBalanceEnginePage'));
+const WeighingAntiErrorPage = lazy(() => import('./pages/ebr/WeighingAntiErrorPage'));
+const PreProductionCheckPage = lazy(() => import('./pages/gmp/PreProductionCheckPage'));
 
 
 // 配置dayjs中文
@@ -334,6 +339,10 @@ const App: React.FC = () => {
       case 'cleanup-manage':    return ['GMP合规', '清场管理'];
       case 'ebr-enhanced':      return ['电子批记录', 'EBR增强版'];
       case 'batch-pkg-ebr':     return ['电子批记录', '批包装记录（SOR-MF-PE-02-05）'];
+      case 'ebr-workflow':      return ['电子批记录', 'EBR审批工作流（PRD §5）'];
+      case 'mat-balance-engine': return ['电子批记录', '物料平衡计算引擎（PRD §6）'];
+      case 'weigh-anti-error':  return ['电子批记录', '称量配料防错（PRD §8）'];
+      case 'pre-check':         return ['GMP合规', '生产前再确认（PRD §7）'];
       case 'fg-receipt':       return ['仓储管理', '成品入库'];
       case 'sales-shipment':   return ['仓储管理', '成品出库'];
       case 'reports':          return ['数据报表'];
@@ -397,6 +406,11 @@ const App: React.FC = () => {
       case 'cleanup-manage':    return <PageWrapper><CleanupManagePage /></PageWrapper>;
       case 'ebr-enhanced':      return <PageWrapper><EbrEnhancedPage /></PageWrapper>;
       case 'batch-pkg-ebr':     return <PageWrapper><BatchPackagingEbrPage /></PageWrapper>;
+      // PRD完善模块
+      case 'ebr-workflow':      return <PageWrapper><EbrWorkflowPage /></PageWrapper>;
+      case 'mat-balance-engine': return <PageWrapper><MaterialBalanceEnginePage /></PageWrapper>;
+      case 'weigh-anti-error':  return <PageWrapper><WeighingAntiErrorPage /></PageWrapper>;
+      case 'pre-check':         return <PageWrapper><PreProductionCheckPage /></PageWrapper>;
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
       // 数据报表

@@ -40,6 +40,8 @@ import {
   InboxOutlined,
   QrcodeOutlined,
   FileProtectOutlined,
+  CalculatorOutlined,
+  SafetyOutlined,
 } from '@ant-design/icons';
 import { FACTORIES, getFactoryById } from '../../store/rbacData';
 import './MainLayout.css';
@@ -150,10 +152,13 @@ const menuItems = [
     group: '电子批记录',
     children: [
       { key: 'ebr-list',         label: '批记录管理',   icon: <FileTextOutlined /> },
+      { key: 'ebr-workflow',     label: 'EBR审批工作流', icon: <AuditOutlined /> },
       { key: 'ebr-enhanced',     label: 'EBR增强版',    icon: <FileDoneOutlined /> },
       { key: 'batch-pkg-ebr',    label: '批包装记录(EBR)', icon: <FileProtectOutlined /> },
       { key: 'equip-usage',      label: '设备使用批记录', icon: <HddOutlined /> },
-      { key: 'material-balance', label: '物料平衡表',   icon: <FileTextOutlined /> },
+      { key: 'mat-balance-engine', label: '物料平衡计算引擎', icon: <CalculatorOutlined /> },
+      { key: 'material-balance', label: '物料平衡表(旧)',   icon: <FileTextOutlined /> },
+      { key: 'weigh-anti-error', label: '称量配料防错',  icon: <ExperimentOutlined /> },
     ],
   },
   {
@@ -173,6 +178,7 @@ const menuItems = [
     label: 'GMP合规',
     group: 'GMP合规',
     children: [
+      { key: 'pre-check',       label: '生产前再确认',  icon: <SafetyOutlined /> },
       { key: 'gmp-hygiene',    label: '卫生管理记录', icon: <ExperimentOutlined /> },
       { key: 'gmp-deviation',  label: '偏差处理',     icon: <WarningOutlined /> },
       { key: 'gmp-capa',       label: 'CAPA管理',     icon: <AuditOutlined /> },
@@ -307,6 +313,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'gmp-deviation':      '偏差处理',
     'gmp-capa':           'CAPA管理',
     'cleanup-manage':     '清场管理',
+    'ebr-workflow':       'EBR审批工作流',
+    'mat-balance-engine': '物料平衡计算引擎',
+    'weigh-anti-error':   '称量配料防错',
+    'pre-check':          '生产前再确认',
     'ebr-enhanced':       'EBR增强版',
     'batch-pkg-ebr':      '批包装记录（SOR-MF-PE-02-05）',
     mrb:              'MRB不合格品评审',
