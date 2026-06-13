@@ -487,6 +487,124 @@ export const OPERATIONS: OperationDef[] = [
   },
 ];
 
+// ==================== 保健品/GMP 工序定义（按 SOR-MF-PE-02-05 批包装路线）====================
+
+export const GMP_OPERATIONS: OperationDef[] = [
+  // 1. 领料/称量配料
+  {
+    seq: 10,
+    code: 'OP-GMP-WEIGH',
+    name: '称量配料',
+    workshop: '固体制剂车间',
+    remark: '双人复核，物料平衡必填',
+    stages: makeStages(
+      { PRE_CLEAN: true, CHECK_IN: true, MAT_VERIFY: true, FIRST_PIECE: false, DATA_COLLECT: true, SELF_CHECK: false, POST_CLEAN: false, REPORT: true, CHECK_OUT: true },
+      {
+        PRE_CLEAN: '确认称量间无上批遗留物料；清场合格证有效期内（72小时）；天平校验合格证在有效期内',
+        MAT_VERIFY: '核对物料名称、批号、数量，与批包装指令一致；检查物料状态标签（"已取样"或"合格"）',
+        DATA_COLLECT: '每种物料：处方量、实称量、天平编号、称量人、复核人；环境温湿度记录',
+        REPORT: '称量总量、物料清单、称量人、复核人签名',
+      }
+    ),
+    hasQcInspection: false,
+  },
+
+  // 2. 混合
+  {
+    seq: 20,
+    code: 'OP-GMP-MIX',
+    name: '混合',
+    workshop: '固体制剂车间',
+    stages: makeStages(
+      { PRE_CLEAN: true, CHECK_IN: true, MAT_VERIFY: false, FIRST_PIECE: false, DATA_COLLECT: true, SELF_CHECK: false, POST_CLEAN: false, REPORT: true, CHECK_OUT: true },
+      {
+        PRE_CLEAN: '三维混合机清洁合格证有效；内壁无上批遗留物',
+        DATA_COLLECT: '混合机编号、转速(rpm)、混合时间(min)、混合均匀性RSD(≤5%)；环境温度/湿度',
+        REPORT: '混合批量、混合参数、操作人签名',
+      }
+    ),
+    hasQcInspection: true,
+    inspectionRecordName: '混合均匀性检验记录（RSD≤5%）',
+  },
+
+  // 3. 制粒/干燥（可选，粉剂直接跳到内包）
+  {
+    seq: 30,
+    code: 'OP-GMP-GRANULATE',
+    name: '制粒干燥',
+    workshop: '固体制剂车间',
+    stages: makeStages(
+      { PRE_CLEAN: true, CHECK_IN: true, MAT_VERIFY: false, FIRST_PIECE: false, DATA_COLLECT: true, SELF_CHECK: false, POST_CLEAN: false, REPORT: true, CHECK_OUT: true },
+      {
+        PRE_CLEAN: '制粒机/干燥机清洁合格证有效；确认无上批遗留颗粒',
+        DATA_COLLECT: '进风温度/出风温度/干燥时间/颗粒水分(≤3.0%)/颗粒粒径(目数)',
+        REPORT: '颗粒批量、水分测定结果、操作人签名',
+      }
+    ),
+    hasQcInspection: true,
+    inspectionRecordName: '颗粒中间体检验记录',
+  },
+
+  // 4. 内包装（瓶包线）—— 对应 SOR-MF-PE-02-05 第3部分
+  {
+    seq: 40,
+    code: 'OP-GMP-INNERPACK',
+    name: '内包装',
+    workshop: '包装车间',
+    remark: '关键工序，QA监控，装量差异检查每小时一次',
+    stages: makeStages(
+      { PRE_CLEAN: true, CHECK_IN: true, MAT_VERIFY: true, FIRST_PIECE: true, DATA_COLLECT: true, SELF_CHECK: false, POST_CLEAN: true, REPORT: true, CHECK_OUT: true },
+      {
+        PRE_CLEAN: '包装线清场合格证有效（固体制剂72小时内）；无上批包材、产品遗留；上批清场合格证已撤除',
+        MAT_VERIFY: '核对内包材（瓶、盖）批号、数量与指令一致；物料状态标签为"合格"',
+        FIRST_PIECE: '首瓶装量复核：按标准装量±5%范围内；首件合格后方可批量生产（双人核对）',
+        DATA_COLLECT: '每小时装量检查（5瓶/次）：装量克重；密封检查；标签位置；环境温湿度',
+        POST_CLEAN: '清点本工序物料用量；填写物料平衡表；清场并申请清场合格证',
+        REPORT: '实际产量、合格品数、不合格品数、操作人、班组长复核',
+      }
+    ),
+    hasQcInspection: true,
+    inspectionRecordName: '内包装过程检验记录',
+  },
+
+  // 5. 内包装后清场 — 独立记录清场合格证
+  {
+    seq: 45,
+    code: 'OP-GMP-INNERCLEAN',
+    name: '内包清场',
+    workshop: '包装车间',
+    remark: '清场后申请清场合格证，有效期72小时',
+    stages: makeStages(
+      { PRE_CLEAN: false, CHECK_IN: true, MAT_VERIFY: false, FIRST_PIECE: false, DATA_COLLECT: false, SELF_CHECK: false, POST_CLEAN: true, REPORT: true, CHECK_OUT: false },
+      {
+        POST_CLEAN: '按清场SOP清洁设备/容器/地面；移除本批所有物料及标识；操作人、班组长、QA三级检查并签字',
+        REPORT: '清场开始时间、结束时间、清场人、班组长签名、QA签名、合格证编号',
+      }
+    ),
+  },
+
+  // 6. 外包装（装盒/装箱）—— 对应 SOR-MF-PE-02-05 第5部分
+  {
+    seq: 50,
+    code: 'OP-GMP-OUTERPACK',
+    name: '外包装',
+    workshop: '包装车间',
+    remark: '批号打印、说明书、合格证核对',
+    stages: makeStages(
+      { PRE_CLEAN: true, CHECK_IN: true, MAT_VERIFY: true, FIRST_PIECE: false, DATA_COLLECT: true, SELF_CHECK: false, POST_CLEAN: true, REPORT: true, CHECK_OUT: true },
+      {
+        PRE_CLEAN: '外包装区域清场合格证有效；无上批标签、说明书遗留',
+        MAT_VERIFY: '核对外包材（纸盒、说明书、合格证）批号、版本号与指令一致',
+        DATA_COLLECT: '每盒：瓶数/说明书/批号印刷/密封/UPC复核；每小时记录一次',
+        POST_CLEAN: '清点外包材用量；填写物料平衡表；申请清场合格证',
+        REPORT: '实际装盒数、装箱数、操作人、班组长复核、QA抽查',
+      }
+    ),
+    hasQcInspection: true,
+    inspectionRecordName: '外包装过程检验记录',
+  },
+];
+
 // 可见工序（不包含 hidden=true）
 export const VISIBLE_OPERATIONS = OPERATIONS.filter(op => !op.hidden);
 

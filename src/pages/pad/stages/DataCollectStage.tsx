@@ -39,6 +39,99 @@ interface DcConfig {
 }
 
 const DC_CONFIG_BY_OP: Record<string, DcConfig> = {
+  // ─── 保健品工序（SOR-MF-PE-02-05 批包装记录） ───────────────────────────
+
+  // 称量配料
+  'OP-GMP-WEIGH': {
+    title: '称量配料 — 过程数据',
+    deviceLabel: '电子天平',
+    minRecords: 1,
+    fields: [
+      { key: 'material_name', label: '物料名称', type: 'text', required: true, colSpan: 12 },
+      { key: 'batch_no', label: '物料批号', type: 'text', required: true, colSpan: 12 },
+      { key: 'plan_qty', label: '处方量(kg)', unit: 'kg', precision: 3, type: 'number', required: true, colSpan: 8 },
+      { key: 'actual_qty', label: '实称量(kg)', unit: 'kg', precision: 3, type: 'number', required: true, colSpan: 8 },
+      { key: 'balance_check', label: '称量复核', type: 'select', options: ['复核一致', '不一致'], required: true, colSpan: 8 },
+      { key: 'temp', label: '环境温度(℃)', unit: '℃', precision: 1, specMin: 18, specMax: 26, type: 'number', required: true, colSpan: 8 },
+      { key: 'humidity', label: '相对湿度(%)', unit: '%', precision: 1, specMin: 45, specMax: 65, type: 'number', required: true, colSpan: 8 },
+    ],
+    mockData: [{ material_name: '维生素C', batch_no: 'VC-2026-01', plan_qty: 50.000, actual_qty: 50.003, balance_check: '复核一致', temp: 22.1, humidity: 52.3 }],
+  },
+
+  // 混合
+  'OP-GMP-MIX': {
+    title: '混合工序 — 过程参数',
+    deviceLabel: '三维混合机',
+    minRecords: 1,
+    fields: [
+      { key: 'equip_no', label: '混合机编号', type: 'text', required: true, colSpan: 8 },
+      { key: 'mix_speed', label: '混合转速(rpm)', unit: 'rpm', precision: 0, specMin: 8, specMax: 15, type: 'number', required: true, colSpan: 8 },
+      { key: 'mix_time', label: '混合时间(min)', unit: 'min', precision: 0, specMin: 15, specMax: 30, type: 'number', required: true, colSpan: 8 },
+      { key: 'mix_rsd', label: '混合均匀性RSD', unit: '%', precision: 2, spec: 'RSD≤5%', specMin: 0, specMax: 5, type: 'number', required: true, colSpan: 8 },
+      { key: 'temp', label: '环境温度(℃)', unit: '℃', precision: 1, specMin: 18, specMax: 26, type: 'number', required: true, colSpan: 8 },
+      { key: 'humidity', label: '相对湿度(%)', unit: '%', precision: 1, specMin: 45, specMax: 65, type: 'number', required: true, colSpan: 8 },
+    ],
+    mockData: [{ equip_no: 'MX-001', mix_speed: 12, mix_time: 20, mix_rsd: 2.3, temp: 22.5, humidity: 53.0 }],
+  },
+
+  // 制粒/干燥
+  'OP-GMP-GRANULATE': {
+    title: '制粒干燥 — 过程参数',
+    deviceLabel: '湿法制粒机 / 流化床干燥机',
+    minRecords: 1,
+    fields: [
+      { key: 'equip_no', label: '设备编号', type: 'text', required: true, colSpan: 8 },
+      { key: 'granule_moisture', label: '颗粒水分(%)', unit: '%', precision: 2, spec: '≤3.0%', specMin: 0, specMax: 3.0, type: 'number', required: true, colSpan: 8 },
+      { key: 'granule_size', label: '颗粒粒径(目)', unit: '目', precision: 0, type: 'number', colSpan: 8 },
+      { key: 'inlet_temp', label: '进风温度(℃)', unit: '℃', precision: 1, type: 'number', colSpan: 8 },
+      { key: 'outlet_temp', label: '出风温度(℃)', unit: '℃', precision: 1, type: 'number', colSpan: 8 },
+      { key: 'dry_time', label: '干燥时间(min)', unit: 'min', precision: 0, type: 'number', colSpan: 8 },
+    ],
+    mockData: [{ equip_no: 'GR-001', granule_moisture: 1.8, granule_size: 20, inlet_temp: 65, outlet_temp: 38, dry_time: 45 }],
+  },
+
+  // 内包装（瓶包线）
+  'OP-GMP-INNERPACK': {
+    title: '内包装（瓶包线） — 过程数据',
+    deviceLabel: '全自动数片机 / 瓶包线',
+    minRecords: 3,
+    fields: [
+      { key: 'check_time', label: '检查时间', type: 'text', required: true, colSpan: 8 },
+      { key: 'fill_qty', label: '装量(片/粒)', unit: '片', precision: 0, type: 'number', required: true, colSpan: 8 },
+      { key: 'fill_weight', label: '装量重(g)', unit: 'g', precision: 2, spec: '±5%', type: 'number', required: true, colSpan: 8 },
+      { key: 'seal_check', label: '瓶盖密封', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+      { key: 'label_check', label: '标签位置', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+      { key: 'temp', label: '环境温度(℃)', unit: '℃', precision: 1, type: 'number', colSpan: 8 },
+      { key: 'humidity', label: '相对湿度(%)', unit: '%', precision: 1, type: 'number', colSpan: 8 },
+    ],
+    mockData: [
+      { check_time: '08:30', fill_qty: 60, fill_weight: 72.15, seal_check: '合格', label_check: '合格', temp: 22.0, humidity: 51.5 },
+      { check_time: '10:00', fill_qty: 60, fill_weight: 71.98, seal_check: '合格', label_check: '合格', temp: 22.3, humidity: 52.0 },
+      { check_time: '14:00', fill_qty: 60, fill_weight: 72.08, seal_check: '合格', label_check: '合格', temp: 22.1, humidity: 51.8 },
+    ],
+  },
+
+  // 外包装（装盒/装箱）
+  'OP-GMP-OUTERPACK': {
+    title: '外包装（装盒/装箱） — 过程数据',
+    deviceLabel: '装盒机 / 打码机',
+    minRecords: 2,
+    fields: [
+      { key: 'check_time', label: '检查时间', type: 'text', required: true, colSpan: 8 },
+      { key: 'bottles_per_box', label: '每盒瓶数', unit: '瓶', precision: 0, type: 'number', required: true, colSpan: 8 },
+      { key: 'insert_check', label: '说明书', type: 'select', options: ['合格', '缺失'], required: true, colSpan: 8 },
+      { key: 'batch_print', label: '批号打印', type: 'select', options: ['清晰正确', '不合格'], required: true, colSpan: 8 },
+      { key: 'seal_check', label: '盒体密封', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+      { key: 'code_verify', label: 'UPC/批号复核', type: 'select', options: ['一致', '不一致'], required: true, colSpan: 8 },
+    ],
+    mockData: [
+      { check_time: '09:00', bottles_per_box: 1, insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致' },
+      { check_time: '13:00', bottles_per_box: 1, insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致' },
+    ],
+  },
+
+  // ─── 原医疗器械工序 ───────────────────────────────────────────────────────
+
   // OP-10 机床成型：抽检外径/尖端径/锥度/螺距/表面粗糙度 + 设备工艺参数
   'OP-10-GRIND': {
     title: '机床成型 — 过程抽检数据',
