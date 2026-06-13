@@ -106,13 +106,14 @@ export interface QcItemImportConfig {
  * 质检项目API服务类
  */
 class QcItemApiService {
-  private readonly baseUrl = '/qc-item';
+  private readonly baseUrl = '/inspection-items';
 
   /**
    * 获取质检项目列表（分页）
+   * 后端 /inspection-items/page 返回 {list, total, pageNum, pageSize}
    */
   async getQcItems(query: QcItemQuery): Promise<ApiResponse<PageResult<QcItem>>> {
-    return apiClient.getPage(`${this.baseUrl}/list`, query);
+    return apiClient.getPage(`${this.baseUrl}/page`, query);
   }
 
   /**
