@@ -49,7 +49,9 @@
 ### ✅ 基础数据管理
 - 物料档案、BOM、工艺路线、工序档案、计量单位
 - 员工、班组、设备、工作中心、车间管理
-- QC检验方案（前端有 mock，后端部分未实现）
+- **BOM物料清单**：6个成品BOM已入库，含53条明细（原料/辅料/包材）
+- **FQC质检方案**：6套成品质检方案，共65条检验项（含spec范围值）
+- QC检验项管理（含 IQC/IPQC/FQC/在线/清洁 等5类共19条方案）
 
 ### ✅ 生产计划与执行
 - 工单管理（与后端联通，200 OK）
@@ -70,6 +72,10 @@
 | `/api/process-routings/list` | ✅ 200 | 工艺路线 |
 | `/api/routing-steps/list` | ✅ 200 | 工序步骤 |
 | `/api/materials/list` | ✅ 200 | 物料列表 |
+| `/api/boms/list` | ✅ 200 | BOM物料清单（6条） |
+| `/api/boms/{id}/details` | ✅ 200 | BOM明细（原料/辅料/包材） |
+| `/api/qc-schemes/list` | ✅ 200 | 质检方案（19条） |
+| `/api/qc-schemes/{id}` | ✅ 200 | 质检方案详情+检验项 |
 | `/api/float-tickets/list` | ⚠️ 404 | 流转票（后端未实现，前端已静默处理） |
 | `/api/base/employee/list` | ⚠️ 404 | 员工（后端未实现） |
 | `/api/base/team/list` | ⚠️ 404 | 班组（后端未实现） |
