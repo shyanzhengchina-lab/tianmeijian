@@ -59,6 +59,13 @@ const EQUIP_BY_OP: Record<string, Array<{ id: string; name: string }>> = {
   'OP-150-STORE':    [{ id: 'EQ-S01', name: '入库扫码枪-S01' }],
   'OP-160-HANDLE':   [{ id: 'EQ-H01', name: '激光打码机-H01' }],
   'OP-170-COLOR':    [{ id: 'EQ-C01', name: '上色台-C01' }],
+  // ── GMP 保健品工序设备 ─────────────────────────────────────────
+  'OP-GMP-WEIGH':      [{ id: 'EQ-BAL01', name: '电子天平-BAL01（量程60kg）' }, { id: 'EQ-BAL02', name: '电子天平-BAL02（量程6kg）' }],
+  'OP-GMP-MIX':        [{ id: 'EQ-MIX01', name: '三维运动混合机-MIX01' }],
+  'OP-GMP-GRANULATE':  [{ id: 'EQ-GRA01', name: '湿法制粒机-GRA01' }, { id: 'EQ-DRY01', name: '沸腾干燥机-DRY01' }],
+  'OP-GMP-INNERPACK':  [{ id: 'EQ-BTP01', name: '全自动瓶包机-BTP01' }, { id: 'EQ-BTP02', name: '全自动瓶包机-BTP02' }],
+  'OP-GMP-INNERCLEAN': [{ id: 'EQ-VAC01', name: '工业吸尘器-VAC01' }],
+  'OP-GMP-OUTERPACK':  [{ id: 'EQ-CTN01', name: '装盒机-CTN01' }, { id: 'EQ-CSE01', name: '装箱机-CSE01' }],
 };
 
 const PROCESS_PARAMS: Record<string, Array<{ label: string; value: string; unit: string }>> = {
@@ -70,6 +77,13 @@ const PROCESS_PARAMS: Record<string, Array<{ label: string; value: string; unit:
   'OP-90-LINE':    [{ label: '刻线转速', value: '800', unit: 'rpm' }, { label: '刻线深度', value: '0.05', unit: 'mm' }, { label: '刀具规格', value: 'KX-03', unit: '' }],
   'OP-160-HANDLE': [{ label: '激光功率', value: '15', unit: 'W' }, { label: '扫描速度', value: '500', unit: 'mm/s' }, { label: '打码内容', value: 'UDI+批号', unit: '' }],
   'OP-170-COLOR':  [{ label: '烘干温度', value: '60', unit: '℃' }, { label: '烘干时间', value: '10', unit: 'min' }, { label: '涂料批号', value: 'CL-2026-04', unit: '' }],
+  // ── GMP 保健品工序工艺参数 ──────────────────────────────────────
+  'OP-GMP-WEIGH':     [{ label: '称量精度', value: '±0.1%', unit: '' }, { label: '环境温度', value: '22±2', unit: '℃' }, { label: '相对湿度', value: '55±5', unit: '%' }],
+  'OP-GMP-MIX':       [{ label: '混合转速', value: '12', unit: 'rpm' }, { label: '混合时间', value: '20', unit: 'min' }, { label: '混合均匀度(RSD)', value: '≤5', unit: '%' }],
+  'OP-GMP-GRANULATE': [{ label: '进风温度', value: '55±5', unit: '℃' }, { label: '出风温度', value: '40±5', unit: '℃' }, { label: '干燥时间', value: '60', unit: 'min' }, { label: '颗粒水分', value: '≤3.0', unit: '%' }],
+  'OP-GMP-INNERPACK': [{ label: '装量范围', value: '±5%', unit: '' }, { label: '生产速度', value: '60', unit: '瓶/min' }, { label: '封口温度', value: '180±10', unit: '℃' }],
+  'OP-GMP-INNERCLEAN':[{ label: '清场方式', value: '湿法清洁', unit: '' }, { label: '清洁剂', value: '纯化水', unit: '' }],
+  'OP-GMP-OUTERPACK': [{ label: '每盒装量', value: '60', unit: '粒/盒' }, { label: '每箱装量', value: '48', unit: '盒/箱' }, { label: '封箱方式', value: '热熔胶', unit: '' }],
 };
 const DEFAULT_PARAMS = [{ label: '生产班次', value: '白班', unit: '' }, { label: '生产批次', value: '-', unit: '' }];
 

@@ -1,242 +1,149 @@
-# 迈迪康 MES 系统
+# 天美健 · 保健品MES生产执行系统
 
-医疗器械制造执行系统（Manufacturing Execution System）
+医疗器械 & 保健品GMP 双模式制造执行系统（Manufacturing Execution System）
 
 ## 技术架构
 
 ```
-┌─────────────────────────────────────────────┐
-│               前端 (React + TypeScript)      │
-│   React 19 + Ant Design 6 + Axios           │
-│   端口：3000                                 │
-└──────────────────┬──────────────────────────┘
-                   │  HTTP / REST API
-┌──────────────────▼──────────────────────────┐
-│               后端 (Java Spring Boot)        │
-│   Spring Boot 3.2 + MyBatis-Plus            │
-│   端口：8080                                 │
-└──────────────────┬──────────────────────────┘
-                   │  JDBC
-┌──────────────────▼──────────────────────────┐
-│               数据库 (MySQL 8.0+)            │
-│   数据库名：mes_db                           │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│           前端 (React 18 + TypeScript)           │
+│   Ant Design 5 + Axios + localStorage持久化     │
+│   nginx 静态服务  端口：80                        │
+└──────────────────┬──────────────────────────────┘
+                   │  HTTP / REST API (/api/*)
+┌──────────────────▼──────────────────────────────┐
+│           后端 (Node.js + Express)              │
+│   PM2 守护进程                                   │
+│   端口：8088                                     │
+└──────────────────┬──────────────────────────────┘
+                   │  MySQL
+┌──────────────────▼──────────────────────────────┐
+│           数据库 (MariaDB utf8mb4)               │
+│   数据库名：tmj_mes_db                           │
+│   48张表，含 sys_user/base_*/qms_* 等模块        │
+└─────────────────────────────────────────────────┘
 ```
 
-## 项目结构
+## 已完成功能
 
+### ✅ PAD工序执行（核心）
+- **双模式切换**：医疗器械（NiTi根管锉）⟺ 保健品GMP（固体制剂）
+- **9个标准阶段**：PRE_CLEAN → CHECK_IN → MAT_VERIFY → FIRST_PIECE → DATA_COLLECT → SELF_CHECK → POST_CLEAN → REPORT → CHECK_OUT
+- **医疗器械工序**（VISIBLE_OPERATIONS）：OP-10～OP-110，11道工序
+- **保健品GMP工序**（GMP_OPERATIONS）：称量配料/混合/制粒干燥/内包装/内包清场/外包装，6道工序
+- **过程数据采集**（DataCollectStage）：按工序配置字段，含规格限值校验、mock数据
+- execMap 持久化到 localStorage（`bip_pad_exec_map`）
+
+### ✅ 批包装EBR报告（只读自动生成）
+- **数据流**：PAD执行 → execMap → BatchPackagingEbrPage 自动汇总
+- **7个Tab**：批次概览 / 称量配料 / 混合 / 内包装 / 外包装 / 物料平衡 / 执行时间线
+- **物料平衡**：GMP规则 96.0%~102.0% 自动计算并标记 PASS/FAIL
+- **空状态提示**：未执行PAD时显示正确数据流说明
+- 路由：`/batch-pkg-ebr` 菜单：电子批记录 → 批包装记录(EBR)
+
+### ✅ 电子批记录（医疗器械EBR）
+- EBR列表页、增强版详情页、物料平衡表
+- 从 execMap 自动 `buildEbrFromExecMap()` 生成 EBR
+- EBR 状态：DRAFT → IN_PROGRESS → COMPLETED → APPROVED
+
+### ✅ 基础数据管理
+- 物料档案、BOM、工艺路线、工序档案、计量单位
+- 员工、班组、设备、工作中心、车间管理
+- QC检验方案（前端有 mock，后端部分未实现）
+
+### ✅ 生产计划与执行
+- 工单管理（与后端联通，200 OK）
+- 工艺路线管理（200 OK）
+- 任务池、PAD领料执行
+
+### ✅ 系统基础
+- 登录认证（JWT Token，localStorage 存储）
+- 中文编码：nginx utf-8 + MariaDB utf8mb4
+- 角色：admin（系统管理员）/ op001（生产操作员）/ qc001（质量检验员）
+
+## 关键 API 状态
+
+| API | 状态 | 说明 |
+|-----|------|------|
+| `/api/auth/login` | ✅ 200 | 认证 |
+| `/api/work-orders/list` | ✅ 200 | 工单列表 |
+| `/api/process-routings/list` | ✅ 200 | 工艺路线 |
+| `/api/routing-steps/list` | ✅ 200 | 工序步骤 |
+| `/api/materials/list` | ✅ 200 | 物料列表 |
+| `/api/float-tickets/list` | ⚠️ 404 | 流转票（后端未实现，前端已静默处理） |
+| `/api/base/employee/list` | ⚠️ 404 | 员工（后端未实现） |
+| `/api/base/team/list` | ⚠️ 404 | 班组（后端未实现） |
+| `/api/base/equipment/list` | ⚠️ 404 | 设备（后端未实现） |
+
+## 数据架构
+
+### localStorage 持久化键
+| Key | 内容 |
+|-----|------|
+| `bip_pad_exec_map` | PAD执行数据 `Record<opCode, OperationExecution>` |
+| `bip_pad_selected_wo` | 当前选中工单 |
+| `bip_pad_view` | 当前视图（list/execution） |
+| `bip_pad_current_op_code` | 当前执行工序代码 |
+| `bip_ebr_records` | EBR记录列表 |
+
+### GMP工序 → EBR Tab 对应关系
 ```
-webapp/
-├── backend/                    # Java Spring Boot 后端
-│   ├── pom.xml                # Maven 依赖配置
-│   └── src/main/java/com/mdk/mes/
-│       ├── MesApplication.java         # 启动类
-│       ├── config/                     # 配置类
-│       │   ├── CorsConfig.java         # 跨域配置
-│       │   ├── MyBatisPlusConfig.java  # 分页插件
-│       │   └── GlobalExceptionHandler.java # 全局异常
-│       ├── controller/                 # REST 控制器
-│       │   ├── AuthController.java     # 认证
-│       │   ├── MaterialController.java # 物料档案
-│       │   ├── MaterialCategoryController.java # 物料分类
-│       │   ├── UnitController.java     # 计量单位
-│       │   └── BomController.java      # 物料清单
-│       ├── service/                    # 业务逻辑层
-│       ├── repository/                 # 数据访问层（MyBatis-Plus Mapper）
-│       ├── entity/                     # 数据库实体类
-│       ├── dto/                        # 请求参数对象
-│       └── common/                     # 公共类（Result、PageResult）
-│   └── src/main/resources/
-│       ├── application.yml             # 主配置文件
-│       ├── application-dev.yml         # 开发环境配置
-│       └── sql/init.sql               # 数据库初始化脚本
-│
-├── src/                        # React 前端源码
-│   ├── api/                    # API 调用层
-│   │   ├── http.ts             # Axios 封装（统一拦截）
-│   │   ├── auth.ts             # 认证接口
-│   │   ├── material.ts         # 物料档案接口
-│   │   ├── unit.ts             # 计量单位接口
-│   │   └── bom.ts              # 物料清单接口
-│   ├── components/layout/      # 主布局组件
-│   ├── pages/                  # 页面组件
-│   │   ├── login/              # 登录页
-│   │   ├── dashboard/          # 生产看板
-│   │   ├── material/           # 物料档案
-│   │   ├── unit/               # 计量单位
-│   │   └── bom/                # 物料清单
-│   ├── store/                  # Mock 数据（离线演示用）
-│   └── types/                  # TypeScript 类型定义
-└── package.json                # 前端依赖（含代理配置）
+OP-GMP-WEIGH    → Tab: 称量配料
+OP-GMP-MIX      → Tab: 混合（RSD ≤5%）
+OP-GMP-GRANULATE → 物料平衡计算
+OP-GMP-INNERPACK → Tab: 内包装（每小时检查）
+OP-GMP-INNERCLEAN → 批次概览 Timeline
+OP-GMP-OUTERPACK → Tab: 外包装
 ```
 
 ## 快速启动
 
-### 1. 数据库初始化
-
 ```bash
-# 登录 MySQL
-mysql -u root -p
+# 后端（已由PM2守护，通常无需手动启动）
+pm2 status
+pm2 restart tmj-mes-backend   # 如需重启
 
-# 执行初始化脚本
-source /path/to/webapp/backend/src/main/resources/sql/init.sql
+# 前端构建并部署
+cd /home/user/webapp
+GENERATE_SOURCEMAP=false CI=false npm run build
+sudo nginx -s reload
+
+# 数据库
+mysql -u root -ptmj_mes_2026 tmj_mes_db
 ```
 
-### 2. 启动后端
+## 默认账号
 
-```bash
-cd webapp/backend
-
-# 修改数据库连接信息
-# 编辑 src/main/resources/application-dev.yml
-
-# 编译启动
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-
-# 或打包运行
-mvn package -DskipTests
-java -jar target/mes-backend-1.0.0.jar --spring.profiles.active=dev
-```
-
-后端启动后访问：http://localhost:8080/api
-
-### 3. 启动前端
-
-```bash
-cd webapp
-
-# 安装依赖（首次）
-npm install
-
-# 启动开发服务器（自动代理 /api 到 localhost:8080）
-npm start
-```
-
-前端访问：http://localhost:3000
-
-> **注意**：前端配置了代理，开发时 `/api/*` 请求自动转发到 `http://localhost:8080`，无需手动配置跨域。
-
-### 4. 登录账号
-
-| 工号 | 姓名 | 密码 | 角色 |
-|------|------|------|------|
-| E001 | 张伟 | 123456 | 管理员 |
-| E002 | 李娜 | 123456 | 质检员 |
-| E003 | 王芳 | 123456 | 操作员 |
-| E010 | admin | 123456 | 管理员 |
-
-> **离线演示模式**：如果后端未启动，前端会自动降级为 Mock 数据模式，所有数据操作在内存中完成（页面刷新后重置）。
-
-## API 接口文档
-
-### 认证
-
-| 方法 | 路径 | 说明 |
+| 账号 | 密码 | 角色 |
 |------|------|------|
-| POST | /api/auth/login | 登录 |
+| admin | admin123 | 系统管理员 |
+| op001 | 123456 | 生产操作员 |
+| qc001 | 123456 | 质量检验员 |
 
-### 物料分类
+## PAD演示工牌
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET  | /api/material/category/tree | 获取分类树 |
-| POST | /api/material/category | 新增分类 |
-| PUT  | /api/material/category | 更新分类 |
-| DELETE | /api/material/category/{id} | 删除分类 |
+| 工牌号 | 姓名 | 角色 |
+|--------|------|------|
+| 1001 | 张三 | 操作员 |
+| 1002 | 李四 | 检验员 |
+| 1003 | 王五 | 操作员 |
+| 1004 | 赵六 | 班长 |
+| 9999 | QA王 | QA |
 
-### 物料档案
+## 待实现 / 建议下一步
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET  | /api/material/page | 分页查询（支持categoryId、keyword、type、status过滤） |
-| GET  | /api/material/{id} | 根据ID查询 |
-| POST | /api/material | 新增物料 |
-| PUT  | /api/material | 更新物料 |
-| DELETE | /api/material | 批量删除（Body: [id1,id2]） |
-| PUT  | /api/material/status | 批量启用/禁用（Body: {ids:[],status:1}） |
+- [ ] 后端实现 `/api/float-tickets/list`（流转票）
+- [ ] 后端实现 `/api/base/employee/list` 等基础数据 API
+- [ ] GMP工序执行完毕后，自动跳转至批包装EBR页面的引导提示
+- [ ] PAD操作员登录改为真实后端用户认证（当前为 mock）
+- [ ] EBR打印/导出 PDF 功能完善
+- [ ] 物料平衡偏差自动触发偏差记录工作流
 
-### 计量单位
+## 最近更新
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET  | /api/unit/groups | 获取所有分组 |
-| GET  | /api/unit/page | 分页查询 |
-| POST | /api/unit | 新增单位 |
-| PUT  | /api/unit | 更新单位 |
-| DELETE | /api/unit | 批量删除 |
-| PUT  | /api/unit/status | 批量启用/禁用 |
-
-### 物料清单(BOM)
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET  | /api/bom/page | 分页查询 |
-| GET  | /api/bom/{id} | 获取BOM详情（含明细） |
-| POST | /api/bom | 新增BOM（含明细） |
-| PUT  | /api/bom | 更新BOM（含明细） |
-| DELETE | /api/bom | 批量删除 |
-| PUT  | /api/bom/{id}/review | 审核 |
-| PUT  | /api/bom/{id}/approve | 批准 |
-| PUT  | /api/bom/{id}/un-review | 撤销审核 |
-
-## 数据库表说明
-
-| 表名 | 说明 |
+| 版本 | 内容 |
 |------|------|
-| material_category | 物料分类（支持无限层级树形） |
-| material | 物料档案 |
-| unit_group | 计量单位分组 |
-| unit | 计量单位 |
-| bom | 物料清单主表 |
-| bom_detail | 物料清单明细 |
-| sys_user | 系统用户 |
-
-所有表均支持**逻辑删除**（`deleted`字段，MyBatis-Plus 自动处理）。
-
-## 生产环境部署
-
-### 前端打包
-
-```bash
-cd webapp
-npm run build
-# 生成 build/ 目录，部署到 Nginx
-```
-
-### Nginx 配置示例
-
-```nginx
-server {
-    listen 80;
-    root /var/www/mes/build;
-    index index.html;
-
-    # API 反向代理
-    location /api/ {
-        proxy_pass http://127.0.0.1:8080/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # React Router 支持
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-```
-
-### 后端 JAR 包
-
-```bash
-cd webapp/backend
-mvn package -DskipTests
-# 复制 JAR 到服务器
-scp target/mes-backend-1.0.0.jar server:/opt/mes/
-
-# 在服务器上启动
-java -jar /opt/mes/mes-backend-1.0.0.jar \
-  --spring.datasource.url=jdbc:mysql://localhost:3306/mes_db?... \
-  --spring.datasource.username=root \
-  --spring.datasource.password=yourpwd \
-  --server.port=8080
-```
+| 2026-06-13 | fix: PAD页面空白+请求失败两个bug（currentOp查GMP_OPERATIONS / float-tickets 静默处理） |
+| 2026-06-13 | feat: GMP模式切换+批包装EBR自动报表 |
+| 2026-06-13 | feat: 完善生产业务流程+1:1批包装记录EBR |
+| 2026-06-12 | fix: 数据库 utf8mb4 编码重建，修复中文乱码 |
