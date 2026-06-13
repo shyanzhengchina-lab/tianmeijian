@@ -5,7 +5,7 @@ import {
   MobileOutlined, RotateRightOutlined, FileTextOutlined,
 } from '@ant-design/icons';
 import type { OperationDef, WorkOrder, OperationExecution } from './padExecutionData';
-import { VISIBLE_OPERATIONS, loadPadWorkOrders, writePadExecBackToWo, l2WoToPadWo } from './padExecutionData';
+import { VISIBLE_OPERATIONS, GMP_OPERATIONS, loadPadWorkOrders, writePadExecBackToWo, l2WoToPadWo } from './padExecutionData';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import PadOperationListPage from './PadOperationListPage';
 import PadExecutionPage from './PadExecutionPage';
@@ -46,10 +46,11 @@ const PadIndex: React.FC = () => {
     try {
       const [woResp, ftResp] = await Promise.all([
         getWorkOrderList({ status: 'RELEASED' }) as any,
-        getFloatTicketList() as any,
+        // float-tickets/list 当前后端尚未实现，silent 避免 404 弹 toast
+        getFloatTicketList().catch(() => ({ data: [] })) as any,
       ]);
       const apiWos: any[] = woResp.data ?? [];
-      const apiFts: any[] = ftResp.data ?? [];
+      const apiFts: any[] = (ftResp?.data ?? []);
       const woStatusMap: Record<string, WOStatus> = {
         DRAFT: 'CREATED', RELEASED: 'RELEASED', IN_PROGRESS: 'IN_PROGRESS',
         COMPLETED: 'COMPLETED', CLOSED: 'CLOSED',
@@ -114,8 +115,11 @@ const PadIndex: React.FC = () => {
   const [ebrRecords, setEbrRecords] = useLocalStorage<EbrRecord[]>(EBR_STORAGE_KEY, []);
 
   // 根据持久化的 opCode 还原 currentOp / currentWo 对象
+  // 同时查找医疗器械工序和 GMP 工序
   const currentOp: OperationDef | null =
-    VISIBLE_OPERATIONS.find(op => op.code === currentOpCode) ?? null;
+    VISIBLE_OPERATIONS.find(op => op.code === currentOpCode)
+    ?? GMP_OPERATIONS.find(op => op.code === currentOpCode)
+    ?? null;
   const currentWo: WorkOrder | null = selectedWo ?? null;
 
   // ── 全屏 & 横屏 ─────────────────────────────────────────────
