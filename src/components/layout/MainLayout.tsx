@@ -152,11 +152,9 @@ const menuItems = [
     children: [
       { key: 'ebr-list',         label: '批记录管理',   icon: <FileTextOutlined /> },
       { key: 'ebr-workflow',     label: 'EBR审批工作流', icon: <AuditOutlined /> },
-      { key: 'ebr-enhanced',     label: 'EBR增强版',    icon: <FileDoneOutlined /> },
       { key: 'batch-pkg-ebr',    label: '批包装记录(EBR)', icon: <FileProtectOutlined /> },
       { key: 'equip-usage',      label: '设备使用批记录', icon: <HddOutlined /> },
       { key: 'mat-balance-engine', label: '物料平衡计算引擎', icon: <CalculatorOutlined /> },
-      { key: 'material-balance', label: '物料平衡表(旧)',   icon: <FileTextOutlined /> },
     ],
   },
   {
@@ -298,7 +296,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     release:            '质量放行',
     'ebr-list':         '批记录管理',
     'equip-usage':        '设备使用批记录',
-    'material-balance':   '物料平衡表',
     'system-org':         '组织机构管理',
     permission:           '权限管理',
     'material-issuance':  '领料单管理',
@@ -314,7 +311,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'mat-balance-engine': '物料平衡计算引擎',
     'dev-enhanced':       '偏差管理（PRD §13）',
     'audit-trail':        '审计追踪ALCOA+（PRD §15）',
-    'ebr-enhanced':       'EBR增强版',
     'batch-pkg-ebr':      '批包装记录（SOR-MF-PE-02-05）',
     mrb:              'MRB不合格品评审',
     'urgent-order':   '插单管理',
