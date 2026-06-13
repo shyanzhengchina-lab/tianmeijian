@@ -1,14 +1,38 @@
 import React, { useState } from 'react';
 import {
   Button, Card, Checkbox, Select, Space, Typography, Tag, Alert,
-  Divider, Row, Col, message, Input
+  Divider, Row, Col, message, Input, Badge, Steps
 } from 'antd';
-import { SafetyOutlined, CheckCircleOutlined, EditOutlined } from '@ant-design/icons';
+import {
+  SafetyOutlined, CheckCircleOutlined, EditOutlined,
+  ClockCircleOutlined, WarningOutlined, ExclamationCircleOutlined
+} from '@ant-design/icons';
 import type { StageExecution } from '../padExecutionData';
 import PadCamera, { CapturedPhoto } from '../components/PadCamera';
 
 const { Text } = Typography;
 const { Option } = Select;
+
+// ── GMP工序：有效期规则（小时） ──────────────────────────────────────
+const CLEANUP_VALID_HOURS: Record<string, number> = {
+  'OP-GMP-WEIGH': 72, 'OP-GMP-MIX': 72, 'OP-GMP-GRANULATE': 72,
+  'OP-GMP-INNERPACK': 72, 'OP-GMP-INNERCLEAN': 72, 'OP-GMP-OUTERPACK': 24,
+};
+
+const GMP_OP_CODES = Object.keys(CLEANUP_VALID_HOURS);
+
+// ── 生产前再确认9项清单（适用所有GMP工序） ─────────────────────────
+const PRE_CONFIRM_ITEMS = [
+  { key: 'pc_wo',       label: '批生产指令已发放并经复核', required: true },
+  { key: 'pc_bom',      label: 'BOM配方中各物料已按规定领料/复核', required: true },
+  { key: 'pc_equip',    label: '所用设备/仪器已通过维保验证，状态标识"合格"', required: true },
+  { key: 'pc_cert',     label: '清场合格证在有效期内，车间已移除上批遗留物', required: true },
+  { key: 'pc_env',      label: '洁净室温湿度/压差记录已确认并符合规定', required: true },
+  { key: 'pc_ppe',      label: '操作人员着装符合GMP洁净级别要求', required: true },
+  { key: 'pc_record',   label: '批记录已打印/调出，首页信息填写正确', required: true },
+  { key: 'pc_material', label: '所有物料状态标签为"合格"或"已取样"', required: true },
+  { key: 'pc_qapprove', label: '本工序已通过QA开工前审批（或授权豁免）', required: false },
+];
 
 interface PreCleanStageProps {
   opName: string;
@@ -108,10 +132,50 @@ const PRE_CLEAN_ITEMS: Record<string, Array<{
     { key: 'transferDone', label: '上一批产品工序转移单已转移', method: '核对浮漂状态', type: 'enum', options: ['已转移', '未转移'] },
     { key: 'colorReady', label: '涂料/色料状态确认（无沉淀、在效期内）', method: '目视检查涂料', type: 'enum', options: ['合格', '不合格'] },
   ],
+  // ─── 保健品GMP工序清场条目 ──────────────────────────────────────────
+  'OP-GMP-WEIGH': [
+    { key: 'surfaceClear', label: '称量间台面无上批遗留物料', method: '目视检查，拍照留存', requirePhoto: true, type: 'bool' },
+    { key: 'certValid', label: '清场合格证在有效期内（固体车间≤72h）', method: '查看清场合格证签发时间', type: 'enum', options: ['有效期内', '已过期/无证'] },
+    { key: 'balanceCalib', label: '天平/地秤校验合格证在有效期内', method: '查看校验标签', type: 'enum', options: ['有效', '已过期'] },
+    { key: 'envCheck', label: '称量间温湿度符合规定（18-26℃，45-65%RH）', method: '查看温湿度计', type: 'enum', options: ['合格', '不合格'] },
+    { key: 'productMatch', label: '本批产品批包装指令与实物批号一致', method: '核对批包装指令', type: 'enum', options: ['一致', '不一致'] },
+  ] as Array<{ key: string; label: string; method: string; requirePhoto?: boolean; type: 'bool' | 'enum'; options?: string[] }>,
+  'OP-GMP-MIX': [
+    { key: 'surfaceClear', label: '混合机内壁及外表面无上批遗留物', method: '打开混合机检查内腔，拍照', requirePhoto: true, type: 'bool' },
+    { key: 'certValid', label: '清场合格证在有效期内（固体车间≤72h）', method: '查看清场合格证签发时间', type: 'enum', options: ['有效期内', '已过期/无证'] },
+    { key: 'equipStatus', label: '三维混合机运行状态正常', method: '空机试运行确认', type: 'enum', options: ['正常', '异常'] },
+    { key: 'productMatch', label: '本批投料量与批包装指令一致', method: '核对称量记录单', type: 'enum', options: ['一致', '不一致'] },
+  ] as Array<{ key: string; label: string; method: string; requirePhoto?: boolean; type: 'bool' | 'enum'; options?: string[] }>,
+  'OP-GMP-GRANULATE': [
+    { key: 'surfaceClear', label: '制粒机/干燥机内腔无上批遗留颗粒', method: '打开设备检查，拍照', requirePhoto: true, type: 'bool' },
+    { key: 'certValid', label: '清场合格证在有效期内（固体车间≤72h）', method: '查看清场合格证签发时间', type: 'enum', options: ['有效期内', '已过期/无证'] },
+    { key: 'sieveCheck', label: '筛网完好无损、规格正确', method: '目视检查筛网', type: 'enum', options: ['正常', '破损/规格不符'] },
+    { key: 'productMatch', label: '本批混合物与批记录批号一致', method: '核对批记录', type: 'enum', options: ['一致', '不一致'] },
+  ] as Array<{ key: string; label: string; method: string; requirePhoto?: boolean; type: 'bool' | 'enum'; options?: string[] }>,
+  'OP-GMP-INNERPACK': [
+    { key: 'surfaceClear', label: '内包装线设备及输送带无上批遗留品', method: '目视检查全线，拍照', requirePhoto: true, type: 'bool' },
+    { key: 'certValid', label: '清场合格证在有效期内（固体车间≤72h）', method: '查看清场合格证签发时间', type: 'enum', options: ['有效期内', '已过期/无证'] },
+    { key: 'printCheck', label: '批号/生产日期/有效期打印参数已确认', method: '打印测试件核对', type: 'enum', options: ['已确认', '未确认'] },
+    { key: 'materialCheck', label: '内包材（铝箔/PVC/瓶）批号与包装指令一致', method: '核对包材标签', type: 'enum', options: ['一致', '不一致'] },
+  ] as Array<{ key: string; label: string; method: string; requirePhoto?: boolean; type: 'bool' | 'enum'; options?: string[] }>,
+  'OP-GMP-INNERCLEAN': [
+    { key: 'surfaceClear', label: '内包装线及工作区域清洁完毕', method: '目视检查各区域，拍照', requirePhoto: true, type: 'bool' },
+    { key: 'productRemoved', label: '所有成品/在制品已转移或入库', method: '实物清点确认', type: 'enum', options: ['已清空', '仍有遗留'] },
+    { key: 'wasteRemoved', label: '废料/不合格品已按规定处置', method: '查看废料袋', type: 'enum', options: ['已处置', '未处置'] },
+    { key: 'equipCleaned', label: '设备清洁记录填写完整', method: '查看清洁记录', type: 'enum', options: ['已填写', '未填写'] },
+  ] as Array<{ key: string; label: string; method: string; requirePhoto?: boolean; type: 'bool' | 'enum'; options?: string[] }>,
+  'OP-GMP-OUTERPACK': [
+    { key: 'surfaceClear', label: '外包装区域无上批遗留产品/纸箱', method: '目视检查，拍照', requirePhoto: true, type: 'bool' },
+    { key: 'certValid', label: '清场合格证在有效期内（包装区≤24h）', method: '查看清场合格证签发时间', type: 'enum', options: ['有效期内', '已过期/无证'] },
+    { key: 'printCheck', label: '外箱批号/生产日期/有效期打印参数已确认', method: '打印测试件核对', type: 'enum', options: ['已确认', '未确认'] },
+    { key: 'materialCheck', label: '外包材（纸箱/说明书/封箱带）批号与包装指令一致', method: '核对包材标签', type: 'enum', options: ['一致', '不一致'] },
+  ] as Array<{ key: string; label: string; method: string; requirePhoto?: boolean; type: 'bool' | 'enum'; options?: string[] }>,
 };
 
 const PreCleanStage: React.FC<PreCleanStageProps> = ({ opName, opCode, content, execution, onComplete, onESign }) => {
   const items = PRE_CLEAN_ITEMS[opCode] || PRE_CLEAN_ITEMS.default;
+  const isGmpOp = GMP_OP_CODES.includes(opCode);
+  const validHours = CLEANUP_VALID_HOURS[opCode] ?? 72;
 
   const [checkValues, setCheckValues] = useState<Record<string, string | boolean>>(
     Object.fromEntries(items.map(i => [i.key, i.type === 'bool' ? false : '']))
@@ -120,6 +184,26 @@ const PreCleanStage: React.FC<PreCleanStageProps> = ({ opName, opCode, content, 
   const [conclusion, setConclusion] = useState<'' | 'pass' | 'fail'>('');
   const [signed, setSigned] = useState(false);
   const [operatorNote, setOperatorNote] = useState('');
+
+  // GMP：清场合格证有效期输入
+  const [certIssueTime, setCertIssueTime] = useState('');
+  const [certExpired, setCertExpired] = useState<boolean | null>(null);
+
+  // GMP：生产前再确认9项清单
+  const [preConfirmChecks, setPreConfirmChecks] = useState<Record<string, boolean>>(
+    Object.fromEntries(PRE_CONFIRM_ITEMS.map(i => [i.key, false]))
+  );
+
+  const handleCertTimeChange = (val: string) => {
+    setCertIssueTime(val);
+    if (!val) { setCertExpired(null); return; }
+    const issued = new Date(val.replace(/\//g, '-'));
+    const hoursElapsed = (Date.now() - issued.getTime()) / 3600000;
+    setCertExpired(hoursElapsed > validHours);
+  };
+
+  const requiredPreConfirm = PRE_CONFIRM_ITEMS.filter(i => i.required);
+  const allPreConfirmDone = requiredPreConfirm.every(i => preConfirmChecks[i.key]);
 
   const startTime = execution.startTime
     || new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -140,7 +224,12 @@ const PreCleanStage: React.FC<PreCleanStageProps> = ({ opName, opCode, content, 
     return false;
   });
 
-  const canSubmit = allItemsOk && (!photoRequired || photos.length >= 2) && conclusion === 'pass' && signed;
+  const certOk = !isGmpOp || (certIssueTime !== '' && certExpired === false);
+
+  const canSubmit = allItemsOk && (!photoRequired || photos.length >= 2)
+    && conclusion === 'pass' && signed
+    && certOk
+    && (!isGmpOp || allPreConfirmDone);
 
   const handleSetValue = (key: string, val: string | boolean) => {
     setCheckValues(prev => ({ ...prev, [key]: val }));
@@ -162,6 +251,11 @@ const PreCleanStage: React.FC<PreCleanStageProps> = ({ opName, opCode, content, 
       pre_operator: '张三(1001)',
       pre_note: operatorNote,
       pre_esig: '张三(1001)',
+      // GMP专属
+      cert_issue_time: certIssueTime,
+      cert_valid_hours: validHours,
+      cert_expired: certExpired,
+      pre_confirm_checks: preConfirmChecks,
     });
   };
 
@@ -286,6 +380,119 @@ const PreCleanStage: React.FC<PreCleanStageProps> = ({ opName, opCode, content, 
             />
           )}
 
+          {/* ── GMP专属：清场合格证有效期验证 ── */}
+          {isGmpOp && (
+            <Card
+              size="small"
+              title={
+                <Space>
+                  <ClockCircleOutlined style={{ color: certExpired === false ? '#52c41a' : certExpired === true ? '#ff4d4f' : '#faad14' }} />
+                  <Text strong style={{ fontSize: 13 }}>清场合格证有效期验证</Text>
+                  <Tag color={certExpired === false ? 'success' : certExpired === true ? 'error' : 'warning'} style={{ fontSize: 11 }}>
+                    {opCode === 'OP-GMP-OUTERPACK' ? '包装区≤24h' : '固体车间≤72h'}
+                  </Tag>
+                </Space>
+              }
+              style={{
+                borderRadius: 8,
+                border: certExpired === false ? '1px solid #b7eb8f' : certExpired === true ? '2px solid #ff4d4f' : '1px solid #ffe58f',
+                background: certExpired === false ? '#f6ffed' : certExpired === true ? '#fff2f0' : '#fffbe6',
+              }}
+            >
+              <Space direction="vertical" style={{ width: '100%' }} size={8}>
+                <Row gutter={16} align="middle">
+                  <Col span={14}>
+                    <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                      <Text style={{ fontSize: 12 }}>清场合格证签发时间：</Text>
+                      <Input
+                        size="large"
+                        placeholder="例: 2026-06-13 08:30"
+                        value={certIssueTime}
+                        onChange={e => handleCertTimeChange(e.target.value)}
+                        style={{ fontSize: 14, fontFamily: 'monospace' }}
+                        prefix={<ClockCircleOutlined style={{ color: '#8c8c8c' }} />}
+                      />
+                      <Text type="secondary" style={{ fontSize: 11 }}>格式：YYYY-MM-DD HH:mm</Text>
+                    </Space>
+                  </Col>
+                  <Col span={10}>
+                    {certExpired === false && (
+                      <Alert
+                        message={<Text style={{ fontSize: 12 }}>✓ 证件有效，距过期还有{Math.floor(validHours - (Date.now() - new Date(certIssueTime.replace(/\//g,'-')).getTime())/3600000)}小时</Text>}
+                        type="success" style={{ padding: '4px 10px' }}
+                      />
+                    )}
+                    {certExpired === true && (
+                      <Alert
+                        message={<Text style={{ fontSize: 12 }}>✗ 清场合格证已超期！禁止开工，需重新清场</Text>}
+                        type="error" style={{ padding: '4px 10px' }}
+                      />
+                    )}
+                    {certExpired === null && certIssueTime === '' && (
+                      <Alert
+                        message={<Text style={{ fontSize: 12 }}>⚠ 请输入清场合格证签发时间</Text>}
+                        type="warning" style={{ padding: '4px 10px' }}
+                      />
+                    )}
+                  </Col>
+                </Row>
+              </Space>
+            </Card>
+          )}
+
+          {/* ── GMP专属：生产前再确认9项清单 ── */}
+          {isGmpOp && (
+            <Card
+              size="small"
+              title={
+                <Space>
+                  <CheckCircleOutlined style={{ color: allPreConfirmDone ? '#52c41a' : '#faad14' }} />
+                  <Text strong style={{ fontSize: 13 }}>开工前再确认清单（PRD §7）</Text>
+                  <Tag color={allPreConfirmDone ? 'success' : 'warning'} style={{ fontSize: 11 }}>
+                    {PRE_CONFIRM_ITEMS.filter(i => i.required && preConfirmChecks[i.key]).length}/{requiredPreConfirm.length} 必填项已确认
+                  </Tag>
+                </Space>
+              }
+              style={{
+                borderRadius: 8,
+                border: allPreConfirmDone ? '1px solid #b7eb8f' : '1px solid #ffe58f',
+                background: allPreConfirmDone ? '#f6ffed' : '#fffbe6',
+              }}
+            >
+              {!allPreConfirmDone && (
+                <Alert
+                  message="⚠ 所有必填项（★）未全部确认时禁止开始生产！"
+                  type="warning" showIcon
+                  style={{ marginBottom: 10, padding: '4px 10px', fontSize: 12 }}
+                />
+              )}
+              <Space direction="vertical" style={{ width: '100%' }} size={6}>
+                {PRE_CONFIRM_ITEMS.map((item, idx) => (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '7px 12px', borderRadius: 6,
+                      background: preConfirmChecks[item.key] ? '#f6ffed' : '#fff',
+                      border: preConfirmChecks[item.key] ? '1px solid #b7eb8f' : '1px solid #f0f0f0',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <Checkbox
+                      checked={preConfirmChecks[item.key]}
+                      onChange={e => setPreConfirmChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                    >
+                      <Text style={{ fontSize: 13 }}>
+                        {idx + 1}. {item.label}
+                        {item.required && <Text style={{ color: '#ff4d4f', marginLeft: 4, fontSize: 12 }}>★</Text>}
+                      </Text>
+                    </Checkbox>
+                  </div>
+                ))}
+              </Space>
+            </Card>
+          )}
+
           <Divider style={{ margin: '8px 0' }} />
 
           {/* 照片总结、结论、签名 */}
@@ -353,7 +560,11 @@ const PreCleanStage: React.FC<PreCleanStageProps> = ({ opName, opCode, content, 
 
           {!canSubmit && !hasAbnormal && (
             <Alert
-              message="请完成所有检查项（如需拍照至少2张）、填写清场结论并完成电子签名"
+              message={
+                isGmpOp
+                  ? "请完成：①所有清场检查项（≥2张照片）②清场合格证有效期验证③开工前再确认（必填★项）④清场结论⑤电子签名"
+                  : "请完成所有检查项（如需拍照至少2张）、填写清场结论并完成电子签名"
+              }
               type="warning" showIcon style={{ fontSize: 12 }}
             />
           )}

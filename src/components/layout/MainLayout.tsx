@@ -41,8 +41,6 @@ import {
   QrcodeOutlined,
   FileProtectOutlined,
   CalculatorOutlined,
-  SafetyOutlined,
-  BranchesOutlined,
 } from '@ant-design/icons';
 import { FACTORIES, getFactoryById } from '../../store/rbacData';
 import './MainLayout.css';
@@ -159,7 +157,6 @@ const menuItems = [
       { key: 'equip-usage',      label: '设备使用批记录', icon: <HddOutlined /> },
       { key: 'mat-balance-engine', label: '物料平衡计算引擎', icon: <CalculatorOutlined /> },
       { key: 'material-balance', label: '物料平衡表(旧)',   icon: <FileTextOutlined /> },
-      { key: 'weigh-anti-error', label: '称量配料防错',  icon: <ExperimentOutlined /> },
     ],
   },
   {
@@ -179,14 +176,11 @@ const menuItems = [
     label: 'GMP合规',
     group: 'GMP合规',
     children: [
-      { key: 'pre-check',       label: '生产前再确认',  icon: <SafetyOutlined /> },
-      { key: 'dev-enhanced',    label: '偏差管理增强',  icon: <WarningOutlined /> },
-      { key: 'quality-gate',    label: '质量门控',      icon: <BranchesOutlined /> },
+      { key: 'dev-enhanced',    label: '偏差管理',      icon: <WarningOutlined /> },
       { key: 'audit-trail',     label: '审计追踪ALCOA+', icon: <FileProtectOutlined /> },
       { key: 'gmp-hygiene',    label: '卫生管理记录', icon: <ExperimentOutlined /> },
       { key: 'gmp-deviation',  label: '偏差处理',     icon: <WarningOutlined /> },
       { key: 'gmp-capa',       label: 'CAPA管理',     icon: <AuditOutlined /> },
-      { key: 'cleanup-manage', label: '清场管理',      icon: <SafetyCertificateOutlined /> },
     ],
   },
   {
@@ -316,13 +310,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'gmp-hygiene':        '卫生管理记录',
     'gmp-deviation':      '偏差处理',
     'gmp-capa':           'CAPA管理',
-    'cleanup-manage':     '清场管理',
     'ebr-workflow':       'EBR审批工作流',
     'mat-balance-engine': '物料平衡计算引擎',
-    'weigh-anti-error':   '称量配料防错',
-    'pre-check':          '生产前再确认',
-    'dev-enhanced':       '偏差管理增强（PRD §13）',
-    'quality-gate':       '质量门控（PRD §11）',
+    'dev-enhanced':       '偏差管理（PRD §13）',
     'audit-trail':        '审计追踪ALCOA+（PRD §15）',
     'ebr-enhanced':       'EBR增强版',
     'batch-pkg-ebr':      '批包装记录（SOR-MF-PE-02-05）',

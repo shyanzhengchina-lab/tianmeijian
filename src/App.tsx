@@ -89,19 +89,16 @@ const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
 const UrgentOrderPage = lazy(() => import('./pages/production/UrgentOrderPage'));
 // 新增：GMP增强模块
 const OperationArchivePage = lazy(() => import('./pages/operation/OperationArchivePage'));
-const CleanupManagePage = lazy(() => import('./pages/gmp/CleanupManagePage'));
+// 清场管理页保留（供后续直接访问URL使用），质量门控/生产前确认/称量防错已嵌入PAD工序阶段
 const EbrEnhancedPage = lazy(() => import('./pages/ebr/EbrEnhancedPage'));
 // 新增：批包装记录EBR（1:1复刻）
 const BatchPackagingEbrPage = lazy(() => import('./pages/ebr/BatchPackagingEbrPage'));
-// 新增：PRD完善模块（批记录审批工作流/物料平衡计算引擎/称量防错/生产前再确认）
+// PRD完善模块（EBR审批工作流/物料平衡计算引擎）
 const EbrWorkflowPage = lazy(() => import('./pages/ebr/EbrWorkflowPage'));
 const MaterialBalanceEnginePage = lazy(() => import('./pages/ebr/MaterialBalanceEnginePage'));
-const WeighingAntiErrorPage = lazy(() => import('./pages/ebr/WeighingAntiErrorPage'));
-const PreProductionCheckPage = lazy(() => import('./pages/gmp/PreProductionCheckPage'));
-// 新增：PRD §13/§15/§11 偏差增强/审计追踪/质量门控
+// PRD §13/§15 偏差增强/审计追踪（§11质量门控/§7生产前确认/§10清场管理已嵌入PAD工序阶段）
 const DeviationEnhancedPage = lazy(() => import('./pages/gmp/DeviationEnhancedPage'));
 const AuditTrailPage        = lazy(() => import('./pages/gmp/AuditTrailPage'));
-const QualityGatePage       = lazy(() => import('./pages/gmp/QualityGatePage'));
 
 
 // 配置dayjs中文
@@ -340,16 +337,12 @@ const App: React.FC = () => {
       case 'gmp-deviation':    return ['GMP合规', '偏差处理'];
       case 'gmp-capa':         return ['GMP合规', 'CAPA管理'];
       case 'operation-archive': return ['基础资料', '工序档案(GMP增强版)'];
-      case 'cleanup-manage':    return ['GMP合规', '清场管理'];
       case 'ebr-enhanced':      return ['电子批记录', 'EBR增强版'];
       case 'batch-pkg-ebr':     return ['电子批记录', '批包装记录（SOR-MF-PE-02-05）'];
       case 'ebr-workflow':      return ['电子批记录', 'EBR审批工作流（PRD §5）'];
       case 'mat-balance-engine': return ['电子批记录', '物料平衡计算引擎（PRD §6）'];
-      case 'weigh-anti-error':  return ['电子批记录', '称量配料防错（PRD §8）'];
-      case 'pre-check':         return ['GMP合规', '生产前再确认（PRD §7）'];
-      case 'dev-enhanced':      return ['GMP合规', '偏差管理增强（PRD §13）'];
+      case 'dev-enhanced':      return ['GMP合规', '偏差管理（PRD §13）'];
       case 'audit-trail':       return ['GMP合规', '审计追踪ALCOA+（PRD §15）'];
-      case 'quality-gate':      return ['GMP合规', '质量门控（PRD §11）'];
       case 'fg-receipt':       return ['仓储管理', '成品入库'];
       case 'sales-shipment':   return ['仓储管理', '成品出库'];
       case 'reports':          return ['数据报表'];
@@ -410,17 +403,14 @@ const App: React.FC = () => {
         return <PageWrapper><GmpPage subPage={currentPage} /></PageWrapper>;
       // GMP增强模块
       case 'operation-archive': return <PageWrapper><OperationArchivePage /></PageWrapper>;
-      case 'cleanup-manage':    return <PageWrapper><CleanupManagePage /></PageWrapper>;
       case 'ebr-enhanced':      return <PageWrapper><EbrEnhancedPage /></PageWrapper>;
       case 'batch-pkg-ebr':     return <PageWrapper><BatchPackagingEbrPage /></PageWrapper>;
       // PRD完善模块
       case 'ebr-workflow':      return <PageWrapper><EbrWorkflowPage /></PageWrapper>;
       case 'mat-balance-engine': return <PageWrapper><MaterialBalanceEnginePage /></PageWrapper>;
-      case 'weigh-anti-error':  return <PageWrapper><WeighingAntiErrorPage /></PageWrapper>;
-      case 'pre-check':         return <PageWrapper><PreProductionCheckPage /></PageWrapper>;
+      // §13偏差管理/§15审计追踪（§11质量门控/§7生产前确认/§8称量防错/§10清场管理已嵌入PAD工序阶段）
       case 'dev-enhanced':      return <PageWrapper><DeviationEnhancedPage /></PageWrapper>;
       case 'audit-trail':       return <PageWrapper><AuditTrailPage /></PageWrapper>;
-      case 'quality-gate':      return <PageWrapper><QualityGatePage /></PageWrapper>;
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
       // 数据报表

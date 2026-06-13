@@ -5,7 +5,7 @@ import {
   MobileOutlined, RotateRightOutlined, FileTextOutlined,
 } from '@ant-design/icons';
 import type { OperationDef, WorkOrder, OperationExecution } from './padExecutionData';
-import { VISIBLE_OPERATIONS, GMP_OPERATIONS, loadPadWorkOrders, writePadExecBackToWo, l2WoToPadWo } from './padExecutionData';
+import { GMP_OPERATIONS, loadPadWorkOrders, writePadExecBackToWo, l2WoToPadWo } from './padExecutionData';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import PadOperationListPage from './PadOperationListPage';
 import PadExecutionPage from './PadExecutionPage';
@@ -114,11 +114,9 @@ const PadIndex: React.FC = () => {
   // EBR 持久化存储
   const [ebrRecords, setEbrRecords] = useLocalStorage<EbrRecord[]>(EBR_STORAGE_KEY, []);
 
-  // 根据持久化的 opCode 还原 currentOp / currentWo 对象
-  // 同时查找医疗器械工序和 GMP 工序
+  // 根据持久化的 opCode 还原 currentOp 对象（仅 GMP 工序）
   const currentOp: OperationDef | null =
-    VISIBLE_OPERATIONS.find(op => op.code === currentOpCode)
-    ?? GMP_OPERATIONS.find(op => op.code === currentOpCode)
+    GMP_OPERATIONS.find(op => op.code === currentOpCode)
     ?? null;
   const currentWo: WorkOrder | null = selectedWo ?? null;
 

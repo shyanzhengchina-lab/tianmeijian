@@ -186,6 +186,10 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
   const [isTimeout, setIsTimeout] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [qcModalOpen, setQcModalOpen] = useState(false);
+  // 质量门控弹框状态
+  const [qualityGateModal, setQualityGateModal] = useState(false);
+  const [qgItems, setQgItems] = useState<Array<{key:string; label:string; passed:boolean|null}>>([]);
+  const [qgResult, setQgResult] = useState<'PASS'|'FAIL'|null>(null);
   const [form] = Form.useForm();
   const stageEnterRef = useRef<Date>(new Date());
 
@@ -278,6 +282,37 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
     // 触发 QC 检验记录弹窗（自检/数据采集完成后，若工序关联QC检验）
     if ((stageCode === 'SELF_CHECK' || stageCode === 'DATA_COLLECT') && operation.hasQcInspection) {
       setTimeout(() => setQcModalOpen(true), 600);
+    }
+    // 触发质量门控（关键GMP工序 POST_CLEAN 完成后）
+    const gmpKeyOps = ['OP-GMP-MIX', 'OP-GMP-INNERPACK', 'OP-GMP-OUTERPACK'];
+    if (stageCode === 'POST_CLEAN' && gmpKeyOps.includes(operation.code)) {
+      const gateItemsMap: Record<string, Array<{key:string; label:string}>> = {
+        'OP-GMP-MIX': [
+          { key:'rsd', label:'混合均匀性RSD ≤ 5%（检验记录已签字）' },
+          { key:'qty', label:'混合批量与批记录一致，无异常损耗' },
+          { key:'env', label:'洁净区温湿度/压差记录完整无超标' },
+          { key:'equip', label:'混合机清洁状态已恢复，清场记录已填写' },
+          { key:'sign', label:'操作员/复核员电子签名完整' },
+        ],
+        'OP-GMP-INNERPACK': [
+          { key:'print', label:'批号/生产日期/有效期打印抽查合格' },
+          { key:'qty_check', label:'内包装数量点数与包装指令一致' },
+          { key:'seal', label:'铝箔/PVC密封性检查合格（漏液/破损为零）' },
+          { key:'label', label:'标签核对：品名/规格/批号与生产指令一致' },
+          { key:'rejects', label:'不合格品已单独标识并隔离处理' },
+        ],
+        'OP-GMP-OUTERPACK': [
+          { key:'box_print', label:'外箱批号/生产日期/有效期打印抽查合格' },
+          { key:'leaflet', label:'说明书版本与注册文件一致，放置数量正确' },
+          { key:'count', label:'外箱内小包数量与装箱标准一致' },
+          { key:'weight', label:'整箱重量在允许范围内（称重抽查≥5箱）' },
+          { key:'release', label:'QA放行签字已完成（入库前必须）' },
+        ],
+      };
+      const items = (gateItemsMap[operation.code] || []).map(i => ({ ...i, passed: null as boolean|null }));
+      setQgItems(items);
+      setQgResult(null);
+      setTimeout(() => setQualityGateModal(true), 800);
     }
   };
 
@@ -507,7 +542,7 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
             onClick={onBack}
             style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', height: 38 }}
           >返回</Button>
-          <Text style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>🏭 YonBIP/SY 医疗器械</Text>
+          <Text style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>💊 天美健MES · 保健品GMP</Text>
           <Text style={{ color: '#c5cae9', fontSize: 12 }}>工单：{workOrder.woNo}</Text>
           <Text style={{ color: '#c5cae9', fontSize: 12 }}>产品：{workOrder.productSpec}</Text>
         </Space>
@@ -961,6 +996,81 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
             <Input placeholder="如：30分钟后" />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* ===== 质量门控 Modal ===== */}
+      <Modal
+        title={
+          <Space>
+            <CheckCircleOutlined style={{ color: '#1677ff' }} />
+            <span>工序质量门控 — {operation.name}</span>
+            <Tag color="blue" style={{ fontSize: 11 }}>PRD §11</Tag>
+          </Space>
+        }
+        open={qualityGateModal}
+        width={560}
+        onOk={() => {
+          const allAnswered = qgItems.every(i => i.passed !== null);
+          if (!allAnswered) { message.warning('请对所有检查项作出判断'); return; }
+          const failed = qgItems.filter(i => i.passed === false);
+          if (failed.length > 0) {
+            setQgResult('FAIL');
+            message.error({ content: `质量门控不通过：${failed.length}项未满足！工序已BLOCKED，系统将自动创建MAJOR偏差单。`, duration: 6 });
+            setQualityGateModal(false);
+          } else {
+            setQgResult('PASS');
+            message.success({ content: `✅ 质量门控通过！${operation.name} → 下工序放行`, duration: 4 });
+            setQualityGateModal(false);
+          }
+        }}
+        onCancel={() => setQualityGateModal(false)}
+        okText="提交门控结果"
+        cancelText="稍后填写"
+        okButtonProps={{ size: 'large', style: { height: 44, fontWeight: 700 } }}
+      >
+        <Alert
+          message={`请在 ${operation.name} 完成后逐项核查，全部通过方可放行至下工序`}
+          type="info" showIcon style={{ marginBottom: 14, fontSize: 12 }}
+        />
+        <Space direction="vertical" style={{ width: '100%' }} size={8}>
+          {qgItems.map((item, idx) => (
+            <div
+              key={item.key}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 14px', borderRadius: 8,
+                background: item.passed === true ? '#f6ffed' : item.passed === false ? '#fff2f0' : '#fafafa',
+                border: item.passed === true ? '1px solid #b7eb8f' : item.passed === false ? '1px solid #ffccc7' : '1px solid #f0f0f0',
+                transition: 'all 0.2s',
+              }}
+            >
+              <Space>
+                <Tag style={{ minWidth: 28, textAlign:'center', fontWeight:700 }}>{idx+1}</Tag>
+                <span style={{ fontSize: 13 }}>{item.label}</span>
+              </Space>
+              <Space size={6}>
+                <Button
+                  size="small"
+                  type={item.passed === true ? 'primary' : 'default'}
+                  style={{ background: item.passed === true ? '#52c41a' : undefined, borderColor: item.passed === true ? '#52c41a' : undefined, color: item.passed === true ? '#fff' : undefined }}
+                  onClick={() => setQgItems(prev => prev.map(i => i.key === item.key ? { ...i, passed: true } : i))}
+                >✓ 通过</Button>
+                <Button
+                  size="small"
+                  danger
+                  type={item.passed === false ? 'primary' : 'default'}
+                  onClick={() => setQgItems(prev => prev.map(i => i.key === item.key ? { ...i, passed: false } : i))}
+                >✗ 不通过</Button>
+              </Space>
+            </div>
+          ))}
+        </Space>
+        {qgItems.some(i => i.passed === false) && (
+          <Alert
+            message="存在不通过项！提交后工序将被BLOCKED，系统自动生成MAJOR偏差单，需QA处理后方可继续。"
+            type="error" showIcon style={{ marginTop: 12, fontSize: 12 }}
+          />
+        )}
       </Modal>
 
       {/* ===== 异常上报 Modal ===== */}

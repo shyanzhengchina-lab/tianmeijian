@@ -13,7 +13,7 @@ import {
 } from '@ant-design/icons';
 import type { WorkOrder, OperationDef, OperationExecution } from './padExecutionData';
 import {
-  VISIBLE_OPERATIONS, GMP_OPERATIONS, getEnabledStages,
+  GMP_OPERATIONS, getEnabledStages,
   initOperationExecution, WORKSHOP_COLOR, STAGE_ICON,
   loadPadWorkOrders,
 } from './padExecutionData';
@@ -74,9 +74,8 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
   // confirmModal removed – clicking a card directly enters execution
   const [detailDrawerOp, setDetailDrawerOp] = useState<OperationDef | null>(null);
 
-  // ── 生产模式切换（医疗器械 vs 保健品GMP） ────────────────────────
-  const [padMode, setPadMode] = useState<'med' | 'gmp'>('med');
-  const activeOps = padMode === 'gmp' ? GMP_OPERATIONS : VISIBLE_OPERATIONS;
+  // 始终使用保健品GMP工序
+  const activeOps = GMP_OPERATIONS;
 
   // ── API 工单列表 ──────────────────────────────────────────────
   const [apiWorkOrders, setApiWorkOrders] = useState<WorkOrder[]>([]);
@@ -182,10 +181,10 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
               <Avatar size={48} style={{ background: 'rgba(255,255,255,0.15)', fontSize: 24 }}>🏭</Avatar>
               <div>
                 <Title level={4} style={{ color: '#fff', margin: 0 }}>
-                    {padMode === 'gmp' ? '天美健MES · 保健品GMP · PAD生产执行' : 'YonBIP/SY 医疗器械 · 工业PAD生产执行'}
+                    天美健MES · 保健品GMP · PAD生产执行
                   </Title>
                 <Text style={{ color: '#c5cae9', fontSize: 13 }}>
-                  {padMode === 'gmp' ? '固体制剂 · SOR-MF-PE-02-05 · GMP · ALCOA+' : 'NiTi Rotary Files · ISO 13485 · GMP · ALCOA+'}
+                  固体制剂 · SOR-MF-PE-02-05 · GMP · ALCOA+
                 </Text>
               </div>
             </Space>
@@ -261,53 +260,7 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
         </Row>
       </div>
 
-      {/* ===== 生产模式切换 ===== */}
-      <Card style={{ marginBottom: 16, borderRadius: 10 }} bodyStyle={{ padding: '12px 20px' }}>
-        <Row align="middle" gutter={16}>
-          <Col flex="none">
-            <Text strong style={{ fontSize: 14 }}>生产模式：</Text>
-          </Col>
-          <Col flex="none">
-            <Space size={8}>
-              <Button
-                type={padMode === 'med' ? 'primary' : 'default'}
-                size="middle"
-                style={{
-                  borderRadius: 20,
-                  fontWeight: padMode === 'med' ? 700 : 400,
-                  background: padMode === 'med' ? '#C8000A' : undefined,
-                  borderColor: padMode === 'med' ? '#C8000A' : undefined,
-                  color: padMode === 'med' ? '#fff' : undefined,
-                }}
-                onClick={() => { setPadMode('med'); setExecMap({}); }}
-              >
-                🔧 医疗器械（NiTi锉）
-              </Button>
-              <Button
-                type={padMode === 'gmp' ? 'primary' : 'default'}
-                size="middle"
-                style={{
-                  borderRadius: 20,
-                  fontWeight: padMode === 'gmp' ? 700 : 400,
-                  background: padMode === 'gmp' ? '#00875a' : undefined,
-                  borderColor: padMode === 'gmp' ? '#00875a' : undefined,
-                  color: padMode === 'gmp' ? '#fff' : undefined,
-                }}
-                onClick={() => { setPadMode('gmp'); setExecMap({}); }}
-              >
-                💊 保健品GMP（固体制剂）
-              </Button>
-            </Space>
-          </Col>
-          <Col flex="auto">
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {padMode === 'gmp'
-                ? '⚠️ GMP模式：执行完毕后可在「批包装EBR」页面自动生成批记录报告'
-                : '当前为医疗器械工序模式，共 ' + VISIBLE_OPERATIONS.length + ' 道工序'}
-            </Text>
-          </Col>
-        </Row>
-      </Card>
+
 
       {/* ===== 工单选择 ===== */}
       <Card style={{ marginBottom: 16, borderRadius: 10 }}>
@@ -363,38 +316,9 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
               </Col>
               <Col xs={12} sm={8}>
                 <Space direction="vertical" size={0}>
-                  <Text type="secondary" style={{ fontSize: 11 }}>镍钛丝批号</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>物料批号</Text>
                   <Text style={{ fontFamily: 'monospace', fontSize: 11, color: '#1677ff' }}>
                     {selectedWo?.materialLotNo ?? '—'}
-                  </Text>
-                </Space>
-              </Col>
-              {selectedWo?.handleLotNo && (
-                <Col xs={12} sm={8}>
-                  <Space direction="vertical" size={0}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>手柄批号</Text>
-                    <Text style={{ fontFamily: 'monospace', fontSize: 11, color: '#eb2f96' }}>
-                      {selectedWo?.handleLotNo}
-                    </Text>
-                  </Space>
-                </Col>
-              )}
-              {selectedWo?.limitLotNo && (
-                <Col xs={12} sm={8}>
-                  <Space direction="vertical" size={0}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>限位块批号</Text>
-                    <Text style={{ fontFamily: 'monospace', fontSize: 11, color: '#52c41a' }}>
-                      {selectedWo?.limitLotNo}
-                    </Text>
-                  </Space>
-                </Col>
-              )}
-              <Col xs={12} sm={8}>
-                <Space direction="vertical" size={0}>
-                  <Text type="secondary" style={{ fontSize: 11 }}>浮漂条码</Text>
-                  <Text style={{ fontFamily: 'monospace', fontSize: 11 }}>
-                    <BarcodeOutlined style={{ marginRight: 3, color: '#8c8c8c' }} />
-                    {selectedWo?.floatBarcode ?? '—'}
                   </Text>
                 </Space>
               </Col>
@@ -670,25 +594,16 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
       <Alert
         style={{ marginTop: 20, borderRadius: 10 }}
         type="info" showIcon
-        message="操作说明"
+        message="GMP操作说明"
         description={
-          padMode === 'gmp' ? (
-            <Space direction="vertical" size={4}>
-              <Text style={{ fontSize: 13 }}>• 【GMP模式】工序顺序：称量配料 → 混合 → 制粒干燥 → 内包装 → 内包清场 → 外包装</Text>
-              <Text style={{ fontSize: 13 }}>• 每道工序的「过程数据录入」阶段对应 SOR-MF-PE-02-05 批包装记录的相应章节</Text>
-              <Text style={{ fontSize: 13 }}>• 混合（OP-GMP-MIX）、内包装（OP-GMP-INNERPACK）、外包装（OP-GMP-OUTERPACK）为关键工序，需 QC 检验</Text>
-              <Text style={{ fontSize: 13 }}>• 所有工序执行完毕后，进入「批包装EBR」菜单，系统自动汇总生成 <strong>批记录报告</strong></Text>
-              <Text style={{ fontSize: 13 }}>• 物料平衡计算范围：96.0%～102.0%（GMP 强制要求）</Text>
-            </Space>
-          ) : (
-            <Space direction="vertical" size={4}>
-              <Text style={{ fontSize: 13 }}>• 热处理（OP-60）、清洗二（OP-70）前端不显示，后台自动记录</Text>
-              <Text style={{ fontSize: 13 }}>• 按 PRD 阶段顺序锁定：未完成前序阶段不可跳过（需班长授权解锁）</Text>
-              <Text style={{ fontSize: 13 }}>• 研磨一（OP-50）自检完成后触发独立《机床成型检验记录》，QC 回写合格数量</Text>
-              <Text style={{ fontSize: 13 }}>• 每道工序进站需扫描浮漂条码，系统自动校验上工序已出站</Text>
-              <Text style={{ fontSize: 13 }}>• 阶段超过 30 分钟未完成将触发超时预警，请及时处理</Text>
-            </Space>
-          )
+          <Space direction="vertical" size={4}>
+            <Text style={{ fontSize: 13 }}>• 工序顺序：称量配料 → 混合 → 制粒干燥 → 内包装 → 内包清场 → 外包装，前序未完成不可跳过</Text>
+            <Text style={{ fontSize: 13 }}>• 「称量配料」工序进站后自动启动称量防错四重核对（品名/批号/规格/数量，±0.5%偏差预警）</Text>
+            <Text style={{ fontSize: 13 }}>• 每道工序「前清场」阶段内嵌清场合格证验证（固体车间有效期72h，超期自动锁定）</Text>
+            <Text style={{ fontSize: 13 }}>• 「开工前确认」阶段内嵌9项生产前再确认清单，未全部确认禁止开工</Text>
+            <Text style={{ fontSize: 13 }}>• 混合/内包装/外包装为关键工序，完成后自动触发质量门控，不合格→BLOCKED+MAJOR偏差</Text>
+            <Text style={{ fontSize: 13 }}>• 所有工序完成后，进入「批包装EBR」菜单自动汇总生成批记录报告，物料平衡96.0%～102.0%</Text>
+          </Space>
         }
       />
 
