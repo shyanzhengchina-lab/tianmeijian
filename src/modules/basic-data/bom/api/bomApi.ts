@@ -102,13 +102,19 @@ export interface BomImportConfig {
  * BOM API服务类
  */
 class BomApiService {
-  private readonly baseUrl = '/bom';
+  private readonly baseUrl = '/boms';
 
   /**
    * 获取BOM列表（分页）
+   * 后端 /boms/list 返回 data 直接为数组，此处归一化为 {list, total} 分页结构
    */
   async getBoms(query: BomQuery): Promise<ApiResponse<PageResult<Bom>>> {
-    return apiClient.getPage(`${this.baseUrl}/list`, query);
+    const res = await apiClient.getPage(`${this.baseUrl}/list`, query) as any;
+    // 若 data 是数组，包装为分页对象
+    if (res && Array.isArray(res.data)) {
+      res.data = { list: res.data, total: res.data.length, current: 1, pageSize: res.data.length };
+    }
+    return res;
   }
 
   /**

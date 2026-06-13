@@ -113,13 +113,18 @@ export interface QcSchemeImportConfig {
  * 质检方案API服务类
  */
 class QcSchemeApiService {
-  private readonly baseUrl = '/qc-scheme';
+  private readonly baseUrl = '/qc-schemes';
 
   /**
    * 获取质检方案列表（分页）
+   * 后端 /qc-schemes/list 返回 data 直接为数组，此处归一化为 {list, total} 分页结构
    */
   async getQcSchemes(query: QcSchemeQuery): Promise<ApiResponse<PageResult<QcScheme>>> {
-    return apiClient.getPage(`${this.baseUrl}/list`, query);
+    const res = await apiClient.getPage(`${this.baseUrl}/list`, query) as any;
+    if (res && Array.isArray(res.data)) {
+      res.data = { list: res.data, total: res.data.length, current: 1, pageSize: res.data.length };
+    }
+    return res;
   }
 
   /**
