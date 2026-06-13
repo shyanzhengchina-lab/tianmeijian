@@ -91,6 +91,8 @@ const UrgentOrderPage = lazy(() => import('./pages/production/UrgentOrderPage'))
 const OperationArchivePage = lazy(() => import('./pages/operation/OperationArchivePage'));
 const CleanupManagePage = lazy(() => import('./pages/gmp/CleanupManagePage'));
 const EbrEnhancedPage = lazy(() => import('./pages/ebr/EbrEnhancedPage'));
+// 新增：批包装记录EBR（1:1复刻）
+const BatchPackagingEbrPage = lazy(() => import('./pages/ebr/BatchPackagingEbrPage'));
 
 
 // 配置dayjs中文
@@ -331,6 +333,7 @@ const App: React.FC = () => {
       case 'operation-archive': return ['基础资料', '工序档案(GMP增强版)'];
       case 'cleanup-manage':    return ['GMP合规', '清场管理'];
       case 'ebr-enhanced':      return ['电子批记录', 'EBR增强版'];
+      case 'batch-pkg-ebr':     return ['电子批记录', '批包装记录（SOR-MF-PE-02-05）'];
       case 'fg-receipt':       return ['仓储管理', '成品入库'];
       case 'sales-shipment':   return ['仓储管理', '成品出库'];
       case 'reports':          return ['数据报表'];
@@ -393,6 +396,7 @@ const App: React.FC = () => {
       case 'operation-archive': return <PageWrapper><OperationArchivePage /></PageWrapper>;
       case 'cleanup-manage':    return <PageWrapper><CleanupManagePage /></PageWrapper>;
       case 'ebr-enhanced':      return <PageWrapper><EbrEnhancedPage /></PageWrapper>;
+      case 'batch-pkg-ebr':     return <PageWrapper><BatchPackagingEbrPage /></PageWrapper>;
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
       // 数据报表

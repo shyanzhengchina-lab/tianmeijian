@@ -39,6 +39,7 @@ import {
   SendOutlined,
   InboxOutlined,
   QrcodeOutlined,
+  FileProtectOutlined,
 } from '@ant-design/icons';
 import { FACTORIES, getFactoryById } from '../../store/rbacData';
 import './MainLayout.css';
@@ -150,6 +151,7 @@ const menuItems = [
     children: [
       { key: 'ebr-list',         label: '批记录管理',   icon: <FileTextOutlined /> },
       { key: 'ebr-enhanced',     label: 'EBR增强版',    icon: <FileDoneOutlined /> },
+      { key: 'batch-pkg-ebr',    label: '批包装记录(EBR)', icon: <FileProtectOutlined /> },
       { key: 'equip-usage',      label: '设备使用批记录', icon: <HddOutlined /> },
       { key: 'material-balance', label: '物料平衡表',   icon: <FileTextOutlined /> },
     ],
@@ -306,6 +308,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'gmp-capa':           'CAPA管理',
     'cleanup-manage':     '清场管理',
     'ebr-enhanced':       'EBR增强版',
+    'batch-pkg-ebr':      '批包装记录（SOR-MF-PE-02-05）',
     mrb:              'MRB不合格品评审',
     'urgent-order':   '插单管理',
     reports:          '数据报表中心',
