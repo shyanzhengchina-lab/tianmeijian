@@ -26,6 +26,7 @@ const qualityEbrRouter = require('./routes/qualityEbr');
 const warehouseRouter = require('./routes/warehouse');
 const equipmentRouter = require('./routes/equipment');
 const traceRouter = require('./routes/traceAndDashboard');
+const gmpPrdRouter = require('./routes/gmpPrd');   // PRD §8/§10/§11/§13/§15/§17
 
 app.use('/api', systemRouter);
 app.use('/api', baseRouter);
@@ -34,6 +35,7 @@ app.use('/api', qualityEbrRouter);
 app.use('/api', warehouseRouter);
 app.use('/api', equipmentRouter);
 app.use('/api', traceRouter);
+app.use('/api', gmpPrdRouter);
 
 // 健康检查
 app.get('/health', (req, res) => {
