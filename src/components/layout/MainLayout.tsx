@@ -41,6 +41,7 @@ import {
   QrcodeOutlined,
   FileProtectOutlined,
   CalculatorOutlined,
+  PrinterOutlined,
 } from '@ant-design/icons';
 import { FACTORIES, getFactoryById } from '../../store/rbacData';
 import './MainLayout.css';
@@ -150,11 +151,12 @@ const menuItems = [
     label: '电子批记录',
     group: '电子批记录',
     children: [
-      { key: 'ebr-list',         label: '批记录管理',   icon: <FileTextOutlined /> },
-      { key: 'ebr-workflow',     label: 'EBR审批工作流', icon: <AuditOutlined /> },
-      { key: 'batch-pkg-ebr',    label: '批包装记录(EBR)', icon: <FileProtectOutlined /> },
-      { key: 'equip-usage',      label: '设备使用批记录', icon: <HddOutlined /> },
-      { key: 'mat-balance-engine', label: '物料平衡计算引擎', icon: <CalculatorOutlined /> },
+      { key: 'ebr-list',           label: '批记录管理',         icon: <FileTextOutlined /> },
+      { key: 'ebr-workflow',       label: 'EBR审批工作流',       icon: <AuditOutlined /> },
+      { key: 'batch-record-print', label: '批记录自动生成打印',  icon: <PrinterOutlined /> },
+      { key: 'batch-pkg-ebr',      label: '批包装记录(EBR旧版)', icon: <FileProtectOutlined /> },
+      { key: 'equip-usage',        label: '设备使用批记录',      icon: <HddOutlined /> },
+      { key: 'mat-balance-engine', label: '物料平衡计算引擎',    icon: <CalculatorOutlined /> },
     ],
   },
   {
@@ -312,6 +314,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'dev-enhanced':       '偏差管理（PRD §13）',
     'audit-trail':        '审计追踪ALCOA+（PRD §15）',
     'batch-pkg-ebr':      '批包装记录（SOR-MF-PE-02-05）',
+    'batch-record-print': '批记录自动生成（SOR-MF-PE-02-05格式）',
     mrb:              'MRB不合格品评审',
     'urgent-order':   '插单管理',
     reports:          '数据报表中心',

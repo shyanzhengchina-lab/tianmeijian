@@ -96,9 +96,11 @@ const BatchPackagingEbrPage = lazy(() => import('./pages/ebr/BatchPackagingEbrPa
 // PRD完善模块（EBR审批工作流/物料平衡计算引擎）
 const EbrWorkflowPage = lazy(() => import('./pages/ebr/EbrWorkflowPage'));
 const MaterialBalanceEnginePage = lazy(() => import('./pages/ebr/MaterialBalanceEnginePage'));
-// PRD §13/§15 偏差增强/审计追踪（§11质量门控/§7生产前确认/§10清场管理已嵌入PAD工序阶段）
-const DeviationEnhancedPage = lazy(() => import('./pages/gmp/DeviationEnhancedPage'));
+// 新增：批包装记录自动生成打印页（SOR-MF-PE-02-05格式）
+const BatchRecordPrintPage = lazy(() => import('./pages/ebr/BatchRecordPrintPage'));
 const AuditTrailPage        = lazy(() => import('./pages/gmp/AuditTrailPage'));
+// PRD §13/§15 偏差增强/审计追踪
+const DeviationEnhancedPage = lazy(() => import('./pages/gmp/DeviationEnhancedPage'));
 
 
 // 配置dayjs中文
@@ -339,6 +341,7 @@ const App: React.FC = () => {
       case 'operation-archive': return ['基础资料', '工序档案(GMP增强版)'];
       case 'ebr-enhanced':      return ['电子批记录', 'EBR增强版'];
       case 'batch-pkg-ebr':     return ['电子批记录', '批包装记录（SOR-MF-PE-02-05）'];
+      case 'batch-record-print': return ['电子批记录', '批记录自动生成打印'];
       case 'ebr-workflow':      return ['电子批记录', 'EBR审批工作流（PRD §5）'];
       case 'mat-balance-engine': return ['电子批记录', '物料平衡计算引擎（PRD §6）'];
       case 'dev-enhanced':      return ['GMP合规', '偏差管理（PRD §13）'];
@@ -405,6 +408,7 @@ const App: React.FC = () => {
       case 'operation-archive': return <PageWrapper><OperationArchivePage /></PageWrapper>;
       case 'ebr-enhanced':      return <PageWrapper><EbrEnhancedPage /></PageWrapper>;
       case 'batch-pkg-ebr':     return <PageWrapper><BatchPackagingEbrPage /></PageWrapper>;
+      case 'batch-record-print': return <PageWrapper><BatchRecordPrintPage /></PageWrapper>;
       // PRD完善模块
       case 'ebr-workflow':      return <PageWrapper><EbrWorkflowPage /></PageWrapper>;
       case 'mat-balance-engine': return <PageWrapper><MaterialBalanceEnginePage /></PageWrapper>;
