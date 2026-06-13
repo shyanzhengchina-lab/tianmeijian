@@ -98,6 +98,10 @@ const EbrWorkflowPage = lazy(() => import('./pages/ebr/EbrWorkflowPage'));
 const MaterialBalanceEnginePage = lazy(() => import('./pages/ebr/MaterialBalanceEnginePage'));
 const WeighingAntiErrorPage = lazy(() => import('./pages/ebr/WeighingAntiErrorPage'));
 const PreProductionCheckPage = lazy(() => import('./pages/gmp/PreProductionCheckPage'));
+// 新增：PRD §13/§15/§11 偏差增强/审计追踪/质量门控
+const DeviationEnhancedPage = lazy(() => import('./pages/gmp/DeviationEnhancedPage'));
+const AuditTrailPage        = lazy(() => import('./pages/gmp/AuditTrailPage'));
+const QualityGatePage       = lazy(() => import('./pages/gmp/QualityGatePage'));
 
 
 // 配置dayjs中文
@@ -343,6 +347,9 @@ const App: React.FC = () => {
       case 'mat-balance-engine': return ['电子批记录', '物料平衡计算引擎（PRD §6）'];
       case 'weigh-anti-error':  return ['电子批记录', '称量配料防错（PRD §8）'];
       case 'pre-check':         return ['GMP合规', '生产前再确认（PRD §7）'];
+      case 'dev-enhanced':      return ['GMP合规', '偏差管理增强（PRD §13）'];
+      case 'audit-trail':       return ['GMP合规', '审计追踪ALCOA+（PRD §15）'];
+      case 'quality-gate':      return ['GMP合规', '质量门控（PRD §11）'];
       case 'fg-receipt':       return ['仓储管理', '成品入库'];
       case 'sales-shipment':   return ['仓储管理', '成品出库'];
       case 'reports':          return ['数据报表'];
@@ -411,6 +418,9 @@ const App: React.FC = () => {
       case 'mat-balance-engine': return <PageWrapper><MaterialBalanceEnginePage /></PageWrapper>;
       case 'weigh-anti-error':  return <PageWrapper><WeighingAntiErrorPage /></PageWrapper>;
       case 'pre-check':         return <PageWrapper><PreProductionCheckPage /></PageWrapper>;
+      case 'dev-enhanced':      return <PageWrapper><DeviationEnhancedPage /></PageWrapper>;
+      case 'audit-trail':       return <PageWrapper><AuditTrailPage /></PageWrapper>;
+      case 'quality-gate':      return <PageWrapper><QualityGatePage /></PageWrapper>;
       case 'fg-receipt':          return <PageWrapper><FinishedGoodsReceiptPage /></PageWrapper>;
       case 'sales-shipment':      return <PageWrapper><SalesShipmentPage /></PageWrapper>;
       // 数据报表
