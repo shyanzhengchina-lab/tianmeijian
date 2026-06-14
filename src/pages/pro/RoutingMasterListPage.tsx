@@ -35,11 +35,28 @@ interface Props {
   initialHighlightCode?: string;     // 从工单跳转时预充搜索并高亮指定路径编码
 }
 
+// ── 数据版本号：每次 mockRoutingMasters 有重大更新时递增，触发强制刷新 ──
+const ROUTINGS_DATA_VERSION = 'v20260614-2';
+
 const RoutingMasterListPage: React.FC<Props> = ({ onViewDetail, onNavigateToSeries, initialHighlightCode }) => {
   // bip_routings 默认使用 mockRoutingMasters，包含 GMP-PACKAGE-V1 等完整工序数据
   const [rawRoutings, setRoutings] = useLocalStorage<RoutingMaster[]>('bip_routings', mockRoutingMasters);
 
-  // 修复localStorage中groups为空的历史记录：用mockRoutingMasters中的完整数据补全
+  // ── 版本化强制刷新：检测到版本变化时用 mockRoutingMasters 重置缓存 ──
+  useEffect(() => {
+    const storedVer = localStorage.getItem('bip_routings_data_ver');
+    if (storedVer !== ROUTINGS_DATA_VERSION) {
+      // 版本不匹配：强制重置为最新 mock 数据（保留用户在 mock 之外手动新增的条目）
+      const userAdded = rawRoutings.filter(
+        r => !mockRoutingMasters.some(m => m.routingCode === r.routingCode && m.version === r.version)
+      );
+      setRoutings([...mockRoutingMasters, ...userAdded]);
+      localStorage.setItem('bip_routings_data_ver', ROUTINGS_DATA_VERSION);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 运行时补全：修复缓存中 groups 为空的条目（兜底）
   const routings = rawRoutings.map(r => {
     if (!r.groups || r.groups.length === 0) {
       const fallback = mockRoutingMasters.find(m => m.routingCode === r.routingCode && m.version === r.version);

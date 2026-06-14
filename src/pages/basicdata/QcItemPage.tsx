@@ -99,6 +99,9 @@ function initEdit(base?: QcItem): EditItem {
   };
 }
 
+// ── 数据版本号：mockQcItems 有重大更新时递增，触发强制刷新旧缓存 ──
+const QC_ITEMS_DATA_VERSION = 'v20260614-2';
+
 // ─── 主组件 ──────────────────────────────────────────────────
 // 快速过滤类型
 type QuickFilter = 'ALL' | 'ACTIVE' | 'CRITICAL' | 'REFERENCED';
@@ -106,12 +109,17 @@ type QuickFilter = 'ALL' | 'ACTIVE' | 'CRITICAL' | 'REFERENCED';
 const QcItemPage: React.FC = () => {
   // bip_qc_items 存储的空数组[]也算"未初始化"，此时用mockQcItems填充
   const [rawItems, setItems] = useLocalStorage<QcItem[]>('bip_qc_items', mockQcItems);
+  // 运行时兜底：空数组直接降级到 mock（首次渲染立即生效，不等 useEffect）
   const items: QcItem[] = (rawItems && rawItems.length > 0) ? rawItems : mockQcItems;
   const [apiSaving, setApiSaving] = useState(false);
 
-  // ── 确保初始化时有mock数据（处理localStorage空值情况）─────────
+  // ── 版本化强制刷新：检测到版本变化时用 mockQcItems 重置缓存 ──────
   useEffect(() => {
-    setItems(prev => (prev && prev.length > 0) ? prev : mockQcItems);
+    const storedVer = localStorage.getItem('bip_qc_items_data_ver');
+    if (storedVer !== QC_ITEMS_DATA_VERSION) {
+      setItems(mockQcItems);
+      localStorage.setItem('bip_qc_items_data_ver', QC_ITEMS_DATA_VERSION);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
