@@ -42,6 +42,8 @@ import {
   FileProtectOutlined,
   CalculatorOutlined,
   PrinterOutlined,
+  BoxPlotOutlined,
+  PlaySquareOutlined,
 } from '@ant-design/icons';
 import { FACTORIES, getFactoryById } from '../../store/rbacData';
 import './MainLayout.css';
@@ -184,6 +186,15 @@ const menuItems = [
     ],
   },
   {
+    key: 'demo',
+    icon: <BoxPlotOutlined />,
+    label: '演示工具',
+    group: '演示工具',
+    children: [
+      { key: 'demo-injector', label: '完整演示数据注入', icon: <PlaySquareOutlined /> },
+    ],
+  },
+  {
     key: 'inventory',
     icon: <InboxOutlined />,
     label: '仓储管理',
@@ -320,6 +331,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     reports:          '数据报表中心',
     'fg-receipt':     '成品入库',
     'sales-shipment':     '成品出库',
+    'demo-injector':      '演示数据注入工具',
   };
 
   const getHeaderTitle = () => PAGE_TITLE_MAP[currentPage] ?? '天美健 保健品MES';

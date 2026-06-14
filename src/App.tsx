@@ -101,6 +101,8 @@ const BatchRecordPrintPage = lazy(() => import('./pages/ebr/BatchRecordPrintPage
 const AuditTrailPage        = lazy(() => import('./pages/gmp/AuditTrailPage'));
 // PRD §13/§15 偏差增强/审计追踪
 const DeviationEnhancedPage = lazy(() => import('./pages/gmp/DeviationEnhancedPage'));
+// 演示数据注入工具
+const DemoDataInjectorPage = lazy(() => import('./pages/demo/DemoDataInjectorPage'));
 
 
 // 配置dayjs中文
@@ -351,6 +353,7 @@ const App: React.FC = () => {
       case 'reports':          return ['数据报表'];
       case 'urgent-order':     return ['生产管理', '插单管理'];
       case 'mrb':              return ['质量管理', 'MRB不合格品评审'];
+      case 'demo-injector':     return ['演示工具', '完整演示数据注入'];
       default:                  return [];
     }
   };
@@ -421,6 +424,8 @@ const App: React.FC = () => {
       case 'reports':             return <PageWrapper><ReportsPage /></PageWrapper>;
       // 插单管理
       case 'urgent-order':        return <PageWrapper><UrgentOrderPage /></PageWrapper>;
+      // 演示工具
+      case 'demo-injector':        return <PageWrapper><DemoDataInjectorPage /></PageWrapper>;
       default:
         return (
           <div style={{
