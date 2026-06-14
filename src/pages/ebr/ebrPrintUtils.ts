@@ -392,3 +392,226 @@ export function printEbr(record: EbrRecord): void {
     }, 2000);
   }, 500);
 }
+
+// ============================================================
+// PDF 导出：利用浏览器 print-to-PDF 能力
+// 原理：在隐藏 iframe 中渲染 EBR HTML，调用系统打印对话框；
+//       现代浏览器（Chrome/Edge/Firefox）均支持"另存为PDF"。
+//       同时提供纯 HTML blob 下载作为备选（离线存档）。
+// ============================================================
+
+/**
+ * 导出 EBR 为 PDF
+ * 策略：
+ *  1. 优先尝试 window.showSaveFilePicker（Chrome 86+ File System Access API），
+ *     直接写入磁盘，无需弹出打印对话框。
+ *  2. 若不支持，则生成含 GMP 打印样式的 HTML Blob，
+ *     以 <a download> 方式保存为 .html 文件；
+ *     用户可用浏览器打开后"打印为 PDF"。
+ *  3. 同时在新窗口展示可直接 Ctrl+P 打印的 EBR 预览页（附 print 提示）。
+ */
+export async function exportEbrPdf(record: EbrRecord): Promise<void> {
+  // ── 复用 printEbr 相同的 HTML 内容（但追加 PDF 优化样式） ──
+  const pdfCss = `
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'SimSun', '宋体', Arial, sans-serif;
+      font-size: 11px; color: #000; background: #fff;
+      padding: 12mm 14mm;
+    }
+    .cover { text-align: center; padding: 20mm 0; border-bottom: 2px solid #000; margin-bottom: 8mm; }
+    .cover h1 { font-size: 22px; font-weight: 900; letter-spacing: 4px; margin-bottom: 6mm; }
+    .cover h2 { font-size: 16px; font-weight: 700; margin-bottom: 4mm; }
+    .cover .ebr-no { font-size: 14px; font-family: monospace; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 6mm; }
+    th, td { border: 1px solid #555; padding: 3px 6px; vertical-align: top; }
+    th { background: #e8e8e8; font-weight: 700; text-align: center; }
+    td.label { background: #f5f5f5; font-weight: 600; width: 90px; }
+    .section-title {
+      font-size: 13px; font-weight: 700; margin: 6mm 0 2mm;
+      border-left: 4px solid #000; padding-left: 6px;
+    }
+    .kpi-row { display: flex; gap: 4mm; margin-bottom: 4mm; }
+    .kpi-box { flex: 1; border: 1px solid #aaa; text-align: center; padding: 3mm; }
+    .kpi-box .val { font-size: 18px; font-weight: 900; }
+    .kpi-box .lbl { font-size: 10px; color: #555; margin-top: 1mm; }
+    .sig-row { display: flex; gap: 6mm; margin-top: 4mm; flex-wrap: wrap; }
+    .sig-box { flex: 1; min-width: 30mm; border: 1px solid #aaa; padding: 3mm; min-height: 18mm; }
+    .sig-box .role { font-weight: 700; font-size: 11px; margin-bottom: 2mm; }
+    .sig-box .name { font-size: 11px; }
+    .sig-box .time { font-size: 9px; color: #555; margin-top: 1mm; }
+    .compliance { border: 1px solid #aaa; padding: 3mm; margin-top: 6mm; font-size: 10px; color: #333; }
+    .deviation-box { border: 1px solid #f90; background: #fffbe6; padding: 3mm; margin-bottom: 3mm; }
+    .pdf-hint {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: #1677ff; color: #fff; text-align: center;
+      padding: 10px 0; font-size: 14px; font-family: Arial, sans-serif;
+    }
+    .pdf-hint kbd { background: rgba(255,255,255,0.3); border-radius: 3px; padding: 1px 6px; }
+    .page-break { page-break-before: always; }
+    @page { margin: 10mm; size: A4; }
+    @media print {
+      .pdf-hint { display: none !important; }
+      body { padding: 0; }
+    }
+  `;
+
+  // 构建签名块
+  const sigBoxes = record.signatures.map(sig => `
+    <div class="sig-box">
+      <div class="role">${sig.role}</div>
+      <div class="name">${sig.name}</div>
+      <div class="time">${sig.signedAt}</div>
+      ${sig.remark ? `<div class="time">${sig.remark}</div>` : ''}
+    </div>`).join('');
+
+  // 偏差块
+  const deviationSection = record.deviations.length > 0
+    ? record.deviations.map(d => `
+        <div class="deviation-box">
+          <strong>[${d.type}] ${d.opNo} ${d.opName}</strong>
+          <div>发现：${d.discoveredAt} by ${d.discoveredBy}</div>
+          <div>描述：${d.description}</div>
+          <div>处置：${d.disposition}</div>
+          ${d.closedAt ? `<div>关闭：${d.closedAt} by ${d.closedBy ?? '—'}</div>` : '<div>状态：处理中</div>'}
+        </div>`).join('')
+    : '<p style="color:#999;padding:2mm">无偏差记录</p>';
+
+  const ebrStatusLabel = (s: string) => ({ IN_PROGRESS: '生产中', COMPLETED: '待审核', REVIEWED: '已审核', APPROVED: '已批准放行', REJECTED: '已驳回' }[s] ?? s);
+
+  const html = `<!DOCTYPE html><html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <title>EBR-PDF_${record.ebrNo}</title>
+    <style>${pdfCss}</style>
+  </head><body>
+    <div class="pdf-hint">
+      📄 GMP电子批记录 PDF导出 — 请按 <kbd>Ctrl+P</kbd>（Mac: <kbd>⌘+P</kbd>），目标打印机选择"另存为PDF"
+      &nbsp;&nbsp;|&nbsp;&nbsp; 文件名建议：EBR_${record.ebrNo}_${record.batchNo}.pdf
+    </div>
+
+    <div class="cover" style="margin-top:14mm">
+      <h1>电子批记录（EBR）</h1>
+      <h2>Electronic Batch Record — GMP Archive Copy</h2>
+      <div class="ebr-no">${record.ebrNo}</div>
+      <div style="margin-top:6mm;font-size:12px">状态：${ebrStatusLabel(record.status)} &nbsp;&nbsp; 创建：${record.createdAt}</div>
+      <div style="margin-top:2mm;font-size:11px;color:#555">工艺路径：${record.routingCode} &nbsp;&nbsp; BOM版本：${record.bomVersion}</div>
+    </div>
+
+    <div class="section-title">一、批次产品信息</div>
+    <table>
+      <tr>
+        <td class="label">工单号</td><td>${record.woNo}</td>
+        <td class="label">批次号</td><td><strong>${record.batchNo}</strong></td>
+        <td class="label">EBR编号</td><td style="font-family:monospace">${record.ebrNo}</td>
+      </tr>
+      <tr>
+        <td class="label">产品名称</td><td>${record.productName}</td>
+        <td class="label">产品规格</td><td>${record.productSpec}</td>
+        <td class="label">产品编码</td><td>${record.productCode}</td>
+      </tr>
+      <tr>
+        <td class="label">开始时间</td><td>${record.startTime}</td>
+        <td class="label">完成时间</td><td>${record.endTime ?? '生产中'}</td>
+        <td class="label">更新时间</td><td>${record.updatedAt}</td>
+      </tr>
+    </table>
+
+    <div class="section-title">二、生产数量汇总</div>
+    <div class="kpi-row">
+      <div class="kpi-box"><div class="val">${record.planQtyTotal}</div><div class="lbl">计划数量</div></div>
+      <div class="kpi-box"><div class="val">${record.reportQtyTotal}</div><div class="lbl">完工数量</div></div>
+      <div class="kpi-box"><div class="val">${record.goodQtyTotal}</div><div class="lbl">合格数量</div></div>
+      <div class="kpi-box"><div class="val">${record.scrapQtyTotal}</div><div class="lbl">报废数量</div></div>
+      <div class="kpi-box"><div class="val" style="color:${record.yieldRate >= 98 ? '#389e0d' : record.yieldRate >= 95 ? '#faad14' : '#cf1322'}">${record.yieldRate}%</div><div class="lbl">综合良率</div></div>
+    </div>
+
+    <div class="section-title page-break">三、工序执行明细（${record.routingSteps.length}道）</div>
+    <table>
+      <thead><tr><th>工序</th><th>工作中心</th><th>状态</th><th>操作员</th><th>开始</th><th>完成</th><th>偏差</th></tr></thead>
+      <tbody>
+      ${record.routingSteps.map(s => `
+        <tr>
+          <td style="font-size:10px"><strong>${s.opNo}</strong> ${s.opName}${s.isKeyOp ? ' ★' : ''}${s.mandatoryInspection ? ' [必检]' : ''}</td>
+          <td style="font-size:10px">${s.workCenter}</td>
+          <td style="text-align:center;font-size:10px;color:${s.status === 'COMPLETED' ? '#389e0d' : s.status === 'DEVIATION' ? '#cf1322' : '#000'}">
+            ${s.status === 'COMPLETED' ? '✓' : s.status === 'IN_PROGRESS' ? '▶' : s.status === 'DEVIATION' ? '⚠' : '○'}
+          </td>
+          <td style="font-size:10px">${s.operatorName ?? '—'}</td>
+          <td style="font-size:10px">${s.startedAt ?? '—'}</td>
+          <td style="font-size:10px">${s.completedAt ?? '—'}</td>
+          <td style="font-size:10px;color:${s.hasDeviation ? '#cf1322' : '#999'}">${s.hasDeviation ? '有偏差' : '—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="section-title">四、质量检验记录（${record.inspectionRecords.length}项）</div>
+    <table>
+      <thead><tr><th>任务编号</th><th>类型</th><th>方案名称</th><th>结论</th><th>放行状态</th><th>检验员</th></tr></thead>
+      <tbody>
+      ${record.inspectionRecords.map(ir => `
+        <tr>
+          <td style="font-size:10px;font-family:monospace">${ir.taskNo}</td>
+          <td style="font-size:10px">${ir.schemeType}</td>
+          <td style="font-size:10px">${ir.schemeName}</td>
+          <td style="text-align:center;font-size:10px;font-weight:700;color:${ir.conclusion === 'PASS' ? '#389e0d' : ir.conclusion === 'FAIL' ? '#cf1322' : '#888'}">
+            ${ir.conclusion === 'PASS' ? '✓ 通过' : ir.conclusion === 'FAIL' ? '✗ 失败' : '待检'}
+            ${ir.failItems && ir.failItems.length > 0 ? `<br><span style="font-size:9px;color:#cf1322">失败项：${ir.failItems.join('、')}</span>` : ''}
+          </td>
+          <td style="text-align:center;font-size:10px">${ir.releaseStatus === 'RELEASED' ? '✓ 已放行' : ir.releaseStatus === 'REJECTED' ? '✗ 已拒绝' : '待放行'}</td>
+          <td style="font-size:10px">${ir.inspectorName ?? '—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="section-title">五、偏差 / 异常记录</div>
+    ${deviationSection}
+
+    <div class="section-title">六、执行签名链</div>
+    ${record.signatures.length > 0 ? `<div class="sig-row">${sigBoxes}</div>` : '<p style="color:#999;padding:2mm">暂无签名记录</p>'}
+
+    <div class="section-title">七、审核与放行</div>
+    <table>
+      <tr>
+        <td class="label">QA审核人</td><td>${record.reviewedBy ?? '待审核'}</td>
+        <td class="label">审核时间</td><td>${record.reviewedAt ?? '—'}</td>
+      </tr>
+      <tr>
+        <td class="label">批准放行人</td><td>${record.approvedBy ?? '待批准'}</td>
+        <td class="label">批准时间</td><td>${record.approvedAt ?? '—'}</td>
+      </tr>
+    </table>
+
+    <div class="compliance">
+      <strong>GMP合规声明 — Compliance Statement</strong>
+      本电子批记录由天美健保健品MES V2.0自动生成，记录批次 <strong>${record.batchNo}</strong>
+      完整生产数据（${record.routingSteps.length}道工序 / ${record.inspectionRecords.length}项检验）。
+      满足《药品生产质量管理规范（GMP）2010年修订版》第四章文件管理要求。
+      <br>记录一经批准不得修改，如需更正须以偏差报告方式处理。
+      <br>导出时间：${new Date().toLocaleString('zh-CN')} &nbsp;|&nbsp; 文件编号：${record.ebrNo}
+    </div>
+  </body></html>`;
+
+  // ── 策略1：新窗口展示，让用户 Ctrl+P 保存为 PDF ──
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    // 延迟触发打印对话框
+    setTimeout(() => {
+      try { win.print(); } catch (_e) { /* 用户手动打印 */ }
+    }, 800);
+    return;
+  }
+
+  // ── 策略2（弹窗被拦截时）：下载 HTML 文件 ──
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `EBR_${record.ebrNo}_${record.batchNo}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

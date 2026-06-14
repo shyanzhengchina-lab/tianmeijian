@@ -19,7 +19,7 @@ import {
 } from '@ant-design/icons';
 import type { EbrRecord, EbrRoutingStep, EbrInspectionRecord, EbrStatus } from './ebrData';
 import { getMaterialBalance } from './ebrData';
-import { printEbr } from './ebrPrintUtils';
+import { printEbr, exportEbrPdf } from './ebrPrintUtils';
 import { MaterialBalanceDetail } from './MaterialBalancePage';
 import { mockUsageRecords } from '../equipment/equipmentData';
 import type { EquipUsageRecord } from '../equipment/equipmentData';
@@ -640,7 +640,16 @@ const EbrDetailPage: React.FC<EbrDetailPageProps> = ({ record, onBack, onUpdate,
             >
               打印 EBR
             </Button>
-            <Button icon={<DownloadOutlined />} onClick={() => message.info('PDF 导出功能开发中')}>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={() => {
+                message.loading({ content: '正在生成PDF预览…', key: 'pdf', duration: 2 });
+                setTimeout(() => {
+                  exportEbrPdf(record);
+                  message.success({ content: '已在新窗口打开PDF预览，请按 Ctrl+P → 另存为PDF', key: 'pdf', duration: 5 });
+                }, 200);
+              }}
+            >
               导出 PDF
             </Button>
           </Space>
@@ -1044,6 +1053,94 @@ const EbrDetailPage: React.FC<EbrDetailPageProps> = ({ record, onBack, onUpdate,
           ))}
         </Card>
       )}
+
+      {/* ⑦-B OOS 质量决策树（当存在检验失败项时展示） */}
+      {(() => {
+        const failedInsp = record.inspectionRecords.filter(
+          ir => ir.conclusion === 'FAIL' || (ir.failItems && ir.failItems.length > 0)
+        );
+        if (failedInsp.length === 0) return null;
+
+        const hasCriticalFail = failedInsp.some(ir =>
+          ir.items?.some((item: { isCritical?: boolean; result?: string }) => item.isCritical && item.result === 'FAIL')
+        );
+        const hasOpenDeviation = record.deviations.some(d => !d.closedAt);
+
+        const decisionColor = hasCriticalFail ? '#cf1322' : hasOpenDeviation ? '#fa8c16' : '#52c41a';
+        const decisionType: 'error' | 'warning' | 'success' = hasCriticalFail ? 'error' : hasOpenDeviation ? 'warning' : 'success';
+        const decisionLabel = hasCriticalFail
+          ? '🔴 关键检验失败 — 建议批次暂扣，启动OOS调查（GMP 2010 第224条）'
+          : hasOpenDeviation
+          ? '🟡 存在未关闭偏差 — 暂停放行，等待CAPA完成后QA决策'
+          : '🟢 轻微偏差已关闭 — 可提交QA审批条件放行';
+
+        return (
+          <Card
+            title={
+              <Space>
+                <AuditOutlined style={{ color: decisionColor }} />
+                <Text strong style={{ color: decisionColor }}>OOS 质量决策树 — 检验失败处置路径</Text>
+                <Tag color={hasCriticalFail ? 'error' : hasOpenDeviation ? 'warning' : 'success'}>
+                  {failedInsp.length} 项异常
+                </Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16, borderRadius: 8, border: `2px solid ${decisionColor}` }}
+          >
+            <Alert
+              type={decisionType}
+              showIcon
+              message={<Text strong>{decisionLabel}</Text>}
+              description={
+                <div style={{ marginTop: 8 }}>
+                  {/* 失败检验任务明细 */}
+                  {failedInsp.map(ir => {
+                    const failItemNames: string[] = ir.failItems
+                      ?? ir.items?.filter((i: { result?: string }) => i.result === 'FAIL')
+                           .map((i: { itemName?: string }) => i.itemName ?? '—')
+                      ?? [];
+                    const isCrit = ir.items?.some(
+                      (i: { isCritical?: boolean; result?: string }) => i.isCritical && i.result === 'FAIL'
+                    );
+                    return (
+                      <div key={ir.taskNo} style={{ marginBottom: 8, padding: '6px 10px', background: '#fff1f0', borderRadius: 4, border: '1px solid #ffccc7' }}>
+                        <Space wrap>
+                          <Tag color={isCrit ? 'error' : 'warning'}>{isCrit ? '关键失败' : '次要失败'}</Tag>
+                          <Text strong style={{ fontSize: 12 }}>{ir.taskNo}</Text>
+                          <Text style={{ fontSize: 12 }}>{ir.schemeName}</Text>
+                          {failItemNames.length > 0 && (
+                            <Text type="danger" style={{ fontSize: 12 }}>失败项：{failItemNames.join('、')}</Text>
+                          )}
+                        </Space>
+                        <div style={{ marginTop: 4, fontSize: 11, color: '#555' }}>
+                          <b>GMP处置路径：</b>{' '}
+                          {isCrit
+                            ? '① 立即停线 → ② 开具OOS/偏差报告 → ③ QA评估影响范围 → ④ 制定CAPA → ⑤ 销毁/退货/降级/复检决策'
+                            : '① 记录偏差 → ② 评估对产品质量影响 → ③ 复检或补充测试 → ④ QA审批条件放行'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* 关联偏差汇总 */}
+                  {record.deviations.length > 0 && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: '#666', background: '#fffbe6', padding: '6px 10px', borderRadius: 4, border: '1px solid #ffe58f' }}>
+                      <b>关联偏差记录：</b>
+                      {record.deviations.map(d => (
+                        <span key={d.id ?? d.type} style={{ marginRight: 10 }}>
+                          <Tag color={d.closedAt ? 'default' : 'orange'}>{d.id ?? d.type}</Tag>
+                          {d.description?.substring(0, 35)}
+                          {!d.closedAt && <Text type="warning" style={{ fontSize: 11 }}> [处理中]</Text>}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              }
+              style={{ marginBottom: 0 }}
+            />
+          </Card>
+        );
+      })()}
 
       {/* ⑧ 签名链 + 审核流 */}
       <Row gutter={16} style={{ marginBottom: 16 }}>

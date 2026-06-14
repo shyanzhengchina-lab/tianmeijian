@@ -545,6 +545,30 @@ export const GMP_OPERATIONS: OperationDef[] = [
     inspectionRecordName: '颗粒中间体检验记录',
   },
 
+  // 4. 包衣（Film Coating）—— 压片后包薄膜衣，VitC咀嚼片专用工序
+  {
+    seq: 35,
+    code: 'OP-GMP-COATING',
+    name: '包衣',
+    workshop: '固体制剂车间',
+    remark: '关键工序：包衣增重率2~4%，每小时称重监控；包衣液温度45~55℃；进风温度40~55℃',
+    stages: makeStages(
+      { PRE_CLEAN: true, CHECK_IN: true, MAT_VERIFY: true, FIRST_PIECE: true, DATA_COLLECT: true, SELF_CHECK: true, POST_CLEAN: true, REPORT: true, CHECK_OUT: true },
+      {
+        PRE_CLEAN: '包衣机清洁合格证有效（72小时内）；无上批遗留包衣液或片芯；喷枪已清洗并检查无堵塞；进排风过滤器检查合格',
+        MAT_VERIFY: '核对包衣预混料（OPADRY等）批号、剩余有效期；称量包衣液浓度（15%±1%）；检查片芯批号与工单一致',
+        FIRST_PIECE: '首次包衣15min后抽样10片：测定片重（与片芯对比，增重率0.5~1.0%）；外观检查（无粘连/裂片/花斑）；包衣液雾化均匀性确认',
+        DATA_COLLECT: '每小时监测：片重增重率(%)、进风温度(℃)、出风温度(℃)、包衣液喷速(g/min)、锅内负压(Pa)、环境温湿度',
+        SELF_CHECK: '操作员自检：随机取10片检查外观（颜色均匀性/裂片/粘连）；末次抽检片重增重率确认达标(2~4%)',
+        POST_CLEAN: '清点包衣片芯用量；填写物料平衡表（≥98%）；清洁包衣机喷枪/包衣锅；申请清场合格证',
+        REPORT: '包衣批量、终止增重率、操作人、班组长复核、QA抽查记录',
+      }
+    ),
+    hasQcInspection: true,
+    inspectionRecordName: '包衣过程检验记录（增重率监控）',
+    masterOpCode: 'OP-GMP-COATING',
+  },
+
   // 4. 内包装（瓶包线）—— 对应 SOR-MF-PE-02-05 第3部分
   {
     seq: 40,

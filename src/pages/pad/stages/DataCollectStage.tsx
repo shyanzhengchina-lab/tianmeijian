@@ -90,6 +90,30 @@ const DC_CONFIG_BY_OP: Record<string, DcConfig> = {
     mockData: [{ equip_no: 'GR-001', granule_moisture: 1.8, granule_size: 20, inlet_temp: 65, outlet_temp: 38, dry_time: 45 }],
   },
 
+  // 包衣（Film Coating）— VitC咀嚼片薄膜包衣，包衣增重率2~4%关键工序
+  'OP-GMP-COATING': {
+    title: '包衣工序 — 包衣增重率及过程参数监控',
+    deviceLabel: '高效包衣机（BFC-150）',
+    minRecords: 4,
+    fields: [
+      { key: 'check_time',   label: '监测时间点',       type: 'text',   required: true,  colSpan: 8 },
+      { key: 'weight_gain',  label: '包衣增重率(%)',    unit: '%',      precision: 2, spec: '2.0~4.0%', specMin: 2.0, specMax: 4.0, type: 'number', required: true, colSpan: 8 },
+      { key: 'tablet_weight',label: '片重(mg)',         unit: 'mg',     precision: 1, spec: '500±5%', specMin: 475, specMax: 525,  type: 'number', required: true, colSpan: 8 },
+      { key: 'inlet_temp',   label: '进风温度(℃)',      unit: '℃',      precision: 1, spec: '40~55℃', specMin: 40, specMax: 55,   type: 'number', required: true, colSpan: 8 },
+      { key: 'outlet_temp',  label: '出风温度(℃)',      unit: '℃',      precision: 1, spec: '35~45℃', specMin: 35, specMax: 45,   type: 'number', required: true, colSpan: 8 },
+      { key: 'spray_rate',   label: '喷液速率(g/min)',  unit: 'g/min',  precision: 1, spec: '80~120', specMin: 80, specMax: 120,   type: 'number', required: true, colSpan: 8 },
+      { key: 'pan_pressure', label: '锅内负压(Pa)',     unit: 'Pa',     precision: 0, spec: '-50~-20', specMin: -50, specMax: -20, type: 'number', required: false, colSpan: 8 },
+      { key: 'appearance',   label: '片面外观',         type: 'select', options: ['合格（颜色均匀）', '裂片', '粘连', '花斑'], required: true, colSpan: 8 },
+      { key: 'humidity',     label: '操作间湿度(%)',    unit: '%',      precision: 1, specMin: 40, specMax: 65, type: 'number', required: false, colSpan: 8 },
+    ],
+    mockData: [
+      { check_time: '08:30（0.5h）', weight_gain: 0.8,  tablet_weight: 504.1, inlet_temp: 48, outlet_temp: 38, spray_rate: 90,  pan_pressure: -35, appearance: '合格（颜色均匀）', humidity: 52 },
+      { check_time: '09:30（1.5h）', weight_gain: 1.6,  tablet_weight: 508.0, inlet_temp: 49, outlet_temp: 39, spray_rate: 95,  pan_pressure: -33, appearance: '合格（颜色均匀）', humidity: 52 },
+      { check_time: '10:30（2.5h）', weight_gain: 2.4,  tablet_weight: 512.0, inlet_temp: 50, outlet_temp: 40, spray_rate: 95,  pan_pressure: -32, appearance: '合格（颜色均匀）', humidity: 53 },
+      { check_time: '11:15（终点）', weight_gain: 3.2,  tablet_weight: 516.0, inlet_temp: 50, outlet_temp: 41, spray_rate: 90,  pan_pressure: -33, appearance: '合格（颜色均匀）', humidity: 52 },
+    ],
+  },
+
   // 内包装（瓶包线）
   'OP-GMP-INNERPACK': {
     title: '内包装（瓶包线） — 过程数据',
