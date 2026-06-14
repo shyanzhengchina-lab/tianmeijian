@@ -629,16 +629,17 @@ export const GMP_OPERATIONS: OperationDef[] = [
   },
 ];
 
-// 可见工序（不包含 hidden=true）
-export const VISIBLE_OPERATIONS = OPERATIONS.filter(op => !op.hidden);
+// ==================== 旧医疗器械 OPERATIONS → 切换为 GMP_OPERATIONS ====================
+// VISIBLE_OPERATIONS 现在指向保健品 GMP 工序（所有 GMP_OPERATIONS 均可见）
+export const VISIBLE_OPERATIONS = GMP_OPERATIONS.filter(op => !op.hidden);
 
-// 根据 seq 获取工序
+// 根据 seq 获取工序（优先从 GMP_OPERATIONS 查找，再回退旧 OPERATIONS）
 export const getOperationBySeq = (seq: number): OperationDef | undefined =>
-  OPERATIONS.find(op => op.seq === seq);
+  GMP_OPERATIONS.find(op => op.seq === seq) ?? OPERATIONS.find(op => op.seq === seq);
 
-// 根据 code 获取工序
+// 根据 code 获取工序（优先从 GMP_OPERATIONS 查找，再回退旧 OPERATIONS）
 export const getOperationByCode = (code: string): OperationDef | undefined =>
-  OPERATIONS.find(op => op.code === code);
+  GMP_OPERATIONS.find(op => op.code === code) ?? OPERATIONS.find(op => op.code === code);
 
 // 获取工序的启用阶段
 export const getEnabledStages = (op: OperationDef): StageConfig[] =>
@@ -651,7 +652,7 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [];
 // ==================== 初始化工序执行状态 ====================
 
 export function initOperationExecution(opCode: string): OperationExecution {
-  const op = OPERATIONS.find(o => o.code === opCode);
+  const op = GMP_OPERATIONS.find(o => o.code === opCode) ?? OPERATIONS.find(o => o.code === opCode);
   const stagesInit: Partial<Record<StageCode, StageExecution>> = {};
   
   ALL_STAGES.forEach(s => {
@@ -718,7 +719,7 @@ export interface FloatCell {
 export function buildFloatCells(
   execMap: Record<string, OperationExecution>
 ): FloatCell[] {
-  return OPERATIONS.map(op => {
+  return GMP_OPERATIONS.map(op => {
     const exec = execMap[op.code];
     let status: FloatCellStatus = 'not_started';
     if (exec) {
@@ -738,15 +739,26 @@ export function buildFloatCells(
   });
 }
 
-// ==================== 车间颜色映射 ====================
+// ==================== 车间颜色映射（天美健双工厂GMP） ====================
 export const WORKSHOP_COLOR: Record<string, string> = {
-  '精密加工车间': '#1890ff',
-  '清洗车间': '#13c2c2',
-  '热处理车间': '#fa8c16',
-  '质检车间': '#722ed1',
-  '组装车间': '#52c41a',
-  '包装车间': '#eb2f96',
-  '仓储': '#8c8c8c',
+  // 南京固体制剂（D级）
+  '固体制剂车间':         '#1677ff',
+  '固体制剂车间（D级）':  '#1677ff',
+  // 溧水益生菌（C级冷链）
+  '益生菌车间（C级，≤8℃）': '#13c2c2',
+  '溧水冷链仓（≤8℃）':   '#36cfc9',
+  // 包装车间
+  '包装车间':             '#eb2f96',
+  // QC实验室
+  'QC实验室':             '#722ed1',
+  'QC实验室（低温区）':   '#9254de',
+  // 旧车间编码兼容（避免已存localStorage的工单显示无色）
+  '精密加工车间':         '#1890ff',
+  '清洗车间':             '#13c2c2',
+  '热处理车间':           '#fa8c16',
+  '质检车间':             '#722ed1',
+  '组装车间':             '#52c41a',
+  '仓储':                 '#8c8c8c',
 };
 
 // ==================== 阶段图标映射 ====================
