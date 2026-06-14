@@ -277,18 +277,21 @@ const FloatTicketPage: React.FC = () => {
           productCode: vals.productCode,
           productName: vals.productName,
           productSpec: vals.productSpec ?? '',
-          routingCode: 'PR-RKQ-STD',
-          routingName: '根管锉标准工艺路径V2.1',
+          routingCode: 'GMP-PACKAGE-V1',
+          routingName: '天美健保健品GMP包装通用方案 V1.0',
           planQty: vals.planQty,
           status: 'PENDING',
           createdAt: new Date().toLocaleString('zh-CN'),
           createdBy: '当前用户',
           steps: [
-            { seq: 10, operationCode: 'OP-P1-CUT', operationName: '切断',    stationCode: 'ST-CUT-01', stationName: '切断工位1',    status: 'PENDING' },
-            { seq: 20, operationCode: 'OP-P2-GRD', operationName: '研磨',    stationCode: 'ST-GRD-01', stationName: '研磨工位1',    status: 'PENDING' },
-            { seq: 30, operationCode: 'OP-P3-HT',  operationName: '热处理',  stationCode: 'ST-HT-01',  stationName: '热处理工位1',  status: 'PENDING' },
-            { seq: 40, operationCode: 'OP-P4-FIN', operationName: '精加工',  stationCode: 'ST-FIN-01', stationName: '精加工工位1',  status: 'PENDING' },
-            { seq: 50, operationCode: 'OP-P5-INS', operationName: '入库报工', stationCode: 'ST-INS-01', stationName: '检验工位',     status: 'PENDING' },
+            { seq: 10, operationCode: 'PKG-01', operationName: '清场确认',      stationCode: 'ST-INNERPACK-01', stationName: '内包装工位', status: 'PENDING' },
+            { seq: 20, operationCode: 'PKG-02', operationName: '称量领料',      stationCode: 'ST-INNERPACK-01', stationName: '内包装工位', status: 'PENDING' },
+            { seq: 30, operationCode: 'PKG-03', operationName: '数片装瓶',      stationCode: 'ST-COUNT-01',     stationName: '数片工位',   status: 'PENDING' },
+            { seq: 40, operationCode: 'PKG-04', operationName: '内包装（加盖/贴标）', stationCode: 'ST-INNERPACK-01', stationName: '内包装工位', status: 'PENDING' },
+            { seq: 50, operationCode: 'PKG-05', operationName: '装盒装箱',      stationCode: 'ST-CARTONER-01', stationName: '装盒工位',   status: 'PENDING' },
+            { seq: 60, operationCode: 'PKG-06', operationName: '喷码赋码',      stationCode: 'ST-CODE-01',     stationName: '喷码工位',   status: 'PENDING' },
+            { seq: 70, operationCode: 'PKG-07', operationName: '物料平衡计算',  stationCode: 'ST-INNERPACK-01', stationName: '内包装工位', status: 'PENDING' },
+            { seq: 80, operationCode: 'PKG-08', operationName: 'QA放行审核',    stationCode: 'ST-QC-01',       stationName: 'QA工位',     status: 'PENDING' },
           ],
         };
         setTickets(prev => [newTicket, ...prev]);
@@ -480,16 +483,16 @@ const FloatTicketPage: React.FC = () => {
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item name="batchNo" label="生产批号" rules={[{ required: true, message: '请输入批号' }]}>
-            <Input placeholder="如：RKQ-20260424-006" />
+            <Input placeholder="如：TMJ-VTC-20260614-001" />
           </Form.Item>
           <Form.Item name="productCode" label="产品编码" rules={[{ required: true }]}>
-            <Input placeholder="如：RKQ-25-04" />
+            <Input placeholder="如：TMJ-VTC-100MG" />
           </Form.Item>
           <Form.Item name="productName" label="产品名称" rules={[{ required: true }]}>
-            <Input placeholder="如：根管锉" />
+            <Input placeholder="如：VitC咀嚼片" />
           </Form.Item>
           <Form.Item name="productSpec" label="规格型号" rules={[{ required: true }]}>
-            <Input placeholder="如：#25 / 04锥度 / 25mm" />
+            <Input placeholder="如：100mg×60片/瓶" />
           </Form.Item>
           <Form.Item name="planQty" label="计划数量（支）" rules={[{ required: true }]}>
             <InputNumber min={1} max={999999} style={{ width: '100%' }} placeholder="10000" />

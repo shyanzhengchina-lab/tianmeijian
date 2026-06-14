@@ -337,7 +337,7 @@ const WorkshopDetail: React.FC<WorkshopDetailProps> = ({
                 efficiency: 92.5,
                 currentTask: {
                   taskNo: 'TO-20260425001',
-                  productName: '机用根管锉',
+                  productName: 'VitC咀嚼片',
                   progress: 64,
                 },
                 runTime: 6.5,

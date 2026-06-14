@@ -490,7 +490,7 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
           workOrder={workOrder}
           opCode={operation.code}
           reportRecords={execution.reportRecords || []}
-          needsQcWriteback={['OP-50-GRIND1', 'OP-70-WASH2'].includes(operation.code)}
+          needsQcWriteback={['PKG-04', 'PKG-05'].includes(operation.code)}
           execution={stageExec}
           onComplete={handleReportComplete}
           onESign={handleESign}
@@ -854,8 +854,8 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
       {/* ===== QC 检验记录弹窗 ===== */}
       {/* 业务逻辑：
           • 单记录模式（OP-10机床成型、OP-70清洗二等）：inspectionRecordName 指定单张记录
-          • 双记录模式（OP-50研磨一 自检阶段）：dualInspectionRecords 指定两张记录顺序生成
-            ① 《数控机床成型检验记录》DK/QR-067 → ② 《根管锉超声波清洗检验记录》DK/QR-119
+          • 双记录模式（PKG-05包衣 自检阶段）：dualInspectionRecords 指定两张记录顺序生成
+            ① 《压片过程检验记录》TMJ/QR-PRD-004 → ② 《包衣过程检验记录》TMJ/QR-PRD-005
           • 检验完成后通过 onInspectionComplete 回写合格数量至报工阶段
       */}
       {operation.hasQcInspection && (

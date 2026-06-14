@@ -57,21 +57,27 @@ const WorkshopDetailDrawer: React.FC<{
   );
 
   // 关联员工：将OPERATORS按照工序号居5姘映到车间
-  // OPERATORS按teamId分组，共 6个班组，将其按轮分配到各车间
-  // 车间匹配规则：
-  //   - 精密加工车间 (WS-GRIND) → TM01, TM05
-  //   - 热处理车间 (WS-HT) → TM02 的热处理部分
-  //   - 组装车间 (WS-ASM) → TM03
-  //   - 包装车间 (WS-PACK) → TM04
-  //   - 全线 (WS-QC, WS-STORE) → TM06
+  // 天美健双工厂车间匹配规则：
+  //   - 固体制剂车间 (WS-GD-NJ)  → TM01, TM05
+  //   - 益生菌车间冷链 (WS-PRO-LS) → TM02
+  //   - QC实验室 (WS-QC) → TM06
+  //   - 冷链仓储 (WS-COLD-LS) → TM06
   const WORKSHOP_TEAM_MAP: Record<string, string[]> = {
+    'WS-GD-NJ':   ['TM01', 'TM05'],  // 南京固体制剂车间（D级）
+    'WS-PRO-LS':  ['TM02'],           // 溧水益生菌车间（C级冷链）
+    'WS-QC':      ['TM06'],           // QC实验室
+    'WS-COLD-LS': ['TM06'],           // 溧水冷链仓储
+    'WS-PACK-NJ': ['TM04'],           // 南京包装车间
+    'WS-GRAN-NJ': ['TM01'],           // 南京制粒间
+    'WS-PRESS-NJ':['TM03'],           // 南京压片间
+    'WS-COAT-NJ': ['TM03'],           // 南京包衣间
+    // 兼容旧编码（保持向后兼容）
     'WS-GRIND': ['TM01', 'TM05'],
     'WS-HT':    ['TM02'],
     'WS-COAT':  ['TM02'],
     'WS-CLEAN': ['TM05'],
     'WS-ASM':   ['TM03'],
     'WS-PACK':  ['TM04'],
-    'WS-QC':    ['TM06'],
     'WS-STORE': ['TM06'],
     'WS-LASER': ['TM04'],
     'WS-STER':  ['TM03'],
@@ -317,7 +323,7 @@ const WorkshopFormModal: React.FC<{
             <Form.Item name="workshopCode" label="车间编码"
               rules={[{ required: true, message: '请输入车间编码' },
                       { pattern: /^WS-[A-Z0-9_-]+$/, message: '格式：WS-XXXX，仅大写字母/数字' }]}>
-              <Input placeholder="如 WS-GRIND" style={{ fontFamily: 'monospace' }} disabled={isEdit} />
+              <Input placeholder="如 WS-GD-NJ" style={{ fontFamily: 'monospace' }} disabled={isEdit} />
             </Form.Item>
           </Col>
           <Col span={12}>

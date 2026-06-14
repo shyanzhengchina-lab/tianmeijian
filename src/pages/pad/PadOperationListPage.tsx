@@ -55,7 +55,7 @@ function mapApiWoToPad(w: WorkOrderRecord): WorkOrder {
   return {
     id:           String(w.id ?? ''),
     woNo:         w.workOrderNo ?? '',
-    productName:  w.materialName ?? '机用镍钛根管锉',
+    productName:  w.materialName ?? 'VitC咀嚼片',
     productSpec:  w.spec ?? w.materialCode ?? '',
     batchNo:      (w as any).batchNo ?? '',
     planQty:      w.planQuantity ?? 0,

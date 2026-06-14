@@ -517,7 +517,7 @@ const EquipUsagePage: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="productName" label="产品名称">
-                <Input placeholder="#25/.04根管锉" />
+                <Input placeholder="VitC咀嚼片 100mg×60片" />
               </Form.Item>
             </Col>
             <Col span={12}>

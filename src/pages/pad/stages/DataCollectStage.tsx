@@ -154,60 +154,58 @@ const DC_CONFIG_BY_OP: Record<string, DcConfig> = {
     ],
   },
 
-  // ─── 原医疗器械工序 ───────────────────────────────────────────────────────
+  // ─── 天美健保健品GMP工序数据采集 ──────────────────────────────────────────
 
-  // OP-10 机床成型：抽检外径/尖端径/锥度/螺距/表面粗糙度 + 设备工艺参数
-  'OP-10-GRIND': {
-    title: '机床成型 — 过程抽检数据',
-    deviceLabel: '千分尺 / 投影仪',
+  // PKG-04 压片工序：抽检片重差异/硬度/脆碎度/外观
+  'PKG-04': {
+    title: '压片工序 — 过程抽检数据（IPQC）',
+    deviceLabel: '电子天平 / 硬度仪',
     minRecords: 3,
     fields: [
-      { key: 'd1', label: '外径 D1', unit: 'mm', precision: 3, spec: '0.250±0.005', specMin: 0.245, specMax: 0.255, type: 'number', required: true, colSpan: 8 },
-      { key: 'd2', label: '尖端外径 D2', unit: 'mm', precision: 3, spec: '0.150±0.005', specMin: 0.145, specMax: 0.155, type: 'number', required: true, colSpan: 8 },
-      { key: 'taper', label: '锥度', unit: '', precision: 3, spec: '0.038~0.042', specMin: 0.038, specMax: 0.042, type: 'number', required: true, colSpan: 8 },
-      { key: 'thread', label: '螺纹完整性', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
-      { key: 'surface', label: '表面粗糙度 Ra', type: 'select', options: ['Ra≤0.8 合格', 'Ra>0.8 不合格'], required: true, colSpan: 8 },
+      { key: 'weight', label: '片重', unit: 'mg', precision: 1, spec: '100±5%', specMin: 95, specMax: 105, type: 'number', required: true, colSpan: 8 },
+      { key: 'hardness', label: '硬度', unit: 'kP', precision: 1, spec: '4.0~8.0', specMin: 4.0, specMax: 8.0, type: 'number', required: true, colSpan: 8 },
+      { key: 'friability', label: '脆碎度', type: 'select', options: ['≤0.5% 合格', '>0.5% 不合格'], required: true, colSpan: 8 },
       { key: 'appearance', label: '外观', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+      { key: 'disintegration', label: '崩解时限', unit: 'min', precision: 1, spec: '≤15min', specMin: 0, specMax: 15, type: 'number', required: false, colSpan: 8 },
     ],
     mockData: [
-      { d1: 0.251, d2: 0.152, taper: 0.040, thread: '合格', surface: 'Ra≤0.8 合格', appearance: '合格' },
-      { d1: 0.250, d2: 0.151, taper: 0.040, thread: '合格', surface: 'Ra≤0.8 合格', appearance: '合格' },
-      { d1: 0.252, d2: 0.150, taper: 0.041, thread: '合格', surface: 'Ra≤0.8 合格', appearance: '合格' },
+      { weight: 100.2, hardness: 6.2, friability: '≤0.5% 合格', appearance: '合格', disintegration: 8.5 },
+      { weight: 99.8, hardness: 5.8, friability: '≤0.5% 合格', appearance: '合格', disintegration: 9.2 },
+      { weight: 100.5, hardness: 6.5, friability: '≤0.5% 合格', appearance: '合格', disintegration: 7.8 },
     ],
   },
 
-  // OP-140 检测合格（AQL综合检验）
-  'OP-140-INSPECT2': {
-    title: 'AQL综合检验 — 半成品抽检数据',
-    deviceLabel: '综合检测台 / 投影仪',
+  // PKG-05 包衣工序：抽检增重/外观/颜色均一性
+  'PKG-05': {
+    title: '包衣工序 — 过程检验数据（IPQC）',
+    deviceLabel: '电子天平 / 包衣机参数采集',
     minRecords: 1,
     fields: [
-      { key: 'total_length', label: '总长', unit: 'mm', precision: 2, spec: '25.0±0.5', specMin: 24.5, specMax: 25.5, type: 'number', required: true, colSpan: 8 },
-      { key: 'appearance', label: '外观（毛刺/崩刃/弯曲）', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
-      { key: 'color_mark', label: '颜色标识（黄色#26）', type: 'select', options: ['符合', '不符合'], required: true, colSpan: 8 },
-      { key: 'aql_sample', label: 'AQL抽检数量', unit: '件', precision: 0, type: 'number', required: true, colSpan: 8 },
-      { key: 'aql_judge', label: '批次判定', type: 'select', options: ['合格批', '拒收批'], required: true, colSpan: 8 },
+      { key: 'weight_gain', label: '包衣增重', unit: '%', precision: 2, spec: '3.0~5.0', specMin: 3.0, specMax: 5.0, type: 'number', required: true, colSpan: 8 },
+      { key: 'inlet_temp', label: '进风温度', unit: '℃', precision: 1, spec: '55±5', specMin: 50, specMax: 60, type: 'number', required: true, colSpan: 8 },
+      { key: 'appearance', label: '包衣外观', type: 'select', options: ['光滑均匀 合格', '有裂片/粘片 不合格'], required: true, colSpan: 8 },
+      { key: 'color_uniform', label: '颜色均一性', type: 'select', options: ['均一', '不均一'], required: true, colSpan: 8 },
     ],
     mockData: [
-      { total_length: 25.0, appearance: '合格', color_mark: '符合', aql_sample: 13, aql_judge: '合格批' },
+      { weight_gain: 3.8, inlet_temp: 55.2, appearance: '光滑均匀 合格', color_uniform: '均一' },
     ],
   },
 };
 
-// 通用默认配置（研磨/抽检通用）
+// 通用默认配置（GMP保健品过程抽检通用）
 const DC_CONFIG_DEFAULT: DcConfig = {
-  title: '过程数据采集',
+  title: '过程数据采集（GMP）',
   deviceLabel: '检测设备',
   minRecords: 1,
   fields: [
-    { key: 'd1', label: '外径 D1', unit: 'mm', precision: 3, spec: '0.250±0.005', specMin: 0.245, specMax: 0.255, type: 'number', required: true, colSpan: 8 },
-    { key: 'd2', label: '外径 D2', unit: 'mm', precision: 3, type: 'number', colSpan: 8 },
-    { key: 'taper', label: '锥度', unit: '', precision: 3, spec: '0.038~0.042', specMin: 0.038, specMax: 0.042, type: 'number', required: true, colSpan: 8 },
+    { key: 'weight', label: '样品重量', unit: 'mg', precision: 1, spec: '标准±5%', type: 'number', required: true, colSpan: 8 },
+    { key: 'appearance', label: '外观', type: 'select', options: ['合格', '不合格'], required: true, colSpan: 8 },
+    { key: 'remark', label: '备注', type: 'select', options: ['无异常', '有异常'], required: false, colSpan: 8 },
   ],
   mockData: [
-    { d1: 0.251, d2: 0.297, taper: 0.040 },
-    { d1: 0.252, d2: 0.298, taper: 0.040 },
-    { d1: 0.250, d2: 0.296, taper: 0.041 },
+    { weight: 300.2, appearance: '合格', remark: '无异常' },
+    { weight: 299.8, appearance: '合格', remark: '无异常' },
+    { weight: 300.5, appearance: '合格', remark: '无异常' },
   ],
 };
 
@@ -228,18 +226,18 @@ function isFieldPass(field: DcField, val: number | string | null | undefined): b
 type RecordRow = Record<string, number | string | null>;
 
 const MOCK_DEVICES_BY_OP: Record<string, Array<{ id: string; name: string; type: string }>> = {
-  'OP-10-GRIND': [
-    { id: 'DC-001', name: '千分尺-DC001', type: '千分尺' },
-    { id: 'DC-002', name: '投影仪-PT001', type: '投影仪' },
+  'PKG-04': [
+    { id: 'TMJ-BAL-001', name: '电子天平-BAL001', type: '电子天平' },
+    { id: 'TMJ-HD-001', name: '硬度测定仪-HD001', type: '硬度仪' },
   ],
-  'OP-140-INSPECT2': [
-    { id: 'EQ-F01', name: '综合检测台-F01', type: '综合检测台' },
-    { id: 'DC-002', name: '投影仪-PT001', type: '投影仪' },
+  'PKG-05': [
+    { id: 'TMJ-BAL-001', name: '电子天平-BAL001', type: '电子天平' },
+    { id: 'TMJ-BY-001', name: '包衣机-BY001', type: '包衣机' },
   ],
   default: [
-    { id: 'DC-001', name: '千分尺-001', type: '千分尺' },
-    { id: 'DC-002', name: '投影仪-001', type: '投影仪' },
-    { id: 'DC-003', name: '三坐标-001', type: '三坐标测量机' },
+    { id: 'TMJ-BAL-001', name: '电子天平-BAL001', type: '电子天平' },
+    { id: 'TMJ-QC-001', name: '紫外分光光度计-UV001', type: '紫外分光' },
+    { id: 'TMJ-QC-002', name: 'HPLC色谱仪-HPLC001', type: 'HPLC' },
   ],
 };
 

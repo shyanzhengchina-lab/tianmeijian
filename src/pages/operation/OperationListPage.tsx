@@ -645,7 +645,7 @@ const OperationListPage: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="paramTemplate" label="技术参数模板">
-                <Input placeholder="如：TP-GRIND-001" />
+                <Input placeholder="如：PKG-04-PRESS" />
               </Form.Item>
             </Col>
             <Col span={24}>

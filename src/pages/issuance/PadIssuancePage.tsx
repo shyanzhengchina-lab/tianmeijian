@@ -29,13 +29,13 @@ import { getPadIssuanceList } from '../../api/padIssuances';
 
 type PadView = 'list' | 'detail' | 'scan' | 'split' | 'confirm' | 'exception';
 
-// ── 模拟批次库存（原料仓） ───────────────────────────────────────
+// ── 模拟批次库存（原料仓）───────────────────────────────────────
 const SOURCE_BATCHES: WipInventory[] = [
-  { warehouseCode: 'A1-原料仓', itemCode: 'CH-NITRIDE', itemName: '氮化钛涂层靶材', batchNo: 'BT-20260420-A2', qty: 300, availableQty: 300, lockedQty: 0, unit: 'G', inboundDate: '2026-04-20', expiryDate: '2027-04-20', updatedAt: '2026-04-30' },
-  { warehouseCode: 'A1-原料仓', itemCode: 'CH-NITRIDE', itemName: '氮化钛涂层靶材', batchNo: 'BT-20260425-A1', qty: 800, availableQty: 800, lockedQty: 0, unit: 'G', inboundDate: '2026-04-25', expiryDate: '2027-04-25', updatedAt: '2026-04-30' },
-  { warehouseCode: 'A1-原料仓', itemCode: 'CH-ADHESIVE', itemName: '涂层粘结剂', batchNo: 'BT-20260428-A1', qty: 600, availableQty: 600, lockedQty: 0, unit: 'ML', inboundDate: '2026-04-28', updatedAt: '2026-04-30' },
-  { warehouseCode: 'A1-原料仓', itemCode: 'NW-SS316L', itemName: '不锈钢丝 316L', batchNo: 'BT-20260422-SS', qty: 120, availableQty: 120, lockedQty: 0, unit: 'KG', inboundDate: '2026-04-22', updatedAt: '2026-04-30' },
-  { warehouseCode: 'A1-原料仓', itemCode: 'NW-NITI', itemName: '镍钛合金丝', batchNo: 'BT-20260415-NI', qty: 60, availableQty: 60, lockedQty: 0, unit: 'KG', inboundDate: '2026-04-15', updatedAt: '2026-04-30' },
+  { warehouseCode: 'A1-原料仓', itemCode: 'RM-VTC-001', itemName: 'L-抗坏血酸（VitC原料）药用级', batchNo: 'BT-TMJ-20260601-VTC', qty: 500, availableQty: 500, lockedQty: 0, unit: 'KG', inboundDate: '2026-06-01', expiryDate: '2027-06-01', updatedAt: '2026-06-14' },
+  { warehouseCode: 'A1-原料仓', itemCode: 'RM-VTC-001', itemName: 'L-抗坏血酸（VitC原料）药用级', batchNo: 'BT-TMJ-20260610-VTC', qty: 800, availableQty: 800, lockedQty: 0, unit: 'KG', inboundDate: '2026-06-10', expiryDate: '2027-06-10', updatedAt: '2026-06-14' },
+  { warehouseCode: 'A1-原料仓', itemCode: 'RM-EXC-001', itemName: '甘露醇（辅料）', batchNo: 'BT-TMJ-20260605-MNT', qty: 300, availableQty: 300, lockedQty: 0, unit: 'KG', inboundDate: '2026-06-05', updatedAt: '2026-06-14' },
+  { warehouseCode: 'A2-冷链原料仓（≤8℃）', itemCode: 'RM-PRO-LGG', itemName: '鼠李糖乳杆菌 LGG菌粉', batchNo: 'BT-TMJ-20260608-LGG', qty: 50, availableQty: 50, lockedQty: 0, unit: 'KG', inboundDate: '2026-06-08', expiryDate: '2026-12-08', updatedAt: '2026-06-14' },
+  { warehouseCode: 'A2-冷链原料仓（≤8℃）', itemCode: 'RM-PRO-BIF', itemName: '双歧杆菌BB12菌粉', batchNo: 'BT-TMJ-20260608-BIF', qty: 30, availableQty: 30, lockedQty: 0, unit: 'KG', inboundDate: '2026-06-08', expiryDate: '2026-12-08', updatedAt: '2026-06-14' },
 ];
 
 const EXCEPTION_OPTIONS = [

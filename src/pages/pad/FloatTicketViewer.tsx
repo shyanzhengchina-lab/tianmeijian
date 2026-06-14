@@ -83,7 +83,7 @@ const FloatTicketViewer: React.FC<FloatTicketViewerProps> = ({ workOrder, cells,
           <div class="meta-item">工单号：<span>${workOrder.woNo}</span></div>
           <div class="meta-item">产品：<span>${workOrder.productSpec}</span></div>
           <div class="meta-item">批次：<span>${workOrder.batchNo}</span></div>
-          <div class="meta-item">计划数量：<span>${workOrder.planQty} 支</span></div>
+          <div class="meta-item">计划数量：<span>${workOrder.planQty} ${workOrder.unit || '粒'}</span></div>
           <div class="meta-item">浮漂条码：<span>${workOrder.floatBarcode}</span></div>
           <div class="meta-item">客户：<span>${workOrder.customer || '—'}</span></div>
           <div class="meta-item">优先级：<span>${workOrder.priority}级</span></div>
@@ -154,7 +154,7 @@ const FloatTicketViewer: React.FC<FloatTicketViewerProps> = ({ workOrder, cells,
               <Col span={12}>
                 <Space direction="vertical" size={4}>
                   <Text style={{ color: '#c5cae9' }}>计划数量：
-                    <Text style={{ color: '#fff', fontWeight: 600 }}>{workOrder.planQty} 支</Text>
+                    <Text style={{ color: '#fff', fontWeight: 600 }}>{workOrder.planQty} {workOrder.unit || '粒'}</Text>
                   </Text>
                   <Text style={{ color: '#c5cae9' }}>客户：
                     <Text style={{ color: '#fff', fontWeight: 600 }}>{workOrder.customer || '—'}</Text>
@@ -234,21 +234,21 @@ const FloatTicketViewer: React.FC<FloatTicketViewerProps> = ({ workOrder, cells,
         <Text strong style={{ fontSize: 12, color: '#595959' }}>物料追溯：</Text>
         <Row gutter={24} style={{ marginTop: 4 }}>
           <Col>
-            <Text style={{ fontSize: 12 }} type="secondary">镍钛丝批号：</Text>
+            <Text style={{ fontSize: 12 }} type="secondary">原料批号：</Text>
             <Text style={{ fontSize: 12, fontFamily: 'monospace' }}>{workOrder.materialLotNo}</Text>
           </Col>
           {workOrder.handleLotNo && (
             <Col>
-              <Text style={{ fontSize: 12 }} type="secondary">手柄批号：</Text>
+              <Text style={{ fontSize: 12 }} type="secondary">辅料批号：</Text>
               <Text style={{ fontSize: 12, fontFamily: 'monospace' }}>{workOrder.handleLotNo}</Text>
-              <Text style={{ fontSize: 11, color: '#faad14' }}> (组装补录)</Text>
+              <Text style={{ fontSize: 11, color: '#faad14' }}> (配料补录)</Text>
             </Col>
           )}
           {workOrder.limitLotNo && (
             <Col>
-              <Text style={{ fontSize: 12 }} type="secondary">限位块批号：</Text>
+              <Text style={{ fontSize: 12 }} type="secondary">包材批号：</Text>
               <Text style={{ fontSize: 12, fontFamily: 'monospace' }}>{workOrder.limitLotNo}</Text>
-              <Text style={{ fontSize: 11, color: '#faad14' }}> (装限位补录)</Text>
+              <Text style={{ fontSize: 11, color: '#faad14' }}> (包装补录)</Text>
             </Col>
           )}
         </Row>
@@ -441,8 +441,8 @@ const FloatTicketViewer: React.FC<FloatTicketViewerProps> = ({ workOrder, cells,
             <Col span={10}><Text type="secondary" style={{ fontSize: 12 }}>产品型号：</Text></Col>
             <Col span={14}><Text strong style={{ fontSize: 12 }}>{workOrder.productSpec}</Text></Col>
             <Col span={10}><Text type="secondary" style={{ fontSize: 12 }}>计划数量：</Text></Col>
-            <Col span={14}><Text strong style={{ fontSize: 12 }}>{workOrder.planQty} 支</Text></Col>
-            <Col span={10}><Text type="secondary" style={{ fontSize: 12 }}>镍钛丝批号：</Text></Col>
+            <Col span={14}><Text strong style={{ fontSize: 12 }}>{workOrder.planQty} {workOrder.unit || '粒'}</Text></Col>
+            <Col span={10}><Text type="secondary" style={{ fontSize: 12 }}>原料批号：</Text></Col>
             <Col span={14}><Text strong style={{ fontSize: 12, fontFamily: 'monospace' }}>{workOrder.materialLotNo}</Text></Col>
             <Col span={10}><Text type="secondary" style={{ fontSize: 12 }}>打印时间：</Text></Col>
             <Col span={14}><Text style={{ fontSize: 12 }}>{new Date().toLocaleString('zh-CN')}</Text></Col>

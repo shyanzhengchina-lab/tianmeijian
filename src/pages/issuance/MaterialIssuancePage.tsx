@@ -520,7 +520,7 @@ const MaterialIssuancePage: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="productName" label="产品名称" rules={[{ required: true }]}>
-                <Input placeholder="如 根管锉 25# 04锥" />
+                <Input placeholder="如 VitC咀嚼片 100mg×60片" />
               </Form.Item>
             </Col>
           </Row>

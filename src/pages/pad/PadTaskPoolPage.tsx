@@ -40,26 +40,29 @@ const { TabPane } = Tabs;
 // 技能矩阵（操作工 → 可执行工序集合）PRD §3.1 employee_skill 表
 // ─────────────────────────────────────────────────────────────────────────────
 const SKILL_MATRIX: Record<string, string[]> = {
-  OP001: ['OP-20','OP-25','OP-30','OP-32'],           // 张三 - 机加工
-  OP002: ['OP-40','OP-42','OP-50'],                    // 李四 - 热处理/涂层
-  OP003: ['OP-60','OP-70','OP-72'],                    // 王五 - 注塑/组装
-  OP004: ['OP-80','OP-82','OP-90','OP-95'],            // 赵六 - 包装/终检
-  OP005: ['OP-10','OP-15','OP-20','OP-25'],            // 孙七 - 备料/机加工
-  OP006: ['OP-10','OP-15','OP-20','OP-25','OP-30',
-          'OP-32','OP-40','OP-42','OP-50','OP-60',
-          'OP-70','OP-72','OP-80','OP-82','OP-90','OP-95'], // 周八 - 全线
-  OP007: ['OP-20','OP-25','OP-30'],                    // 陈小明 - 机加工初级
-  OP008: ['OP-10','OP-15','OP-20'],                    // 刘大强 - 备料/切断
-  OP009: ['OP-40','OP-42'],                            // 林小红 - 热处理
-  OP010: ['OP-50','OP-60'],                            // 黄建国 - 涂层/注塑
-  OP011: ['OP-70','OP-72','OP-80'],                    // 何文华 - 组装/清洗/包装
-  OP012: ['OP-80','OP-82'],                            // 杨帆 - 包装
-  OP013: ['OP-90','OP-95'],                            // 吴晓燕 - 终检/入库
-  OP014: ['OP-80','OP-82','OP-90'],                    // 郑国强 - 包装/检验
-  OP015: ['OP-10','OP-15','OP-20','OP-25','OP-30'],   // 冯建军 - 机加工
-  OP016: ['OP-25','OP-30','OP-32'],                    // 蒋晓峰 - 精磨/螺纹
-  OP017: ['OP-40','OP-42','OP-50','OP-60'],            // 沈美玲 - 热处理~涂层
-  OP018: ['OP-80','OP-82','OP-90','OP-95'],            // 韩志远 - 包装QC
+  // 南京固体制剂（D级）操作工
+  OP001: ['PKG-01','PKG-02','PKG-03'],                 // 王建国 - 制粒/干燥/混合
+  OP002: ['PKG-04','PKG-05'],                          // 李志强 - 压片/包衣
+  OP003: ['PKG-06','PKG-07'],                          // 陈晓梅 - 胶囊充填/内包
+  OP004: ['PKG-07','PKG-08'],                          // 刘文华 - 内包/装盒/数片
+  OP005: ['PKG-01','PKG-02','PKG-03','PKG-04'],        // 张丽萍 - 备料/制粒/压片
+  OP006: ['PKG-01','PKG-02','PKG-03','PKG-04',
+          'PKG-05','PKG-06','PKG-07','PKG-08'],         // 周建业 - 全线（班组长）
+  // 溧水益生菌（C级冷链）操作工
+  OP007: ['PKG-01','PKG-02','PKG-06'],                 // 赵雪峰 - 冷链充填
+  OP008: ['PKG-07','PKG-08'],                          // 黄晓燕 - 冷链包装/放行
+  // QC检验员
+  OP009: ['PKG-08'],                                   // 孙美玲 - FQC/OQC放行
+  OP010: ['PKG-01','PKG-02'],                          // 吴建国 - IPQC巡检
+  OP011: ['PKG-03','PKG-04','PKG-05'],                 // 郑海涛 - IPQC压片包衣
+  OP012: ['PKG-07','PKG-08'],                          // 冯晓云 - OQC包装终检
+  OP013: ['PKG-08'],                                   // 蒋志远 - QA放行
+  OP014: ['PKG-01','PKG-02','PKG-03','PKG-08'],        // 沈美华 - 制粒IPQC+放行
+  OP015: ['PKG-04','PKG-05'],                          // 韩振宇 - 压片包衣
+  OP016: ['PKG-06','PKG-07'],                          // 林小荣 - 胶囊/内包装
+  OP017: ['PKG-01','PKG-02','PKG-03','PKG-04','PKG-05'], // 杨帆 - 固体制剂前处理
+  OP018: ['PKG-01','PKG-02','PKG-03','PKG-04',
+          'PKG-05','PKG-06','PKG-07','PKG-08'],         // 陈玲玲 - 全线QC组长
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,71 +108,85 @@ interface TaskPoolItem {
 }
 
 const MOCK_TASK_POOL: TaskPoolItem[] = [
+  // ── 天美健VitC咀嚼片 WO-TMJ-20260614-001 ──────────────────────────────────
   {
-    id: 'TP001', taskNo: 'TP-20260430-001', woNo: 'WO-20260430-001',
-    batchNo: 'YS-RKQ-20260430-001', productName: '机用根管锉', productSpec: '#25/04锥',
-    opNos: ['OP-20','OP-25'], workCenter: '机加工-磨削区', planQty: 5000,
-    priority: 'HIGH', planStart: '2026-04-30 08:00', planEnd: '2026-04-30 14:00',
-    requiredSkills: ['OP-20','OP-25'], equipIds: ['EQ001'],
-    padStation: 'PAD-MJG-01', status: 'OPEN', isEmergency: false,
-    sopDocUrl: '/sop/OP-20-25-v3.pdf',
-    remark: '紧急订单，优先完成粗精磨工序',
+    id: 'TP001', taskNo: 'TP-20260614-001', woNo: 'WO-TMJ-20260614-001',
+    batchNo: 'TMJ-VTC-20260614-001', productName: 'VitC咀嚼片', productSpec: '100mg×60片/瓶',
+    opNos: ['PKG-01','PKG-02'], workCenter: '固体制剂车间（D级）-制粒间',
+    planQty: 50000,
+    priority: 'HIGH', planStart: '2026-06-14 08:00', planEnd: '2026-06-14 14:00',
+    requiredSkills: ['PKG-01','PKG-02'], equipIds: ['EQ-GRAN-001'],
+    padStation: 'PAD-GRAN-01', status: 'OPEN', isEmergency: false,
+    sopDocUrl: '/sop/TMJ-SOP-GRAN-V2.pdf',
+    remark: '湿法制粒，终点电流判断，粒度D90≤500μm，注意GMP记录完整性',
   },
   {
-    id: 'TP002', taskNo: 'TP-20260430-002', woNo: 'WO-20260430-001',
-    batchNo: 'YS-RKQ-20260430-001', productName: '机用根管锉', productSpec: '#25/04锥',
-    opNos: ['OP-30','OP-32'], workCenter: '机加工-螺纹区', planQty: 4980,
-    priority: 'HIGH', planStart: '2026-04-30 14:00', planEnd: '2026-04-30 20:00',
-    requiredSkills: ['OP-30','OP-32'], equipIds: ['EQ003'],
-    padStation: 'PAD-MJG-01', status: 'OPEN', isEmergency: false,
-    sopDocUrl: '/sop/OP-30-32-v2.pdf',
+    id: 'TP002', taskNo: 'TP-20260614-002', woNo: 'WO-TMJ-20260614-001',
+    batchNo: 'TMJ-VTC-20260614-001', productName: 'VitC咀嚼片', productSpec: '100mg×60片/瓶',
+    opNos: ['PKG-03','PKG-04'], workCenter: '固体制剂车间（D级）-压片间',
+    planQty: 49500,
+    priority: 'HIGH', planStart: '2026-06-14 14:00', planEnd: '2026-06-14 20:00',
+    requiredSkills: ['PKG-03','PKG-04'], equipIds: ['EQ-PRESS-001'],
+    padStation: 'PAD-PRESS-01', status: 'OPEN', isEmergency: false,
+    sopDocUrl: '/sop/TMJ-SOP-PRESS-V3.pdf',
+    remark: '压片硬度4.0~8.0kP，脆碎度≤0.5%，每30min抽检一次',
+  },
+  // ── 天美健VitC咀嚼片 WO-TMJ-20260614-002（紧急补单）──────────────────────
+  {
+    id: 'TP003', taskNo: 'TP-20260614-003', woNo: 'WO-TMJ-20260614-002',
+    batchNo: 'TMJ-VTC-20260614-002', productName: 'VitC咀嚼片', productSpec: '100mg×60片/瓶',
+    opNos: ['PKG-05','PKG-06'], workCenter: '固体制剂车间（D级）-包衣间',
+    planQty: 48000,
+    priority: 'URGENT', planStart: '2026-06-14 08:00', planEnd: '2026-06-14 12:00',
+    requiredSkills: ['PKG-05','PKG-06'], equipIds: ['EQ-COAT-001'],
+    padStation: 'PAD-COAT-01', status: 'OPEN', isEmergency: true,
+    sopDocUrl: '/sop/TMJ-SOP-COAT-V2.pdf',
+    remark: '【紧急补单】薄膜包衣，增重3.0~5.0%，进风温度55±5℃，注意外观光滑无裂片',
   },
   {
-    id: 'TP003', taskNo: 'TP-20260430-003', woNo: 'WO-20260430-002',
-    batchNo: 'YS-RKQ-20260430-002', productName: '机用根管锉', productSpec: '#30/06锥',
-    opNos: ['OP-40','OP-42'], workCenter: '热处理车间', planQty: 3000,
-    priority: 'URGENT', planStart: '2026-04-30 08:00', planEnd: '2026-04-30 12:00',
-    requiredSkills: ['OP-40','OP-42'], equipIds: ['EQ004'],
-    padStation: 'PAD-HCL-01', status: 'OPEN', isEmergency: true,
-    sopDocUrl: '/sop/OP-40-42-v4.pdf',
-    remark: '【紧急】热处理炉温需严格控制 ≤505°C，上批次出现偏差请注意',
+    id: 'TP004', taskNo: 'TP-20260614-004', woNo: 'WO-TMJ-20260614-002',
+    batchNo: 'TMJ-VTC-20260614-002', productName: 'VitC咀嚼片', productSpec: '100mg×60片/瓶',
+    opNos: ['PKG-07'], workCenter: '固体制剂车间（D级）-内包间',
+    planQty: 47800,
+    priority: 'NORMAL', planStart: '2026-06-14 13:00', planEnd: '2026-06-14 17:00',
+    requiredSkills: ['PKG-07'], equipIds: ['EQ-INNERPACK-001'],
+    padStation: 'PAD-INNERPACK-01', status: 'LOCKED', lockedBy: 'OP002',
+    sopDocUrl: '/sop/TMJ-SOP-INNERPACK-V2.pdf',
+    remark: '数片装瓶60片/瓶，加干燥剂，瓶盖扭矩≥2N·m',
+  },
+  // ── 天美健复合益生菌胶囊 WO-TMJ-20260614-003 ─────────────────────────────
+  {
+    id: 'TP005', taskNo: 'TP-20260614-005', woNo: 'WO-TMJ-20260614-003',
+    batchNo: 'TMJ-PRO-20260614-001', productName: '复合益生菌胶囊', productSpec: '300mg×30粒/盒（冷链≤8℃）',
+    opNos: ['PKG-01','PKG-02'], workCenter: '益生菌车间（C级，≤8℃）-胶囊充填间',
+    planQty: 30000,
+    priority: 'NORMAL', planStart: '2026-06-14 08:00', planEnd: '2026-06-14 16:00',
+    requiredSkills: ['PKG-01','PKG-02'], equipIds: ['EQ-CAPS-001'],
+    padStation: 'PAD-CAPS-01', status: 'CLAIMED', claimedBy: 'OP003',
+    sopDocUrl: '/sop/TMJ-SOP-CAPS-COLD-V4.pdf',
+    remark: '冷链操作，室温≤8℃，胶囊充填重量差异±5%，每批次2h内完成充填',
   },
   {
-    id: 'TP004', taskNo: 'TP-20260430-004', woNo: 'WO-20260430-002',
-    batchNo: 'YS-RKQ-20260430-002', productName: '机用根管锉', productSpec: '#30/06锥',
-    opNos: ['OP-50'], workCenter: '涂层车间', planQty: 2980,
-    priority: 'NORMAL', planStart: '2026-04-30 13:00', planEnd: '2026-04-30 17:00',
-    requiredSkills: ['OP-50'], equipIds: ['EQ006'],
-    padStation: 'PAD-HCL-01', status: 'LOCKED', lockedBy: 'OP002',
-    sopDocUrl: '/sop/OP-50-pvd-v2.pdf',
+    id: 'TP006', taskNo: 'TP-20260614-006', woNo: 'WO-TMJ-20260614-003',
+    batchNo: 'TMJ-PRO-20260614-001', productName: '复合益生菌胶囊', productSpec: '300mg×30粒/盒（冷链≤8℃）',
+    opNos: ['PKG-03','PKG-04'], workCenter: '益生菌车间（C级，≤8℃）-冷链包装间',
+    planQty: 29800,
+    priority: 'LOW', planStart: '2026-06-14 16:00', planEnd: '2026-06-14 20:00',
+    requiredSkills: ['PKG-03','PKG-04'], equipIds: ['EQ-COLDPACK-001'],
+    padStation: 'PAD-COLDPACK-01', status: 'OPEN',
+    sopDocUrl: '/sop/TMJ-SOP-COLDPACK-V3.pdf',
+    remark: '冷链装盒，随箱附温度记录仪，冰袋保冷，发货前确认温度≤8℃',
   },
   {
-    id: 'TP005', taskNo: 'TP-20260430-005', woNo: 'WO-20260430-003',
-    batchNo: 'YS-RKQ-20260430-003', productName: '机用根管锉', productSpec: '#15/02锥',
-    opNos: ['OP-70','OP-72'], workCenter: '组装车间', planQty: 4000,
-    priority: 'NORMAL', planStart: '2026-04-30 08:00', planEnd: '2026-04-30 16:00',
-    requiredSkills: ['OP-70','OP-72'], equipIds: ['EQ007','EQ008'],
-    padStation: 'PAD-ZS-01', status: 'CLAIMED', claimedBy: 'OP003',
-    sopDocUrl: '/sop/OP-70-72-assembly-v5.pdf',
-  },
-  {
-    id: 'TP006', taskNo: 'TP-20260430-006', woNo: 'WO-20260430-003',
-    batchNo: 'YS-RKQ-20260430-003', productName: '机用根管锉', productSpec: '#15/02锥',
-    opNos: ['OP-80','OP-82'], workCenter: '包装车间', planQty: 3900,
-    priority: 'LOW', planStart: '2026-04-30 16:00', planEnd: '2026-04-30 20:00',
-    requiredSkills: ['OP-80','OP-82'], equipIds: ['EQ009'],
-    padStation: 'PAD-BZ-01', status: 'OPEN',
-    sopDocUrl: '/sop/OP-80-82-packing-v3.pdf',
-  },
-  {
-    id: 'TP007', taskNo: 'TP-20260430-007', woNo: 'WO-20260430-004',
-    batchNo: 'YS-RKQ-20260430-004', productName: '机用根管锉', productSpec: '#25/04锥',
-    opNos: ['OP-90','OP-95'], workCenter: '检验室', planQty: 4500,
-    priority: 'HIGH', planStart: '2026-04-30 09:00', planEnd: '2026-04-30 13:00',
-    requiredSkills: ['OP-90','OP-95'], equipIds: [],
+    id: 'TP007', taskNo: 'TP-20260614-007', woNo: 'WO-TMJ-20260614-003',
+    batchNo: 'TMJ-PRO-20260614-001', productName: '复合益生菌胶囊', productSpec: '300mg×30粒/盒（冷链≤8℃）',
+    opNos: ['PKG-08'], workCenter: 'QC实验室-理化检验室',
+    planQty: 29800,
+    priority: 'HIGH', planStart: '2026-06-14 09:00', planEnd: '2026-06-14 13:00',
+    requiredSkills: ['PKG-08'], equipIds: [],
     padStation: 'PAD-QC-01', status: 'OPEN', isEmergency: true,
-    sopDocUrl: '/sop/OQC-final-v6.pdf',
-    remark: '出货前终检，按质检方案 QC-RKQ-003 执行',
+    sopDocUrl: '/sop/TMJ-SOP-OQC-FQC-V5.pdf',
+    remark: '【出货前终检】活菌数≥1×10⁹CFU/粒，FQC按方案QC-FQC-PRO-001执行，QA放行签字',
   },
 ];
 

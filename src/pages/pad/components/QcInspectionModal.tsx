@@ -2,22 +2,22 @@
  * QcInspectionModal — QC 检验记录弹窗（独立单据）
  *
  * ════════════════════════════════════════════════════════
- * 业务背景（研磨一 / 超声波清洗）
+ * 业务背景（天美健保健品GMP检验）
  * ════════════════════════════════════════════════════════
  *
  * 触发时机：
- *   研磨一（OP-50-GRIND1）自检阶段完成后，触发 QC 检验。
+ *   压片包衣（PKG-04~PKG-05）自检阶段完成后，触发 QC 检验。
  *   一次操作需顺序生成两张独立单据（互不依赖，关联同一批次号）：
  *
- *   ① 《数控机床成型检验记录》  文件编号：DK/QR-067
- *      检验项：尺寸、外观
- *      检验设备：自动检测仪（扫码绑定）
+ *   ① 《压片过程检验记录》  文件编号：TMJ/QR-PRD-004
+ *      检验项：片重差异、硬度、外观
+ *      检验设备：硬度测定仪（扫码绑定）
  *
- *   ② 《根管锉超声波清洗检验记录》  文件编号：DK/QR-119
- *      检验项：外观（洁净/无油污/无碎屑）
- *      生产设备：超声波清洗机（扫码绑定）
+ *   ② 《包衣过程检验记录》  文件编号：TMJ/QR-PRD-005
+ *      检验项：增重、包衣外观
+ *      生产设备：包衣机（扫码绑定）
  *
- * 单张记录模式（机床成型 OP-10 / 超声波清洗 OP-70 等）：
+ * 单张记录模式（IPQC巡检、OQC领料等）：
  *   直接录入对应检验记录，流程简化为单步。
  *
  * 合格数量回写：
@@ -69,56 +69,64 @@ interface InspectTemplate {
 const TEMPLATES: Record<string, InspectTemplate> = {
 
   // ══════════════════════════════════════════════════════════════════
-  // 数控机床成型检验记录  文件编号：DK/QR-067
+  // 压片过程检验记录  文件编号：TMJ/QR-PRD-004
   // ══════════════════════════════════════════════════════════════════
-  '机床成型检验记录': {
-    title: '数控机床成型检验记录',
-    docNo: 'DK/QR-067',
-    recordPrefix: 'QC-JC-',
+  '压片过程检验记录': {
+    title: '压片过程检验记录',
+    docNo: 'TMJ/QR-PRD-004',
+    recordPrefix: 'QC-YP-',
     deviceLabel: '检验设备',
-    deviceDefault: 'DKZ-010-自动检测仪',
-    sampleRule: 'AQL 1.0（II级，正常检验）',
-    passStandard: '所有抽检项目均符合《产品技术要求》',
+    deviceDefault: 'TMJ-HD-001-硬度测定仪',
+    sampleRule: '每30min抽检20片，AQL 1.0（II级，正常检验）',
+    passStandard: '片重差异±5%，硬度4.0~8.0kP，脆碎度≤0.5%，外观完整光滑',
     rows: [
       {
-        key: 'size',
-        opName: '数控机床成型',
-        item: '尺寸',
-        std: '依据《产品技术要求》',
-        stdParam: '按照规定的型号规格在"自动检测仪"的程序里选择对应参数',
+        key: 'weight',
+        opName: '压片工序',
+        item: '片重差异',
+        std: '中国药典公制要求',
+        stdParam: '平均片重X±5%，连续2片超过此限为不合格',
+        hasNgDesc: true,
+      },
+      {
+        key: 'hardness',
+        opName: '压片工序',
+        item: '硬度',
+        std: '天美健标准TMJ/TP-001',
+        stdParam: '4.0~8.0kP，超出范围为不合格',
         hasNgDesc: true,
       },
       {
         key: 'appearance',
-        opName: '数控机床成型',
+        opName: '压片工序',
         item: '外观',
-        std: '依据《产品技术要求》',
-        stdParam: '螺纹应均匀，应无缺口、结点等外观缺陷',
+        std: '天美健标准TMJ/TP-001',
+        stdParam: '片面平整光滑，面色均一，无麻点、卧片、杂质',
         hasNgDesc: true,
       },
     ],
   },
 
   // ══════════════════════════════════════════════════════════════════
-  // 根管锉超声波清洗检验记录  文件编号：DK/QR-119
+  // 包衣过程检验记录  文件编号：TMJ/QR-PRD-005
   // ══════════════════════════════════════════════════════════════════
-  '超声波清洗检验记录': {
-    title: '根管锉超声波清洗检验记录',
-    docNo: 'DK/QR-119',
-    recordPrefix: 'QC-QX-',
-    deviceLabel: '生产设备（超声波清洗机）',
-    deviceDefault: 'DKS-059-超声波清洗机',
-    inspectMethod: '显微镜目测，全数检验',
-    sampleRule: '全数目视检验',
-    passStandard: '产品洁净、无油污、无碎屑残留',
+  '包衣过程检验记录': {
+    title: '包衣过程检验记录',
+    docNo: 'TMJ/QR-PRD-005',
+    recordPrefix: 'QC-BY-',
+    deviceLabel: '生产设备（包衣机）',
+    deviceDefault: 'TMJ-BY-001-包衣机',
+    inspectMethod: '目视全检＋抹盘数量检查',
+    sampleRule: '全检外观，每小时取样5片称重（增重检查）',
+    passStandard: '增重3.0~5.0%，底色均一，无裂片、粘片',
     rows: [
       {
-        key: 'appearance',
-        opName: '超声波清洗',
-        item: '外观',
-        std: '经超声波清洗后：产品洁净、无油污、无碎屑残留',
-        stdParam: '显微镜目测，全数检验',
-        hasNgDesc: false,
+        key: 'weight_gain',
+        opName: '包衣工序',
+        item: '增重',
+        std: '天美健包衣SOP TMJ/SOP-COAT-001',
+        stdParam: '增重3.0~5.0%，不得超出范围',
+        hasNgDesc: true,
       },
     ],
   },
@@ -128,10 +136,10 @@ const TEMPLATES: Record<string, InspectTemplate> = {
   // ══════════════════════════════════════════════════════════════════
   '半成品检验记录': {
     title: '半成品检验记录',
-    docNo: 'DK/QR-088',
+    docNo: 'TMJ/QR-PRD-002',
     recordPrefix: 'QC-BCP-',
     deviceLabel: '检验设备',
-    deviceDefault: 'DKZ-005-通用量具',
+    deviceDefault: 'TMJ-QC-005-通用量具',
     sampleRule: 'AQL 2.5（II级，正常检验）',
     passStandard: '所有抽检项目均符合产品技术要求',
     rows: [
@@ -265,9 +273,9 @@ const SingleRecordForm: React.FC<SingleRecordFormProps> = ({
         <Descriptions column={2} size="small" bordered>
           <Descriptions.Item label="文件编号">{template.docNo}</Descriptions.Item>
           <Descriptions.Item label="半成品批号">{workOrder.batchNo}</Descriptions.Item>
-          <Descriptions.Item label="送检数量">{sendQty} 支</Descriptions.Item>
-          <Descriptions.Item label="合格数量"><Text style={{ color: '#52c41a', fontWeight: 700 }}>{totalPassQty} 支</Text></Descriptions.Item>
-          {totalNgQty > 0 && <Descriptions.Item label="不合格数量" span={2}><Text type="danger" strong>{totalNgQty} 支</Text></Descriptions.Item>}
+          <Descriptions.Item label="送检数量">{sendQty} {workOrder.unit || '粒'}</Descriptions.Item>
+          <Descriptions.Item label="合格数量"><Text style={{ color: '#52c41a', fontWeight: 700 }}>{totalPassQty} {workOrder.unit || '粒'}</Text></Descriptions.Item>
+          {totalNgQty > 0 && <Descriptions.Item label="不合格数量" span={2}><Text type="danger" strong>{totalNgQty} {workOrder.unit || '粒'}</Text></Descriptions.Item>}
           <Descriptions.Item label="检验设备" span={2}>{state.device}</Descriptions.Item>
           <Descriptions.Item label="检验结论" span={2}>
             <Tag color={state.conclusion === '合格' ? 'success' : 'error'} style={{ fontSize: 13 }}>
@@ -292,9 +300,9 @@ const SingleRecordForm: React.FC<SingleRecordFormProps> = ({
       <Card size="small" title={<Text strong style={{ fontSize: 12 }}>① 产品信息</Text>}
         style={{ marginBottom: 10, borderRadius: 8, background: '#f0f7ff', border: '1px solid #bae0ff' }}>
         <Row gutter={[12, 6]}>
-          <Col span={8}><Text type="secondary" style={{ fontSize: 12 }}>产品名称：</Text><Text strong style={{ fontSize: 12 }}>机用根管锉</Text></Col>
+          <Col span={8}><Text type="secondary" style={{ fontSize: 12 }}>产品名称：</Text><Text strong style={{ fontSize: 12 }}>{workOrder.productName || 'VitC咀嚼片'}</Text></Col>
           <Col span={8}><Text type="secondary" style={{ fontSize: 12 }}>型号/规格：</Text><Text strong style={{ fontSize: 12, fontFamily: 'monospace' }}>{workOrder.productSpec}</Text></Col>
-          <Col span={8}><Text type="secondary" style={{ fontSize: 12 }}>产品长度：</Text><Text strong style={{ fontSize: 12 }}>{workOrder.productSpec?.includes('15') ? '16mm' : '19mm'}</Text></Col>
+          <Col span={8}><Text type="secondary" style={{ fontSize: 12 }}>规格型号：</Text><Text strong style={{ fontSize: 12 }}>{workOrder.productSpec || '—'}</Text></Col>
           <Col span={8}><Text type="secondary" style={{ fontSize: 12 }}>半成品批号：</Text><Text strong style={{ fontSize: 12, fontFamily: 'monospace' }}>{workOrder.batchNo}</Text></Col>
           <Col span={8}>
             <Text type="secondary" style={{ fontSize: 12 }}>送检数量（支）：</Text>

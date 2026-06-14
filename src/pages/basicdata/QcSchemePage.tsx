@@ -719,7 +719,7 @@ const QcSchemePage: React.FC = () => {
                         value={editing.schemeName}
                         onChange={e => setEditing(p => ({ ...p, schemeName: e.target.value }))}
                         style={{ marginTop: 4 }}
-                        placeholder="如：镍钛丝来料检验方案"
+                        placeholder="如：VitC咋嘌片来料检验方案"
                       />
                     </div>
                   </Col>
@@ -763,7 +763,7 @@ const QcSchemePage: React.FC = () => {
                         value={editing.productModel}
                         onChange={e => setEditing(p => ({ ...p, productModel: e.target.value }))}
                         style={{ marginTop: 4 }}
-                        placeholder="如：根管锉"
+                        placeholder="如：VitC咋嘌片 / 复合益生菌胶囊"
                       />
                     </div>
                   </Col>
@@ -785,7 +785,7 @@ const QcSchemePage: React.FC = () => {
                         value={editing.operationCode}
                         onChange={e => setEditing(p => ({ ...p, operationCode: e.target.value }))}
                         style={{ marginTop: 4 }}
-                        placeholder="如：OP-50-GRIND1"
+                        placeholder="如：PKG-04-PRESS"
                       />
                     </div>
                   </Col>
