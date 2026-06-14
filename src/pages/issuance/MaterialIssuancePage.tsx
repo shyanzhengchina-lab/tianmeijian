@@ -212,8 +212,8 @@ const MaterialIssuancePage: React.FC = () => {
         productName: values.productName,
         issueMethod: values.issueMethod,
         priority: values.priority,
-        warehouse: values.warehouse || 'A1-原料仓',
-        wipWarehouse: values.wipWarehouse || 'WIP-车间',
+        warehouse: values.warehouse || 'NJ-RM-原料仓',
+        wipWarehouse: values.wipWarehouse || 'WIP-NJ-称量',
         planDate: '2026-04-30',
         status: 'PENDING',
         createdBy: '系统管理员',
@@ -515,7 +515,7 @@ const MaterialIssuancePage: React.FC = () => {
           <Row gutter={12}>
             <Col span={12}>
               <Form.Item name="woNo" label="关联工单号" rules={[{ required: true }]}>
-                <Input placeholder="如 WO-20260430-001" />
+                <Input placeholder="如 WO-20260605-001" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -546,22 +546,25 @@ const MaterialIssuancePage: React.FC = () => {
           </Row>
           <Row gutter={12}>
             <Col span={12}>
-              <Form.Item name="warehouse" label="领料仓库" initialValue="A1-原料仓">
+              <Form.Item name="warehouse" label="领料仓库" initialValue="NJ-RM-原料仓">
                 <Select>
-                  <Option value="A1-原料仓">A1-原料仓</Option>
-                  <Option value="A2-辅料仓">A2-辅料仓</Option>
-                  <Option value="A3-包材仓">A3-包材仓</Option>
+                  <Option value="NJ-RM-原料仓">南京-原料仓</Option>
+                  <Option value="NJ-PM-包材仓">南京-包材仓</Option>
+                  <Option value="LS-COLD-冷库（≤8℃）">溧水-冷库（≤8℃）</Option>
+                  <Option value="LS-PM-包材仓">溧水-包材仓</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="wipWarehouse" label="目标线边仓" initialValue="WIP-车间">
+              <Form.Item name="wipWarehouse" label="目标线边仓" initialValue="WIP-NJ-称量">
                 <Select>
-                  <Option value="WIP-涂层">WIP-涂层</Option>
-                  <Option value="WIP-研磨">WIP-研磨</Option>
-                  <Option value="WIP-切割">WIP-切割</Option>
-                  <Option value="WIP-包装">WIP-包装</Option>
-                  <Option value="WIP-车间">WIP-通用车间</Option>
+                  <Option value="WIP-NJ-称量">南京-称量线边仓</Option>
+                  <Option value="WIP-NJ-制粒">南京-制粒线边仓</Option>
+                  <Option value="WIP-NJ-压片">南京-压片线边仓</Option>
+                  <Option value="WIP-NJ-内包">南京-内包装线边仓</Option>
+                  <Option value="WIP-LS-混合（冷链）">溧水-混合线边仓（冷链）</Option>
+                  <Option value="WIP-LS-充填">溧水-充填线边仓</Option>
+                  <Option value="WIP-LS-泡罩">溧水-泡罩线边仓</Option>
                 </Select>
               </Form.Item>
             </Col>

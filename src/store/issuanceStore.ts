@@ -5,6 +5,10 @@
  *  - 主动领料（PUSH）：仓管按领料单发料，PDA拣货
  *  - 倒扣领料（BACKFLUSH）：工序报工/完工时自动扣减线边仓
  * ================================================================
+ * 天美健双工厂架构：
+ *  - 南京工厂（D级洁净，固体制剂）：VitC咀嚼片 湿法制粒/直压工艺
+ *  - 溧水工厂（C级洁净，冷链≤8℃）：复合益生菌胶囊 冷链工艺
+ * ================================================================
  */
 
 // ── 类型定义 ─────────────────────────────────────────────────────
@@ -124,124 +128,371 @@ export interface WipInventory {
 }
 
 // ════════════════════════════════════════════════════════════════
-// Mock 初始数据
+// Mock 初始数据 — 天美健保健品双工厂
+// 南京工厂（D级洁净，固体制剂）：VitC咀嚼片
+// 溧水工厂（C级洁净，冷链≤8℃）：复合益生菌胶囊
 // ════════════════════════════════════════════════════════════════
 
-const today = '2026-04-30';
+const today = '2026-06-14';
 
 export const MOCK_ISSUE_ORDERS: IssueOrder[] = [
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-001：南京工厂 WO002 — VitC咀嚼片 称量配料（OP-10-WEIGH）
+  // 工单：WO-20260605-001 / 批次：TMJ-VITC-20260605-002 / 计划20万粒
+  // 状态：拣货中（主动领料，高优先级）
+  // ═══════════════════════════════════════════════════════════════
   {
     id: 'ISO001',
-    issueNo: 'ISU-20260430-001',
-    woNo: 'WO-20260430-001',
-    moNo: 'MO-20260425-001',
-    productCode: 'RKQ-25-04',
-    productName: '根管锉 25# 04锥',
-    operationSeq: 40,
-    operationName: '涂层',
+    issueNo: 'ISU-20260614-001',
+    woNo: 'WO-20260605-001',
+    moNo: 'MO-20260605-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 10,
+    operationName: '称量配料',
     issueMethod: 'PUSH',
     priority: 'HIGH',
-    warehouse: 'A1-原料仓',
-    wipWarehouse: 'WIP-涂层',
+    warehouse: 'NJ-RM-原料仓',
+    wipWarehouse: 'WIP-NJ-称量',
     planDate: today,
     status: 'PICKING',
-    createdBy: '孙七',
-    createdAt: `${today} 08:00`,
+    createdBy: '陈国华',
+    createdAt: `${today} 07:30`,
+    remark: 'VitC咀嚼片湿法制粒批次，称量间D级洁净，双人复核',
     lines: [
       {
         id: 'L001', lineNo: 1,
-        itemCode: 'CH-NITRIDE', itemName: '氮化钛涂层靶材',
-        spec: 'TiN/纯度99.9%', unit: 'G',
-        planQty: 500, actualQty: 0,
-        issueMethod: 'PUSH', operationSeq: 40, operationCode: 'OP-40',
-        wipWarehouse: 'WIP-涂层', sourceWarehouse: 'A1-原料仓',
-        batchPicks: [], status: 'PENDING',
+        itemCode: 'RM-VITC-POWDER', itemName: '维生素C原料粉',
+        spec: 'USP级 / 含量≥99.5% / 25kg/袋',
+        unit: 'KG',
+        planQty: 50.0, actualQty: 50.0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10-WEIGH',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'RM-VITC-20260602-A1', qty: 25.0, inboundDate: '2026-06-02', expiryDate: '2028-06-01', warehouseCode: 'NJ-RM-原料仓' },
+          { batchNo: 'RM-VITC-20260602-A2', qty: 25.0, inboundDate: '2026-06-02', expiryDate: '2028-06-01', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
       },
       {
         id: 'L002', lineNo: 2,
-        itemCode: 'CH-ADHESIVE', itemName: '涂层粘结剂',
-        spec: 'UV-固化型', unit: 'ML',
-        planQty: 200, actualQty: 200,
-        issueMethod: 'PUSH', operationSeq: 40, operationCode: 'OP-40',
-        wipWarehouse: 'WIP-涂层', sourceWarehouse: 'A1-原料仓',
-        batchPicks: [{ batchNo: 'BT-20260428-A1', qty: 200, inboundDate: '2026-04-28', warehouseCode: 'A1-原料仓' }],
+        itemCode: 'RM-MANNITOL', itemName: '甘露醇（填充剂）',
+        spec: '药用级 / 粒径D90≤200μm / 25kg/袋',
+        unit: 'KG',
+        planQty: 30.0, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10-WEIGH',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'L003', lineNo: 3,
+        itemCode: 'RM-SORBITOL', itemName: '山梨醇（甜味剂）',
+        spec: '药用级 / 含量≥97% / 25kg/袋',
+        unit: 'KG',
+        planQty: 12.0, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10-WEIGH',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'L004', lineNo: 4,
+        itemCode: 'EX-PVPK30', itemName: 'PVP K30（粘合剂）',
+        spec: '药用级 / K值28~32 / 5kg/袋',
+        unit: 'KG',
+        planQty: 4.0, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10-WEIGH',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'L005', lineNo: 5,
+        itemCode: 'EX-MGST', itemName: '硬脂酸镁（润滑剂）',
+        spec: '药用级 / 粒径≤75μm / 25kg/袋',
+        unit: 'KG',
+        planQty: 1.0, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10-WEIGH',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [], status: 'PENDING',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-002：南京工厂 WO002 — VitC咀嚼片 压片工序（OP-60-PRESS）
+  // 工单：WO-20260605-001 / 批次：TMJ-VITC-20260605-002
+  // 状态：待拣货（主动领料，高优先级）— 等待制粒完成后发料
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO002',
+    issueNo: 'ISU-20260614-002',
+    woNo: 'WO-20260605-001',
+    moNo: 'MO-20260605-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 60,
+    operationName: '压片',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-PM-包材仓',
+    wipWarehouse: 'WIP-NJ-压片',
+    planDate: today,
+    status: 'PENDING',
+    createdBy: '王建平',
+    createdAt: `${today} 08:00`,
+    remark: '旋转压片机ZP-45D，主压力8~12kN，片重600mg±3%',
+    lines: [
+      {
+        id: 'L006', lineNo: 1,
+        itemCode: 'PKG-AL-FOIL-INNER', itemName: '内层铝塑复合膜',
+        spec: 'PVC/PVDC/Al/PP复合 / 厚度0.08mm / 宽150mm',
+        unit: 'M',
+        planQty: 2500, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60-PRESS',
+        wipWarehouse: 'WIP-NJ-压片', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'L007', lineNo: 2,
+        itemCode: 'EX-SILICON-DIO', itemName: '二氧化硅（助流剂）',
+        spec: '气相法 / 粒径7nm / 5kg/袋',
+        unit: 'KG',
+        planQty: 0.6, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60-PRESS',
+        wipWarehouse: 'WIP-NJ-压片', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [], status: 'PENDING',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-003：南京工厂 WO002 — VitC咀嚼片 内包装（OP-90-BOTTLE）
+  // 工单：WO-20260605-001 / 批次：TMJ-VITC-20260605-002
+  // 状态：已签收（主动领料，高优先级）— 已完成入库前内包
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO003',
+    issueNo: 'ISU-20260614-003',
+    woNo: 'WO-20260605-001',
+    moNo: 'MO-20260605-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 90,
+    operationName: '瓶装内包',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-PM-包材仓',
+    wipWarehouse: 'WIP-NJ-内包',
+    planDate: '2026-06-10',
+    status: 'RECEIVED',
+    createdBy: '刘晓梅',
+    createdAt: '2026-06-10 08:30',
+    pickedBy: '仓管-赵磊',
+    pickedAt: '2026-06-10 09:15',
+    receivedBy: '刘晓梅',
+    receivedAt: '2026-06-10 09:30',
+    remark: '60粒/瓶规格，自动旋盖线，已完成首批次内包',
+    lines: [
+      {
+        id: 'L008', lineNo: 1,
+        itemCode: 'PKG-HDPE-BOTTLE-60', itemName: 'HDPE塑料瓶（60粒装）',
+        spec: 'Φ55mm × H80mm / 白色不透明 / 100个/袋',
+        unit: 'PCS',
+        planQty: 1250, actualQty: 1250,
+        issueMethod: 'PUSH', operationSeq: 90, operationCode: 'OP-90-BOTTLE',
+        wipWarehouse: 'WIP-NJ-内包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PKG-BTL-20260608-NJ', qty: 1250, inboundDate: '2026-06-08', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'L009', lineNo: 2,
+        itemCode: 'PKG-CAP-INDUCTION', itemName: '铝箔感应封口盖',
+        spec: 'Φ55mm / 防伪铝膜 / 1000个/袋',
+        unit: 'PCS',
+        planQty: 1250, actualQty: 1250,
+        issueMethod: 'PUSH', operationSeq: 90, operationCode: 'OP-90-BOTTLE',
+        wipWarehouse: 'WIP-NJ-内包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PKG-CAP-20260608-NJ', qty: 1250, inboundDate: '2026-06-08', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'L010', lineNo: 3,
+        itemCode: 'PKG-DESICCANT-2G', itemName: '干燥剂（食品级）',
+        spec: '硅胶/2g/粒 / 独立包装 / GMP合规',
+        unit: 'PCS',
+        planQty: 1250, actualQty: 1250,
+        issueMethod: 'PUSH', operationSeq: 90, operationCode: 'OP-90-BOTTLE',
+        wipWarehouse: 'WIP-NJ-内包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PKG-DES-20260608-NJ', qty: 1250, inboundDate: '2026-06-08', warehouseCode: 'NJ-PM-包材仓' },
+        ],
         status: 'DONE',
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-004：溧水工厂 WO005 — 复合益生菌胶囊 菌粉混合（OP-P20-BLEND）
+  // 工单：WO-20260612-001 / 批次：TMJ-PROBIO-20260612-002 / 计划6万粒
+  // 状态：拣货中（主动领料，高优先级）— 冷链物料≤8℃
+  // ═══════════════════════════════════════════════════════════════
   {
-    id: 'ISO002',
-    issueNo: 'ISU-20260430-002',
-    woNo: 'WO-20260430-002',
-    moNo: 'MO-20260425-001',
-    productCode: 'RKQ-25-04',
-    productName: '根管锉 25# 04锥',
-    operationSeq: 10,
-    operationName: '切割',
+    id: 'ISO004',
+    issueNo: 'ISU-20260614-004',
+    woNo: 'WO-20260612-001',
+    moNo: 'MO-20260612-001',
+    productCode: 'FG-PROBIO-CAP-250',
+    productName: '复合益生菌胶囊',
+    operationSeq: 20,
+    operationName: '菌粉混合',
     issueMethod: 'PUSH',
-    priority: 'MEDIUM',
-    warehouse: 'A1-原料仓',
-    wipWarehouse: 'WIP-切割',
+    priority: 'HIGH',
+    warehouse: 'LS-COLD-冷库（≤8℃）',
+    wipWarehouse: 'WIP-LS-混合（冷链）',
     planDate: today,
-    status: 'PENDING',
-    createdBy: '孙七',
-    createdAt: `${today} 08:30`,
+    status: 'PICKING',
+    createdBy: '李志远',
+    createdAt: `${today} 07:00`,
+    remark: '全程冷链操作，C级洁净区，菌粉转运需保温箱≤8℃',
     lines: [
       {
-        id: 'L003', lineNo: 1,
-        itemCode: 'NW-SS316L', itemName: '不锈钢丝 316L',
-        spec: 'φ0.6mm×3000mm', unit: 'KG',
-        planQty: 12.5, actualQty: 0,
-        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10',
-        wipWarehouse: 'WIP-切割', sourceWarehouse: 'A1-原料仓',
+        id: 'L011', lineNo: 1,
+        itemCode: 'RM-LACTO-POWDER', itemName: '乳酸菌冻干粉',
+        spec: '≥200亿CFU/g / 冷冻保存≤-18℃ / 1kg/铝箔袋',
+        unit: 'KG',
+        planQty: 1.5, actualQty: 1.5,
+        issueMethod: 'PUSH', operationSeq: 20, operationCode: 'OP-P20-BLEND',
+        wipWarehouse: 'WIP-LS-混合（冷链）', sourceWarehouse: 'LS-COLD-冷库（≤8℃）',
+        batchPicks: [
+          { batchNo: 'RM-LB-20260608-LS', qty: 1.5, inboundDate: '2026-06-08', expiryDate: '2027-06-07', warehouseCode: 'LS-COLD-冷库（≤8℃）' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'L012', lineNo: 2,
+        itemCode: 'RM-BIFIDO-POWDER', itemName: '双歧杆菌冻干粉',
+        spec: '≥150亿CFU/g / 冷冻保存≤-18℃ / 1kg/铝箔袋',
+        unit: 'KG',
+        planQty: 1.2, actualQty: 1.2,
+        issueMethod: 'PUSH', operationSeq: 20, operationCode: 'OP-P20-BLEND',
+        wipWarehouse: 'WIP-LS-混合（冷链）', sourceWarehouse: 'LS-COLD-冷库（≤8℃）',
+        batchPicks: [
+          { batchNo: 'RM-BF-20260608-LS', qty: 1.2, inboundDate: '2026-06-08', expiryDate: '2027-06-07', warehouseCode: 'LS-COLD-冷库（≤8℃）' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'L013', lineNo: 3,
+        itemCode: 'EX-FRUCTOOLIGO', itemName: '低聚果糖（益生元）',
+        spec: '纯度≥95% / FOS / 20kg/袋',
+        unit: 'KG',
+        planQty: 4.2, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 20, operationCode: 'OP-P20-BLEND',
+        wipWarehouse: 'WIP-LS-混合（冷链）', sourceWarehouse: 'LS-COLD-冷库（≤8℃）',
         batchPicks: [], status: 'PENDING',
       },
       {
-        id: 'L004', lineNo: 2,
-        itemCode: 'NW-NITI', itemName: '镍钛合金丝',
-        spec: 'φ0.4mm-φ1.2mm', unit: 'KG',
-        planQty: 8, actualQty: 0,
-        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10',
-        wipWarehouse: 'WIP-切割', sourceWarehouse: 'A1-原料仓',
-        batchPicks: [], status: 'PENDING',
-      },
-      {
-        id: 'L005', lineNo: 3,
-        itemCode: 'PKG-BOX-25', itemName: '包装盒（25#）',
-        spec: '标准GMP包装', unit: 'PCS',
-        planQty: 5000, actualQty: 0,
-        issueMethod: 'ON_SITE', operationSeq: 80, operationCode: 'OP-80',
-        wipWarehouse: 'WIP-包装', sourceWarehouse: 'A1-原料仓',
+        id: 'L014', lineNo: 4,
+        itemCode: 'RM-COLLAGEN-PROT', itemName: '胶原蛋白肽（辅料）',
+        spec: 'MW<1000Da / 水解度≥90% / 10kg/袋',
+        unit: 'KG',
+        planQty: 2.0, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 20, operationCode: 'OP-P20-BLEND',
+        wipWarehouse: 'WIP-LS-混合（冷链）', sourceWarehouse: 'LS-COLD-冷库（≤8℃）',
         batchPicks: [], status: 'PENDING',
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-005：溧水工厂 WO005 — 复合益生菌胶囊 胶囊充填（OP-P30-FILL）
+  // 工单：WO-20260612-001 / 批次：TMJ-PROBIO-20260612-002
+  // 状态：待拣货（主动领料，高优先级）— 等待混合完成
+  // ═══════════════════════════════════════════════════════════════
   {
-    id: 'ISO003',
-    issueNo: 'ISU-20260430-003',
-    woNo: 'WO-20260429-003',
-    moNo: 'MO-20260420-002',
-    productCode: 'RKQ-30-06',
-    productName: '根管锉 30# 06锥',
-    issueMethod: 'BACKFLUSH',
-    priority: 'LOW',
-    warehouse: 'WIP-研磨',
-    wipWarehouse: 'WIP-研磨',
+    id: 'ISO005',
+    issueNo: 'ISU-20260614-005',
+    woNo: 'WO-20260612-001',
+    moNo: 'MO-20260612-001',
+    productCode: 'FG-PROBIO-CAP-250',
+    productName: '复合益生菌胶囊',
+    operationSeq: 30,
+    operationName: '胶囊充填',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'LS-PM-包材仓',
+    wipWarehouse: 'WIP-LS-充填',
     planDate: today,
-    status: 'CLOSED',
-    createdBy: '系统',
-    createdAt: `${today} 07:00`,
+    status: 'PENDING',
+    createdBy: '李志远',
+    createdAt: `${today} 08:30`,
+    remark: '0号HPMC植物胶囊，充填机NJP-1200，充填量250mg±5%，冷链操作',
     lines: [
       {
-        id: 'L006', lineNo: 1,
-        itemCode: 'AB-DIAMOND', itemName: '金刚石磨料',
-        spec: 'D50=2μm', unit: 'G',
-        planQty: 150, actualQty: 152,
-        issueMethod: 'BACKFLUSH', operationSeq: 30, operationCode: 'OP-30',
-        wipWarehouse: 'WIP-研磨', sourceWarehouse: 'WIP-研磨',
+        id: 'L015', lineNo: 1,
+        itemCode: 'PKG-HPMC-CAP-0', itemName: 'HPMC植物胶囊（0号）',
+        spec: '0号 / 透明 / HPMC材质 / 10万粒/箱',
+        unit: 'PCS',
+        planQty: 62000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 30, operationCode: 'OP-P30-FILL',
+        wipWarehouse: 'WIP-LS-充填', sourceWarehouse: 'LS-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-006：溧水工厂 WO005 — 复合益生菌胶囊 铝箔泡罩封合（OP-P40-SEAL）
+  // 工单：WO-20260612-001 / 批次：TMJ-PROBIO-20260612-002
+  // 状态：倒扣领料（已关闭）— 上批次WO004已完成扣减
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO006',
+    issueNo: 'ISU-20260614-006',
+    woNo: 'WO-20260601-002',
+    moNo: 'MO-20260601-002',
+    productCode: 'FG-PROBIO-CAP-250',
+    productName: '复合益生菌胶囊',
+    operationSeq: 40,
+    operationName: '铝箔泡罩封合',
+    issueMethod: 'BACKFLUSH',
+    priority: 'MEDIUM',
+    warehouse: 'WIP-LS-泡罩',
+    wipWarehouse: 'WIP-LS-泡罩',
+    planDate: '2026-06-05',
+    status: 'CLOSED',
+    createdBy: '系统',
+    createdAt: '2026-06-05 15:00',
+    remark: '上批次(WO004)报工触发倒扣，铝膜PTP型，30粒/板×1板/盒',
+    lines: [
+      {
+        id: 'L016', lineNo: 1,
+        itemCode: 'PKG-ALU-FOIL-PTP', itemName: 'PTP铝箔（冷成型）',
+        spec: 'OPA/Al/PVC三层 / 厚度0.085mm / 宽200mm',
+        unit: 'M',
+        planQty: 320, actualQty: 324,
+        issueMethod: 'BACKFLUSH', operationSeq: 40, operationCode: 'OP-P40-SEAL',
+        wipWarehouse: 'WIP-LS-泡罩', sourceWarehouse: 'WIP-LS-泡罩',
         batchPicks: [
-          { batchNo: 'BT-20260410-AB', qty: 150, inboundDate: '2026-04-10', warehouseCode: 'WIP-研磨' },
-          { batchNo: 'BT-20260405-AB', qty: 2, inboundDate: '2026-04-05', warehouseCode: 'WIP-研磨' },
+          { batchNo: 'PKG-PTP-20260601-LS', qty: 320, inboundDate: '2026-06-01', warehouseCode: 'WIP-LS-泡罩' },
+          { batchNo: 'PKG-PTP-20260530-LS', qty: 4, inboundDate: '2026-05-30', warehouseCode: 'WIP-LS-泡罩' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'L017', lineNo: 2,
+        itemCode: 'PKG-LABEL-PROBIO', itemName: '产品标签（益生菌胶囊）',
+        spec: '50mm×30mm / 双面印刷 / 条形码+QR码',
+        unit: 'PCS',
+        planQty: 1000, actualQty: 1000,
+        issueMethod: 'BACKFLUSH', operationSeq: 40, operationCode: 'OP-P40-SEAL',
+        wipWarehouse: 'WIP-LS-泡罩', sourceWarehouse: 'WIP-LS-泡罩',
+        batchPicks: [
+          { batchNo: 'PKG-LBL-20260601-LS', qty: 1000, inboundDate: '2026-06-01', warehouseCode: 'WIP-LS-泡罩' },
         ],
         status: 'DONE',
       },
@@ -249,53 +500,88 @@ export const MOCK_ISSUE_ORDERS: IssueOrder[] = [
   },
 ];
 
-// ── 线边仓库存 Mock ──────────────────────────────────────────────
+// ── 线边仓库存 Mock — 天美健双工厂 ─────────────────────────────
 export const MOCK_WIP_INVENTORY: WipInventory[] = [
-  { warehouseCode: 'WIP-涂层', itemCode: 'CH-NITRIDE', itemName: '氮化钛涂层靶材', batchNo: 'BT-20260425-A1', qty: 800, availableQty: 800, lockedQty: 0, unit: 'G', inboundDate: '2026-04-25', expiryDate: '2027-04-25', updatedAt: `${today} 08:00` },
-  { warehouseCode: 'WIP-涂层', itemCode: 'CH-NITRIDE', itemName: '氮化钛涂层靶材', batchNo: 'BT-20260420-A2', qty: 300, availableQty: 300, lockedQty: 0, unit: 'G', inboundDate: '2026-04-20', expiryDate: '2027-04-20', updatedAt: `${today} 08:00` },
-  { warehouseCode: 'WIP-涂层', itemCode: 'CH-ADHESIVE', itemName: '涂层粘结剂', batchNo: 'BT-20260428-A1', qty: 500, availableQty: 500, lockedQty: 0, unit: 'ML', inboundDate: '2026-04-28', updatedAt: `${today} 08:00` },
-  { warehouseCode: 'WIP-切割', itemCode: 'NW-SS316L', itemName: '不锈钢丝 316L', batchNo: 'BT-20260422-SS', qty: 50, availableQty: 50, lockedQty: 0, unit: 'KG', inboundDate: '2026-04-22', updatedAt: `${today} 08:00` },
-  { warehouseCode: 'WIP-研磨', itemCode: 'AB-DIAMOND', itemName: '金刚石磨料', batchNo: 'BT-20260410-AB', qty: 30, availableQty: 30, lockedQty: 0, unit: 'G', inboundDate: '2026-04-10', updatedAt: `${today} 09:00` },
-  { warehouseCode: 'WIP-研磨', itemCode: 'AB-DIAMOND', itemName: '金刚石磨料', batchNo: 'BT-20260415-AB', qty: 200, availableQty: 200, lockedQty: 0, unit: 'G', inboundDate: '2026-04-15', updatedAt: `${today} 09:00` },
+  // 南京工厂 — 称量/制粒线边仓
+  { warehouseCode: 'WIP-NJ-称量', itemCode: 'RM-VITC-POWDER',   itemName: '维生素C原料粉',     batchNo: 'RM-VITC-20260602-A1', qty: 25.0, availableQty: 0,    lockedQty: 25.0, unit: 'KG', inboundDate: '2026-06-02', expiryDate: '2028-06-01', updatedAt: `${today} 08:30` },
+  { warehouseCode: 'WIP-NJ-称量', itemCode: 'RM-VITC-POWDER',   itemName: '维生素C原料粉',     batchNo: 'RM-VITC-20260602-A2', qty: 25.0, availableQty: 0,    lockedQty: 25.0, unit: 'KG', inboundDate: '2026-06-02', expiryDate: '2028-06-01', updatedAt: `${today} 08:30` },
+  { warehouseCode: 'WIP-NJ-称量', itemCode: 'RM-MANNITOL',      itemName: '甘露醇（填充剂）',   batchNo: 'RM-MAN-20260601-NJ',  qty: 30.0, availableQty: 30.0, lockedQty: 0,    unit: 'KG', inboundDate: '2026-06-01', expiryDate: '2028-12-31', updatedAt: `${today} 09:00` },
+  { warehouseCode: 'WIP-NJ-称量', itemCode: 'RM-SORBITOL',      itemName: '山梨醇（甜味剂）',   batchNo: 'RM-SOR-20260601-NJ',  qty: 12.0, availableQty: 12.0, lockedQty: 0,    unit: 'KG', inboundDate: '2026-06-01', expiryDate: '2028-12-31', updatedAt: `${today} 09:00` },
+  { warehouseCode: 'WIP-NJ-称量', itemCode: 'EX-PVPK30',        itemName: 'PVP K30（粘合剂）',  batchNo: 'EX-PVP-20260601-NJ',  qty: 4.0,  availableQty: 4.0,  lockedQty: 0,    unit: 'KG', inboundDate: '2026-06-01', expiryDate: '2027-12-31', updatedAt: `${today} 09:00` },
+  { warehouseCode: 'WIP-NJ-称量', itemCode: 'EX-MGST',          itemName: '硬脂酸镁（润滑剂）', batchNo: 'EX-MGS-20260601-NJ',  qty: 1.0,  availableQty: 1.0,  lockedQty: 0,    unit: 'KG', inboundDate: '2026-06-01', expiryDate: '2028-06-30', updatedAt: `${today} 09:00` },
+  // 南京工厂 — 内包装线边仓
+  { warehouseCode: 'WIP-NJ-内包', itemCode: 'PKG-HDPE-BOTTLE-60', itemName: 'HDPE塑料瓶（60粒装）', batchNo: 'PKG-BTL-20260608-NJ', qty: 1250, availableQty: 0, lockedQty: 0, unit: 'PCS', inboundDate: '2026-06-08', updatedAt: '2026-06-10 10:00' },
+  { warehouseCode: 'WIP-NJ-内包', itemCode: 'PKG-CAP-INDUCTION',  itemName: '铝箔感应封口盖',       batchNo: 'PKG-CAP-20260608-NJ', qty: 1250, availableQty: 0, lockedQty: 0, unit: 'PCS', inboundDate: '2026-06-08', updatedAt: '2026-06-10 10:00' },
+  // 溧水工厂 — 冷链混合线边仓
+  { warehouseCode: 'WIP-LS-混合（冷链）', itemCode: 'RM-LACTO-POWDER',   itemName: '乳酸菌冻干粉',   batchNo: 'RM-LB-20260608-LS', qty: 1.5, availableQty: 0,   lockedQty: 1.5, unit: 'KG', inboundDate: '2026-06-08', expiryDate: '2027-06-07', updatedAt: `${today} 08:00` },
+  { warehouseCode: 'WIP-LS-混合（冷链）', itemCode: 'RM-BIFIDO-POWDER',  itemName: '双歧杆菌冻干粉', batchNo: 'RM-BF-20260608-LS', qty: 1.2, availableQty: 0,   lockedQty: 1.2, unit: 'KG', inboundDate: '2026-06-08', expiryDate: '2027-06-07', updatedAt: `${today} 08:00` },
+  { warehouseCode: 'WIP-LS-混合（冷链）', itemCode: 'EX-FRUCTOOLIGO',    itemName: '低聚果糖（益生元）', batchNo: 'EX-FOS-20260610-LS', qty: 4.2, availableQty: 4.2, lockedQty: 0, unit: 'KG', inboundDate: '2026-06-10', expiryDate: '2027-06-09', updatedAt: `${today} 09:00` },
+  { warehouseCode: 'WIP-LS-混合（冷链）', itemCode: 'RM-COLLAGEN-PROT',  itemName: '胶原蛋白肽（辅料）', batchNo: 'RM-COL-20260610-LS', qty: 2.0, availableQty: 2.0, lockedQty: 0, unit: 'KG', inboundDate: '2026-06-10', expiryDate: '2027-06-09', updatedAt: `${today} 09:00` },
+  // 溧水工厂 — 泡罩包装线边仓（上批次剩余）
+  { warehouseCode: 'WIP-LS-泡罩', itemCode: 'PKG-ALU-FOIL-PTP', itemName: 'PTP铝箔（冷成型）',       batchNo: 'PKG-PTP-20260601-LS', qty: 30, availableQty: 30, lockedQty: 0, unit: 'M',   inboundDate: '2026-06-01', updatedAt: '2026-06-05 16:00' },
+  { warehouseCode: 'WIP-LS-泡罩', itemCode: 'PKG-LABEL-PROBIO',  itemName: '产品标签（益生菌胶囊）', batchNo: 'PKG-LBL-20260601-LS', qty: 80,  availableQty: 80, lockedQty: 0, unit: 'PCS', inboundDate: '2026-06-01', updatedAt: '2026-06-05 16:00' },
 ];
 
-// ── 倒扣日志 Mock ────────────────────────────────────────────────
+// ── 倒扣日志 Mock — 天美健双工厂 ────────────────────────────────
 export const MOCK_BACKFLUSH_LOGS: BackflushLog[] = [
+  // 溧水工厂 WO004 铝箔泡罩封合倒扣（上批次，已关闭）
   {
-    id: 'BF001', woNo: 'WO-20260429-003', operationSeq: 30, operationCode: 'OP-30',
+    id: 'BF001', woNo: 'WO-20260601-002', operationSeq: 40, operationCode: 'OP-P40-SEAL',
     triggerPoint: 'OPERATION_REPORT',
-    itemCode: 'AB-DIAMOND', itemName: '金刚石磨料',
-    bomChildQty: 30, baseBatchQty: 1000, reportQty: 5000, lossRate: 1,
-    stdQty: 151.5, actualQty: 152, wipWarehouse: 'WIP-研磨',
-    status: 'OVER_CONSUME', errorMsg: '超耗：标准151.5，实际152（拆批向上取整）',
-    createdAt: `${today} 07:30`,
+    itemCode: 'PKG-ALU-FOIL-PTP', itemName: 'PTP铝箔（冷成型）',
+    bomChildQty: 10.8, baseBatchQty: 1000, reportQty: 29880, lossRate: 1.5,
+    stdQty: 323.8, actualQty: 324, wipWarehouse: 'WIP-LS-泡罩',
+    status: 'OVER_CONSUME', errorMsg: '微超耗：标准323.8，实际324（拆批向上取整），在GMP允许范围内',
+    createdAt: '2026-06-05 15:30',
   },
+  // 溧水工厂 WO004 产品标签倒扣（已成功）
   {
-    id: 'BF002', woNo: 'WO-20260429-004', operationSeq: 40, operationCode: 'OP-40',
+    id: 'BF002', woNo: 'WO-20260601-002', operationSeq: 40, operationCode: 'OP-P40-SEAL',
     triggerPoint: 'OPERATION_REPORT',
-    itemCode: 'CH-NITRIDE', itemName: '氮化钛涂层靶材',
-    bomChildQty: 100, baseBatchQty: 1000, reportQty: 3000, lossRate: 2,
-    stdQty: 306, actualQty: 306, wipWarehouse: 'WIP-涂层',
-    status: 'SUCCESS', createdAt: `${today} 09:15`,
+    itemCode: 'PKG-LABEL-PROBIO', itemName: '产品标签（益生菌胶囊）',
+    bomChildQty: 33.4, baseBatchQty: 1000, reportQty: 29880, lossRate: 0.5,
+    stdQty: 1002, actualQty: 1000, wipWarehouse: 'WIP-LS-泡罩',
+    status: 'SUCCESS', createdAt: '2026-06-05 15:35',
   },
+  // 南京工厂 WO001 硬脂酸镁倒扣（首批次，已成功）
   {
-    id: 'BF003', woNo: 'WO-20260430-005', operationSeq: 30, operationCode: 'OP-30',
+    id: 'BF003', woNo: 'WO-20260601-001', operationSeq: 60, operationCode: 'OP-60-PRESS',
     triggerPoint: 'OPERATION_REPORT',
-    itemCode: 'AB-COARSE', itemName: '粗磨磨料',
-    bomChildQty: 50, baseBatchQty: 1000, reportQty: 2000, lossRate: 0,
-    stdQty: 100, actualQty: 30, wipWarehouse: 'WIP-研磨',
-    status: 'INSUFFICIENT', errorMsg: '线边仓库存不足，应扣100，实扣30，缺70',
-    createdAt: `${today} 10:00`,
+    itemCode: 'EX-MGST', itemName: '硬脂酸镁（润滑剂）',
+    bomChildQty: 0.005, baseBatchQty: 1000, reportQty: 99680, lossRate: 2,
+    stdQty: 0.509, actualQty: 0.51, wipWarehouse: 'WIP-NJ-压片',
+    status: 'SUCCESS', createdAt: '2026-06-03 14:00',
   },
 ];
 
 // ════════════════════════════════════════════════════════════════
 // localStorage 持久化
+// 版本号机制：数据模型升级（保健品双工厂）时清除旧缓存
 // ════════════════════════════════════════════════════════════════
 
-const STORE_KEY_ORDERS = 'bip_issue_orders';
-const STORE_KEY_WIP    = 'bip_wip_inventory';
-const STORE_KEY_BF     = 'bip_backflush_logs';
+// ⚠️ 数据版本：每次更换产品线/重构Mock时递增，强制清除旧缓存
+const DATA_VERSION = 'TMJ-HEALTH-V2';
+const STORE_KEY_VERSION = 'bip_data_version';
+const STORE_KEY_ORDERS  = 'bip_issue_orders';
+const STORE_KEY_WIP     = 'bip_wip_inventory';
+const STORE_KEY_BF      = 'bip_backflush_logs';
+
+/** 启动时检查版本，版本不符则清除全部旧数据 */
+function checkAndMigrateVersion(): void {
+  try {
+    const storedVer = localStorage.getItem(STORE_KEY_VERSION);
+    if (storedVer !== DATA_VERSION) {
+      // 版本升级：清除旧的根管锉/医疗器械数据
+      localStorage.removeItem(STORE_KEY_ORDERS);
+      localStorage.removeItem(STORE_KEY_WIP);
+      localStorage.removeItem(STORE_KEY_BF);
+      localStorage.setItem(STORE_KEY_VERSION, DATA_VERSION);
+    }
+  } catch { /* ignore */ }
+}
+
+// 模块加载时立即执行版本检查
+checkAndMigrateVersion();
 
 function load<T>(key: string, defaults: T): T {
   try {
