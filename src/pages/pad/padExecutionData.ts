@@ -152,7 +152,7 @@ export const OPERATIONS: OperationDef[] = [
     stages: makeStages(
       { PRE_CLEAN: true, CHECK_IN: true, MAT_VERIFY: true, FIRST_PIECE: true, DATA_COLLECT: true, SELF_CHECK: false, POST_CLEAN: true, REPORT: true, CHECK_OUT: true },
       {
-        MAT_VERIFY: '镍钛丝、批号',
+        MAT_VERIFY: '主料批号、辅料批号',
         FIRST_PIECE: '产品尺寸（外径D1/D2、尖端直径、锥度、螺纹完整性、表面粗糙度Ra）',
         DATA_COLLECT: '生产员工自己抽检数据：设备编号、主轴转速、进给速度、磨削深度、冷却液浓度、计划/实际/不良产量',
         POST_CLEAN: '清理本批次产品，标识并按流程转移；不合格品、废料、尾料分类标识清理出现场',
@@ -250,7 +250,7 @@ export const OPERATIONS: OperationDef[] = [
     ),
     hasQcInspection: true,
     // 研磨一自检阶段同时生成两张独立检验单据：
-    // ①《数控机床成型检验记录》DK/QR-067  ②《根管锉超声波清洗检验记录》DK/QR-119
+    // ①《数控机床成型检验记录》DK/QR-067  ②《超声波清洗检验记录》DK/QR-119
     dualInspectionRecords: ['机床成型检验记录', '超声波清洗检验记录'],
     inspectionRecordName: '机床成型检验记录', // 兼容旧字段
     masterOpCode: 'OP-YM1-001',

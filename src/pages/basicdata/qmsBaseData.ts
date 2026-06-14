@@ -240,210 +240,197 @@ export function schemeItemToTaskItem(si: QcSchemeItem) {
 }
 
 // ============================================================
-// Mock 质检项目档案
+// Mock 质检项目档案 - 天美健保健品行业（GB/国标/保健食品法规）
 // ============================================================
 
 export const mockQcItems: QcItem[] = [
-  // ── 尺寸类 ────────────────────────────────────────────────
+  // ── 化学类（含量测定）────────────────────────────────────
   {
-    id: 'QCI001', itemCode: 'QCI-SZ-001', itemName: '原材直径', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '0.300±0.005', minValue: 0.295, maxValue: 0.305, unit: 'mm',
-    instrumentType: '千分尺', isCritical: true, isRequired: true,
-    applyTypes: ['IQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI001', itemCode: 'QCI-CH-001', itemName: 'VitC含量（HPLC法）', category: 'CHEMICAL',
+    standardType: 'NUMERIC', standardValue: '450~550mg/粒', minValue: 450, maxValue: 550, unit: 'mg/粒',
+    instrumentType: 'HPLC高效液相色谱仪', isCritical: true, isRequired: true,
+    applyTypes: ['IQC', 'IPQC_SELF', 'FQC', 'OQC'], refStandard: 'GB 14754-2010',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  // ── 化学类（含量/纯度）────────────────────────────────────
+  {
+    id: 'QCI002', itemCode: 'QCI-CH-002', itemName: '维生素C含量（滴定法）', category: 'CHEMICAL',
+    standardType: 'NUMERIC', standardValue: '≥450mg/粒（标示量90%~110%）', minValue: 450, maxValue: 550, unit: 'mg/粒',
+    instrumentType: '自动滴定仪', isCritical: true, isRequired: true,
+    applyTypes: ['FQC', 'OQC'], refStandard: 'GB 14754-2010',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI002', itemCode: 'QCI-SZ-002', itemName: '外径D1', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '0.250±0.005', minValue: 0.245, maxValue: 0.255, unit: 'mm',
-    instrumentType: '千分尺', isCritical: true, isRequired: true,
-    applyTypes: ['IPQC_FIRST', 'IPQC_SELF', 'FQC', 'OQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI003', itemCode: 'QCI-CH-003', itemName: '活菌数（益生菌胶囊）', category: 'CHEMICAL',
+    standardType: 'NUMERIC', standardValue: '≥1×10⁹ CFU/粒', minValue: 1.0e9, unit: 'CFU/粒',
+    instrumentType: '活菌计数仪/培养箱', isCritical: true, isRequired: true,
+    applyTypes: ['IQC', 'IPQC_SELF', 'FQC', 'OQC'], refStandard: 'GB/T 4789.35',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI003', itemCode: 'QCI-SZ-003', itemName: '外径D2', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '按规格书', unit: 'mm',
-    instrumentType: '千分尺', isCritical: false, isRequired: true,
-    applyTypes: ['IPQC_SELF', 'FQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI004', itemCode: 'QCI-CH-004', itemName: '水分（LOD）', category: 'CHEMICAL',
+    standardType: 'NUMERIC', standardValue: '≤2.0%', maxValue: 2.0, unit: '%',
+    instrumentType: '水分测定仪（快速卤素）', isCritical: true, isRequired: true,
+    applyTypes: ['IPQC_SELF', 'FQC'], refStandard: 'GB 5009.3',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI004', itemCode: 'QCI-SZ-004', itemName: '尖端直径D0', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '0.150±0.005', minValue: 0.145, maxValue: 0.155, unit: 'mm',
-    instrumentType: '投影仪', isCritical: true, isRequired: true,
-    applyTypes: ['FQC', 'OQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI005', itemCode: 'QCI-CH-005', itemName: '重金属（铅 Pb）', category: 'CHEMICAL',
+    standardType: 'NUMERIC', standardValue: '≤0.5mg/kg', maxValue: 0.5, unit: 'mg/kg',
+    instrumentType: 'ICP-MS质谱仪', isCritical: true, isRequired: true,
+    applyTypes: ['IQC', 'FQC'], refStandard: 'GB 5009.12',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  // ── 物理类（物理特性）────────────────────────────────────
+  {
+    id: 'QCI006', itemCode: 'QCI-PH-001', itemName: '片重差异', category: 'PHYSICAL',
+    standardType: 'NUMERIC', standardValue: '标示量±5%', minValue: 475, maxValue: 525, unit: 'mg',
+    instrumentType: '分析天平', isCritical: true, isRequired: true,
+    applyTypes: ['IPQC_FIRST', 'IPQC_SELF', 'IPQC_PATROL', 'FQC'], refStandard: 'GB/T 14456',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI005', itemCode: 'QCI-SZ-005', itemName: '总长度L', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '25±0.5', minValue: 24.5, maxValue: 25.5, unit: 'mm',
-    instrumentType: '游标卡尺', isCritical: true, isRequired: true,
-    applyTypes: ['FQC', 'OQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI007', itemCode: 'QCI-PH-002', itemName: '片剂硬度', category: 'PHYSICAL',
+    standardType: 'NUMERIC', standardValue: '50~80N', minValue: 50, maxValue: 80, unit: 'N',
+    instrumentType: '片剂硬度仪', isCritical: false, isRequired: true,
+    applyTypes: ['IPQC_FIRST', 'IPQC_PATROL', 'FQC'], refStandard: 'ChP2020',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI006', itemCode: 'QCI-SZ-006', itemName: '工作长度', category: 'SIZE',
-    standardType: 'ENUM', enumOptions: ['16mm', '20mm', '26mm'],
-    instrumentType: '投影仪', isCritical: true, isRequired: true,
-    applyTypes: ['FQC', 'OQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI008', itemCode: 'QCI-PH-003', itemName: '脆碎度', category: 'PHYSICAL',
+    standardType: 'NUMERIC', standardValue: '≤0.5%', maxValue: 0.5, unit: '%',
+    instrumentType: '片剂脆碎度测定仪', isCritical: false, isRequired: true,
+    applyTypes: ['IPQC_FIRST', 'FQC'], refStandard: 'ChP2020',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI007', itemCode: 'QCI-SZ-007', itemName: '锥度', category: 'SIZE',
-    standardType: 'ENUM', enumOptions: ['0.02', '0.04', '0.06', '0.08'],
-    isCritical: true, isRequired: true,
-    applyTypes: ['IPQC_FIRST', 'IPQC_SELF', 'FQC', 'OQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI009', itemCode: 'QCI-PH-004', itemName: '崩解时限', category: 'PHYSICAL',
+    standardType: 'NUMERIC', standardValue: '≤30min', maxValue: 30, unit: 'min',
+    instrumentType: '崩解时限测定仪', isCritical: true, isRequired: true,
+    applyTypes: ['IPQC_FIRST', 'FQC'], refStandard: 'ChP2020',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI008', itemCode: 'QCI-SZ-008', itemName: '螺纹螺距', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '按设计图纸', unit: 'mm',
-    instrumentType: '投影仪', isCritical: true, isRequired: true,
-    applyTypes: ['IPQC_FIRST'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI010', itemCode: 'QCI-PH-005', itemName: '溶出度（30min释放率）', category: 'PHYSICAL',
+    standardType: 'NUMERIC', standardValue: '≥70%（30min，磷酸盐缓冲液pH6.8）', minValue: 70, unit: '%',
+    instrumentType: '溶出仪/HPLC', isCritical: true, isRequired: true,
+    applyTypes: ['FQC'], refStandard: 'ChP2020',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI009', itemCode: 'QCI-SZ-009', itemName: '表面粗糙度Ra', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '≤0.8', maxValue: 0.8, unit: 'μm',
-    instrumentType: '粗糙度仪', isCritical: false, isRequired: true,
-    applyTypes: ['IPQC_SELF', 'FQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI011', itemCode: 'QCI-PH-006', itemName: '胶囊充填重量差异', category: 'PHYSICAL',
+    standardType: 'NUMERIC', standardValue: '标示量±7.5%', unit: 'mg',
+    instrumentType: '分析天平', isCritical: true, isRequired: true,
+    applyTypes: ['IPQC_FIRST', 'IPQC_SELF', 'FQC'], refStandard: 'ChP2020',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI010', itemCode: 'QCI-SZ-010', itemName: '圆度', category: 'SIZE',
-    standardType: 'NUMERIC', standardValue: '≤0.005', maxValue: 0.005, unit: 'mm',
-    instrumentType: '圆度仪', isCritical: false, isRequired: true,
-    applyTypes: ['FQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI012', itemCode: 'QCI-PH-007', itemName: '冷链温度记录（益生菌）', category: 'PHYSICAL',
+    standardType: 'NUMERIC', standardValue: '操作温度≤8℃', maxValue: 8, unit: '℃',
+    instrumentType: '冷链温度记录仪', isCritical: true, isRequired: true,
+    applyTypes: ['IPQC_SELF', 'SPECIAL'], refStandard: 'GB 19489',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  // ── 微生物类 ─────────────────────────────────────────────
+  {
+    id: 'QCI013', itemCode: 'QCI-MB-001', itemName: '菌落总数', category: 'MICROBIAL',
+    standardType: 'NUMERIC', standardValue: '≤1000 CFU/g', maxValue: 1000, unit: 'CFU/g',
+    instrumentType: '微生物培养箱/平板计数', isCritical: true, isRequired: true,
+    applyTypes: ['IQC', 'FQC', 'OQC'], refStandard: 'GB 4789.2',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  {
+    id: 'QCI014', itemCode: 'QCI-MB-002', itemName: '大肠菌群', category: 'MICROBIAL',
+    standardType: 'ENUM', enumOptions: ['未检出', '检出'],
+    instrumentType: '微生物培养箱/MPN法', isCritical: true, isRequired: true,
+    applyTypes: ['IQC', 'FQC', 'OQC'], refStandard: 'GB 4789.3',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  {
+    id: 'QCI015', itemCode: 'QCI-MB-003', itemName: '霉菌和酵母菌', category: 'MICROBIAL',
+    standardType: 'NUMERIC', standardValue: '≤100 CFU/g', maxValue: 100, unit: 'CFU/g',
+    instrumentType: '微生物培养箱', isCritical: true, isRequired: true,
+    applyTypes: ['FQC', 'OQC'], refStandard: 'GB 4789.15',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  {
+    id: 'QCI016', itemCode: 'QCI-MB-004', itemName: '沙门氏菌', category: 'MICROBIAL',
+    standardType: 'ENUM', enumOptions: ['未检出', '检出'],
+    instrumentType: 'PCR快速检测/培养', isCritical: true, isRequired: true,
+    applyTypes: ['FQC', 'OQC'], refStandard: 'GB 4789.4',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   // ── 外观类 ────────────────────────────────────────────────
   {
-    id: 'QCI011', itemCode: 'QCI-AP-001', itemName: '表面外观', category: 'APPEARANCE',
-    standardType: 'ENUM', enumOptions: ['合格', '不合格'],
-    isCritical: true, isRequired: true,
-    applyTypes: ['IQC', 'IPQC_FIRST', 'IPQC_SELF', 'IPQC_PATROL', 'FQC', 'OQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  {
-    id: 'QCI012', itemCode: 'QCI-AP-002', itemName: '颜色标识', category: 'APPEARANCE',
-    standardType: 'ENUM', enumOptions: ['正确', '错误'],
-    isCritical: false, isRequired: true,
-    applyTypes: ['FQC', 'OQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  {
-    id: 'QCI013', itemCode: 'QCI-AP-003', itemName: '清洗洁净度', category: 'APPEARANCE',
+    id: 'QCI017', itemCode: 'QCI-AP-001', itemName: '片剂外观（色泽/均匀性）', category: 'APPEARANCE',
     standardType: 'ENUM', enumOptions: ['合格', '不合格'],
     isCritical: false, isRequired: true,
-    applyTypes: ['IPQC_SELF'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    applyTypes: ['IPQC_PATROL', 'IPQC_FIRST', 'FQC', 'OQC'],
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI014', itemCode: 'QCI-AP-004', itemName: '包装完整性', category: 'APPEARANCE',
+    id: 'QCI018', itemCode: 'QCI-AP-002', itemName: '包装密封性检验', category: 'APPEARANCE',
     standardType: 'ENUM', enumOptions: ['合格', '不合格'],
     isCritical: true, isRequired: true,
-    applyTypes: ['FQC', 'OQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  // ── 性能类 ────────────────────────────────────────────────
-  {
-    id: 'QCI015', itemCode: 'QCI-PF-001', itemName: '扭转强度', category: 'PERFORMANCE',
-    standardType: 'NUMERIC', standardValue: '≥规范要求值', unit: 'N·cm',
-    instrumentType: '扭力测试仪', isCritical: true, isRequired: true,
-    applyTypes: ['FQC', 'OQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    applyTypes: ['IPQC_SELF', 'FQC', 'OQC'],
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI016', itemCode: 'QCI-PF-002', itemName: '抗弯强度', category: 'PERFORMANCE',
-    standardType: 'NUMERIC', standardValue: '≥规范要求值', unit: 'N',
-    instrumentType: '弯曲测试仪', isCritical: true, isRequired: true,
-    applyTypes: ['FQC', 'OQC'], refStandard: 'YY 0462-2023',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  // ── 物理类 ────────────────────────────────────────────────
-  {
-    id: 'QCI017', itemCode: 'QCI-PH-001', itemName: '硬度', category: 'PHYSICAL',
-    standardType: 'NUMERIC', standardValue: '300~380', minValue: 300, maxValue: 380, unit: 'HV',
-    instrumentType: '硬度仪', isCritical: true, isRequired: true,
-    applyTypes: ['IQC'], refStandard: 'GB/T 4340',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    id: 'QCI019', itemCode: 'QCI-AP-003', itemName: '标签印刷质量', category: 'APPEARANCE',
+    standardType: 'ENUM', enumOptions: ['合格', '不合格'],
+    isCritical: false, isRequired: true,
+    applyTypes: ['IPQC_LAST', 'FQC', 'OQC'],
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI018', itemCode: 'QCI-PH-002', itemName: '升温速率', category: 'PHYSICAL',
-    standardType: 'NUMERIC', standardValue: '5.0~8.0', minValue: 5.0, maxValue: 8.0, unit: '℃/min',
+    id: 'QCI020', itemCode: 'QCI-AP-004', itemName: '胶囊外观（无缺损/无漏粉）', category: 'APPEARANCE',
+    standardType: 'ENUM', enumOptions: ['合格', '不合格'],
     isCritical: true, isRequired: true,
-    applyTypes: ['SPECIAL'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  {
-    id: 'QCI019', itemCode: 'QCI-PH-003', itemName: '保温温度', category: 'PHYSICAL',
-    standardType: 'NUMERIC', standardValue: '480~520', minValue: 480, maxValue: 520, unit: '℃',
-    isCritical: true, isRequired: true,
-    applyTypes: ['SPECIAL'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  {
-    id: 'QCI020', itemCode: 'QCI-PH-004', itemName: '保温时间', category: 'PHYSICAL',
-    standardType: 'NUMERIC', standardValue: '10~15', minValue: 10, maxValue: 15, unit: 'min',
-    isCritical: true, isRequired: true,
-    applyTypes: ['SPECIAL'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    applyTypes: ['IPQC_PATROL', 'FQC', 'OQC'],
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   // ── 文件类 ────────────────────────────────────────────────
   {
-    id: 'QCI021', itemCode: 'QCI-DC-001', itemName: '材质证书', category: 'DOCUMENT',
+    id: 'QCI021', itemCode: 'QCI-DC-001', itemName: '原料检验报告（COA）', category: 'DOCUMENT',
     standardType: 'BOOLEAN',
     isCritical: true, isRequired: true,
     applyTypes: ['IQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI022', itemCode: 'QCI-DC-002', itemName: '材料规格核对', category: 'DOCUMENT',
+    id: 'QCI022', itemCode: 'QCI-DC-002', itemName: '批生产记录（BPR）审核', category: 'DOCUMENT',
     standardType: 'BOOLEAN',
     isCritical: true, isRequired: true,
-    applyTypes: ['IQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    applyTypes: ['FQC', 'OQC'],
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI023', itemCode: 'QCI-DC-003', itemName: '温度曲线审核', category: 'DOCUMENT',
+    id: 'QCI023', itemCode: 'QCI-DC-003', itemName: '有效期与生产日期核对', category: 'DOCUMENT',
     standardType: 'BOOLEAN',
     isCritical: true, isRequired: true,
-    applyTypes: ['SPECIAL'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    applyTypes: ['FQC', 'OQC'],
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI024', itemCode: 'QCI-DC-004', itemName: 'QA双人复核', category: 'DOCUMENT',
+    id: 'QCI024', itemCode: 'QCI-DC-004', itemName: 'QA放行签字确认', category: 'DOCUMENT',
     standardType: 'BOOLEAN',
     isCritical: true, isRequired: true,
-    applyTypes: ['SPECIAL'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    applyTypes: ['FQC', 'OQC'],
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI025', itemCode: 'QCI-DC-005', itemName: '外箱UDI校验', category: 'DOCUMENT',
+    id: 'QCI025', itemCode: 'QCI-DC-005', itemName: '冷链配送温度记录', category: 'DOCUMENT',
     standardType: 'BOOLEAN',
     isCritical: true, isRequired: true,
-    applyTypes: ['OQC'], refStandard: 'YY/T 0681',
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    applyTypes: ['OQC', 'SPECIAL'], refStandard: 'GB 19489',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QCI026', itemCode: 'QCI-DC-006', itemName: '灭菌批号一致性', category: 'DOCUMENT',
-    standardType: 'BOOLEAN',
-    isCritical: true, isRequired: true,
-    applyTypes: ['OQC', 'STERILE'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  {
-    id: 'QCI027', itemCode: 'QCI-DC-007', itemName: '有效期计算确认', category: 'DOCUMENT',
-    standardType: 'BOOLEAN',
-    isCritical: true, isRequired: true,
-    applyTypes: ['OQC', 'STERILE'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  {
-    id: 'QCI028', itemCode: 'QCI-DC-008', itemName: '出货数量核对', category: 'DOCUMENT',
+    id: 'QCI026', itemCode: 'QCI-DC-006', itemName: '出货数量核对', category: 'DOCUMENT',
     standardType: 'BOOLEAN',
     isCritical: false, isRequired: true,
     applyTypes: ['OQC'],
-    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    status: 'ACTIVE', version: 'V1.0', createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
 ];
 
@@ -475,190 +462,264 @@ function mkItem(item: QcItem, seq: number, overrides?: Partial<QcSchemeItem>): Q
 const i = (code: string) => mockQcItems.find(x => x.id === code)!;
 
 export const mockQcSchemes: QcScheme[] = [
-  // ── IQC 来料检验 ──────────────────────────────────────────
+  // ── IQC 来料检验方案 ──────────────────────────────────────
   {
     id: 'QSCH001',
-    schemeCode: 'SCH-IQC-001',
-    schemeName: '镍钛丝来料检验方案',
+    schemeCode: 'SCH-IQC-VITC',
+    schemeName: '维生素C原料来料检验方案',
     schemeType: 'IQC',
-    productModel: '通用',
-    materialCode: 'MAT-NiTi',
+    materialCode: 'RM-VITC-001',
     samplingType: 'AQL',
     aqlLevel: '1.0',
     status: 'ACTIVE',
     version: 'V1.0',
     effectiveDate: '2026-01-01',
-    approvedBy: '张伟 (QA经理)',
+    approvedBy: '张丽华 (QA经理)',
     items: [
-      mkItem(i('QCI022'), 1),  // 材料规格核对
-      mkItem(i('QCI001'), 2),  // 原材直径
-      mkItem(i('QCI017'), 3),  // 硬度
-      mkItem(i('QCI011'), 4),  // 表面外观
-      mkItem(i('QCI021'), 5),  // 材质证书
+      mkItem(i('QCI021'), 1),  // 原料检验报告COA
+      mkItem(i('QCI001'), 2),  // VitC含量(HPLC)
+      mkItem(i('QCI004'), 3),  // 水分(LOD)
+      mkItem(i('QCI005'), 4),  // 重金属(Pb)
+      mkItem(i('QCI013'), 5),  // 菌落总数
+      mkItem(i('QCI014'), 6),  // 大肠菌群
     ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
-  // ── IPQC 首件检验 ─────────────────────────────────────────
   {
     id: 'QSCH002',
-    schemeCode: 'SCH-FPP-010',
-    schemeName: '机床成型首件检验方案',
-    schemeType: 'IPQC_FIRST',
-    productModel: '根管锉',
-    operationCode: 'OP-10-GRIND',
-    operationSeq: 10,
-    samplingType: 'FULL',
-    sampleSize: 1,
+    schemeCode: 'SCH-IQC-PROBIO',
+    schemeName: '益生菌菌粉来料检验方案',
+    schemeType: 'IQC',
+    materialCode: 'RM-PROBIO-LA',
+    samplingType: 'AQL',
+    aqlLevel: '1.0',
     status: 'ACTIVE',
     version: 'V1.0',
     effectiveDate: '2026-01-01',
-    approvedBy: '张伟 (QA经理)',
+    approvedBy: '赵雪梅 (QA经理)',
     items: [
-      mkItem(i('QCI002'), 1),  // 外径D1
-      mkItem(i('QCI007'), 2),  // 锥度
-      mkItem(i('QCI008'), 3),  // 螺纹螺距
-      mkItem(i('QCI011'), 4),  // 表面外观
+      mkItem(i('QCI021'), 1),  // COA
+      mkItem(i('QCI003'), 2),  // 活菌数
+      mkItem(i('QCI012'), 3),  // 冷链温度记录
+      mkItem(i('QCI013'), 4),  // 菌落总数
+      mkItem(i('QCI016'), 5),  // 沙门氏菌
     ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  // ── IPQC 首件检验 ─────────────────────────────────────────
+  {
+    id: 'QSCH003',
+    schemeCode: 'SCH-FPP-TAB',
+    schemeName: 'VitC片剂压片首件检验方案',
+    schemeType: 'IPQC_FIRST',
+    productModel: 'FG-VITC-500MG-AP',
+    operationCode: 'OP-40',
+    operationSeq: 40,
+    samplingType: 'FIXED',
+    sampleSize: 10,
+    status: 'ACTIVE',
+    version: 'V1.0',
+    effectiveDate: '2026-01-01',
+    approvedBy: '张丽华 (QA经理)',
+    items: [
+      mkItem(i('QCI006'), 1),  // 片重差异
+      mkItem(i('QCI007'), 2),  // 片剂硬度
+      mkItem(i('QCI008'), 3),  // 脆碎度
+      mkItem(i('QCI009'), 4),  // 崩解时限
+      mkItem(i('QCI017'), 5),  // 外观
+    ],
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  {
+    id: 'QSCH004',
+    schemeCode: 'SCH-FPP-CAP',
+    schemeName: '益生菌胶囊充填首件检验方案',
+    schemeType: 'IPQC_FIRST',
+    productModel: 'FG-PROBIO-CAP-250',
+    operationCode: 'OP-40',
+    operationSeq: 40,
+    samplingType: 'FIXED',
+    sampleSize: 10,
+    status: 'ACTIVE',
+    version: 'V1.0',
+    effectiveDate: '2026-01-01',
+    approvedBy: '赵雪梅 (QA经理)',
+    items: [
+      mkItem(i('QCI011'), 1),  // 胶囊重量差异
+      mkItem(i('QCI012'), 2),  // 冷链温度
+      mkItem(i('QCI020'), 3),  // 胶囊外观
+    ],
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   // ── IPQC 过程自检 ─────────────────────────────────────────
   {
-    id: 'QSCH003',
-    schemeCode: 'SCH-SLF-050',
-    schemeName: '研磨一过程自检方案',
+    id: 'QSCH005',
+    schemeCode: 'SCH-SLF-TAB',
+    schemeName: '片剂压片过程自检方案',
     schemeType: 'IPQC_SELF',
-    productModel: '根管锉',
-    operationCode: 'OP-50-GRIND1',
-    operationSeq: 50,
+    productModel: 'VitC咀嚼片',
+    operationCode: 'OP-40',
+    operationSeq: 40,
+    samplingType: 'FIXED',
+    sampleSize: 20,
+    status: 'ACTIVE',
+    version: 'V1.0',
+    effectiveDate: '2026-01-01',
+    approvedBy: '张丽华 (QA经理)',
+    remark: '每30分钟取样20粒检验',
+    items: [
+      mkItem(i('QCI006'), 1),  // 片重差异
+      mkItem(i('QCI007'), 2),  // 硬度
+      mkItem(i('QCI017'), 3),  // 外观
+    ],
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  // ── 特殊过程确认（冷链）─────────────────────────────────
+  {
+    id: 'QSCH006',
+    schemeCode: 'SCH-SPC-COLD',
+    schemeName: '益生菌冷链操作特殊过程确认',
+    schemeType: 'SPECIAL',
+    productModel: 'FG-PROBIO-CAP-250',
+    operationCode: 'OP-30',
+    operationSeq: 30,
+    samplingType: 'FULL',
+    status: 'ACTIVE',
+    version: 'V1.0',
+    effectiveDate: '2026-01-01',
+    approvedBy: '赵雪梅 (QA经理)',
+    items: [
+      mkItem(i('QCI012'), 1),  // 冷链温度
+      mkItem(i('QCI025'), 2),  // 冷链配送温度记录
+      mkItem(i('QCI024'), 3),  // QA放行签字
+    ],
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
+  },
+  // ── IPQC 巡检 ─────────────────────────────────────────────
+  {
+    id: 'QSCH007',
+    schemeCode: 'SCH-PTL-SOLID',
+    schemeName: '固体制剂车间通用巡检方案',
+    schemeType: 'IPQC_PATROL',
+    productModel: '通用',
     samplingType: 'FIXED',
     sampleSize: 5,
     status: 'ACTIVE',
     version: 'V1.0',
     effectiveDate: '2026-01-01',
-    approvedBy: '张伟 (QA经理)',
+    approvedBy: '张丽华 (QA经理)',
+    remark: '每2小时巡检一次',
     items: [
-      mkItem(i('QCI002'), 1),  // 外径D1
-      mkItem(i('QCI003'), 2),  // 外径D2
-      mkItem(i('QCI007'), 3),  // 锥度
-      mkItem(i('QCI011'), 4),  // 表面外观
-      mkItem(i('QCI009'), 5),  // 粗糙度Ra
+      mkItem(i('QCI006'), 1),  // 片重差异
+      mkItem(i('QCI007'), 2),  // 硬度
+      mkItem(i('QCI017'), 3),  // 外观
     ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
-  },
-  // ── 特殊过程确认 ──────────────────────────────────────────
-  {
-    id: 'QSCH004',
-    schemeCode: 'SCH-SPC-060',
-    schemeName: '热处理特殊过程确认方案',
-    schemeType: 'SPECIAL',
-    productModel: '根管锉',
-    operationCode: 'OP-60-HEAT',
-    operationSeq: 60,
-    samplingType: 'FULL',
-    status: 'ACTIVE',
-    version: 'V1.0',
-    effectiveDate: '2026-01-01',
-    approvedBy: '周敏 (QA经理)',
-    items: [
-      mkItem(i('QCI018'), 1),  // 升温速率
-      mkItem(i('QCI019'), 2),  // 保温温度
-      mkItem(i('QCI020'), 3),  // 保温时间
-      mkItem(i('QCI023'), 4),  // 温度曲线审核
-      mkItem(i('QCI024'), 5),  // QA双人复核
-    ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   // ── FQC 成品检验 ──────────────────────────────────────────
   {
-    id: 'QSCH005',
-    schemeCode: 'SCH-FQC-001',
-    schemeName: '半成品检验方案',
+    id: 'QSCH008',
+    schemeCode: 'SCH-FQC-VITC',
+    schemeName: '维生素C咀嚼片成品检验方案',
     schemeType: 'FQC',
-    productModel: '根管锉',
-    operationSeq: 150,
+    productModel: 'FG-VITC-500MG-AP',
     samplingType: 'AQL',
     aqlLevel: '1.0',
+    sampleSize: 20,
     status: 'ACTIVE',
-    version: 'V1.0',
+    version: 'V2.0',
     effectiveDate: '2026-01-01',
-    approvedBy: '张伟 (QA经理)',
+    approvedBy: '张丽华 (QA经理)',
     items: [
-      mkItem(i('QCI005'), 1),  // 总长度L
-      mkItem(i('QCI004'), 2),  // 尖端直径D0
-      mkItem(i('QCI007'), 3),  // 锥度
-      mkItem(i('QCI015'), 4),  // 扭转强度
-      mkItem(i('QCI016'), 5),  // 抗弯强度
-      mkItem(i('QCI011'), 6),  // 表面外观
-      mkItem(i('QCI012'), 7),  // 颜色标识
+      mkItem(i('QCI001'), 1),  // VitC含量(HPLC)
+      mkItem(i('QCI002'), 2),  // VitC含量(滴定法)
+      mkItem(i('QCI004'), 3),  // 水分
+      mkItem(i('QCI006'), 4),  // 片重差异
+      mkItem(i('QCI007'), 5),  // 硬度
+      mkItem(i('QCI009'), 6),  // 崩解时限
+      mkItem(i('QCI010'), 7),  // 溶出度
+      mkItem(i('QCI013'), 8),  // 菌落总数
+      mkItem(i('QCI014'), 9),  // 大肠菌群
+      mkItem(i('QCI017'), 10), // 外观
+      mkItem(i('QCI018'), 11), // 包装密封性
+      mkItem(i('QCI022'), 12), // 批生产记录审核
+      mkItem(i('QCI023'), 13), // 有效期核对
     ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   {
-    id: 'QSCH006',
-    schemeCode: 'SCH-FQC-002',
-    schemeName: '成品终检方案',
+    id: 'QSCH009',
+    schemeCode: 'SCH-FQC-PROBIO',
+    schemeName: '复合益生菌胶囊成品检验方案',
     schemeType: 'FQC',
-    productModel: '根管锉',
+    productModel: 'FG-PROBIO-CAP-250',
     samplingType: 'AQL',
     aqlLevel: '1.0',
+    sampleSize: 10,
     status: 'ACTIVE',
-    version: 'V1.0',
+    version: 'V1.5',
     effectiveDate: '2026-01-01',
-    approvedBy: '周敏 (QA经理)',
+    approvedBy: '赵雪梅 (QA经理)',
     items: [
-      mkItem(i('QCI005'), 1),  // 总长度L
-      mkItem(i('QCI006'), 2),  // 工作长度
-      mkItem(i('QCI004'), 3),  // 尖端直径D0
-      mkItem(i('QCI007'), 4),  // 锥度
-      mkItem(i('QCI010'), 5),  // 圆度
-      mkItem(i('QCI009'), 6),  // 粗糙度Ra
-      mkItem(i('QCI015'), 7),  // 扭转强度
-      mkItem(i('QCI016'), 8),  // 抗弯强度
-      mkItem(i('QCI011'), 9),  // 表面外观
+      mkItem(i('QCI003'), 1),  // 活菌数
+      mkItem(i('QCI004'), 2),  // 水分
+      mkItem(i('QCI011'), 3),  // 胶囊重量差异
+      mkItem(i('QCI013'), 4),  // 菌落总数
+      mkItem(i('QCI014'), 5),  // 大肠菌群
+      mkItem(i('QCI015'), 6),  // 霉菌和酵母
+      mkItem(i('QCI016'), 7),  // 沙门氏菌
+      mkItem(i('QCI020'), 8),  // 胶囊外观
+      mkItem(i('QCI018'), 9),  // 包装密封性
+      mkItem(i('QCI022'), 10), // 批生产记录审核
+      mkItem(i('QCI023'), 11), // 有效期核对
     ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
   // ── OQC 出货检验 ──────────────────────────────────────────
   {
-    id: 'QSCH007',
-    schemeCode: 'SCH-OQC-001',
-    schemeName: '出货检验方案',
+    id: 'QSCH010',
+    schemeCode: 'SCH-OQC-HLTH',
+    schemeName: '保健品出货检验通用方案',
     schemeType: 'OQC',
-    productModel: '根管锉',
+    productModel: '通用',
     samplingType: 'AQL',
     aqlLevel: '0.65',
     status: 'ACTIVE',
     version: 'V1.0',
     effectiveDate: '2026-01-01',
-    approvedBy: '周敏 (QA经理)',
+    approvedBy: '张丽华 (QA经理)',
     items: [
-      mkItem(i('QCI025'), 1),  // 外箱UDI校验
-      mkItem(i('QCI014'), 2),  // 包装完整性
-      mkItem(i('QCI026'), 3),  // 灭菌批号一致性
-      mkItem(i('QCI027'), 4),  // 有效期计算确认
-      mkItem(i('QCI028'), 5),  // 出货数量核对
+      mkItem(i('QCI018'), 1),  // 包装密封性
+      mkItem(i('QCI019'), 2),  // 标签印刷质量
+      mkItem(i('QCI022'), 3),  // 批生产记录审核
+      mkItem(i('QCI023'), 4),  // 有效期核对
+      mkItem(i('QCI024'), 5),  // QA放行签字
+      mkItem(i('QCI026'), 6),  // 出货数量核对
     ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
-  // ── IPQC 巡检 ─────────────────────────────────────────────
   {
-    id: 'QSCH008',
-    schemeCode: 'SCH-PTL-001',
-    schemeName: '车间通用巡检方案',
-    schemeType: 'IPQC_PATROL',
-    productModel: '通用',
-    samplingType: 'FIXED',
-    sampleSize: 3,
+    id: 'QSCH011',
+    schemeCode: 'SCH-OQC-COLD',
+    schemeName: '益生菌冷链出货检验方案',
+    schemeType: 'OQC',
+    productModel: 'FG-PROBIO-CAP-250',
+    samplingType: 'AQL',
+    aqlLevel: '0.65',
     status: 'ACTIVE',
     version: 'V1.0',
     effectiveDate: '2026-01-01',
-    approvedBy: '张伟 (QA经理)',
+    approvedBy: '赵雪梅 (QA经理)',
+    remark: '冷链出货，需核验全程温度记录',
     items: [
-      mkItem(i('QCI002'), 1),  // 外径D1
-      mkItem(i('QCI011'), 2),  // 表面外观
-      mkItem(i('QCI013'), 3),  // 清洗洁净度
+      mkItem(i('QCI012'), 1),  // 冷链温度
+      mkItem(i('QCI025'), 2),  // 冷链配送温度记录
+      mkItem(i('QCI018'), 3),  // 包装密封性
+      mkItem(i('QCI022'), 4),  // 批生产记录审核
+      mkItem(i('QCI023'), 5),  // 有效期核对
+      mkItem(i('QCI026'), 6),  // 出货数量核对
     ],
-    createdAt: '2026-01-01', updatedAt: '2026-01-01',
+    createdAt: '2026-01-01', updatedAt: '2026-01-15',
   },
 ];
 
