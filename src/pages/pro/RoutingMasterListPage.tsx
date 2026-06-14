@@ -101,15 +101,20 @@ const RoutingMasterListPage: React.FC<Props> = ({ onViewDetail, onNavigateToSeri
   // 如果有初始高亮编码，自动打开该路径的详情抽屉
   React.useEffect(() => {
     if (!initialHighlightCode) return;
-    const stored = localStorage.getItem('bip_routings');
-    const all: RoutingMaster[] = stored ? JSON.parse(stored) : mockRoutingMasters;
-    const target = all.find(r => r.routingCode === initialHighlightCode);
+    // 优先从 mockRoutingMasters 查找（groups 一定完整）
+    const fromMock = mockRoutingMasters.find(r => r.routingCode === initialHighlightCode);
+    const fromCache = routings.find(r => r.routingCode === initialHighlightCode);
+    const target = fromMock ?? fromCache;
     if (target) {
+      // 确保 groups 完整
+      const full: RoutingMaster = (!target.groups || target.groups.length === 0)
+        ? { ...target, ...mockRoutingMasters.find(m => m.routingCode === target.routingCode) }
+        : target;
       setTimeout(() => {
         if (onViewDetail) {
-          onViewDetail(target);
+          onViewDetail(full);
         } else {
-          setViewTarget(target);
+          setViewTarget(full);
           setViewDrawerOpen(true);
         }
       }, 100);
@@ -150,11 +155,22 @@ const RoutingMasterListPage: React.FC<Props> = ({ onViewDetail, onNavigateToSeri
   // ── 查看详情抽屉（onViewDetail 不存在时降级到内部 Drawer）──
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
   const [viewTarget, setViewTarget]         = useState<RoutingMaster | null>(null);
+
+  // 从 routings（已补全 groups）里取完整数据，避免传入 groups 为空的旧缓存对象
+  const getFullRouting = (r: RoutingMaster): RoutingMaster => {
+    const full = routings.find(x => x.id === r.id || (x.routingCode === r.routingCode && x.version === r.version));
+    if (full && full.groups && full.groups.length > 0) return full;
+    // 兜底：从 mockRoutingMasters 直接补全
+    const mock = mockRoutingMasters.find(m => m.routingCode === r.routingCode && m.version === r.version);
+    return mock ? { ...r, groups: mock.groups, opCount: mock.opCount, totalTimeMin: mock.totalTimeMin } : r;
+  };
+
   const handleView = (r: RoutingMaster) => {
+    const full = getFullRouting(r);
     if (onViewDetail) {
-      onViewDetail(r);
+      onViewDetail(full);
     } else {
-      setViewTarget(r);
+      setViewTarget(full);
       setViewDrawerOpen(true);
     }
   };
