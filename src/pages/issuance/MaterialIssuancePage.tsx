@@ -44,63 +44,162 @@ const IssueStatusStep: React.FC<{ status: IssueStatus }> = ({ status }) => {
   );
 };
 
-// ── 物料行卡片 ───────────────────────────────────────────────────
+// ── 物料行卡片（增强版）──────────────────────────────────────────
 const LineCard: React.FC<{ line: IssueLine; onUpdate: (l: IssueLine) => void }> = ({ line, onUpdate }) => {
   const pct = line.planQty > 0 ? Math.round((line.actualQty / line.planQty) * 100) : 0;
   const methodColor = ISSUE_METHOD_COLOR[line.issueMethod];
+  // 冷链标识：线边仓或来源仓库含"冷"字
+  const isColdChain = (line.wipWarehouse + (line.sourceWarehouse ?? '')).includes('冷');
+  // 批次效期告警：最近效期距今 ≤ 180天
+  const nearExpiry = line.batchPicks.some(b => {
+    if (!b.expiryDate) return false;
+    const diff = (new Date(b.expiryDate).getTime() - Date.now()) / 86400000;
+    return diff > 0 && diff <= 180;
+  });
+
+  const statusBadge = {
+    DONE:      <Badge status="success" text={<span style={{ fontSize: 12 }}>已完成</span>} />,
+    PENDING:   <Badge status="default" text={<span style={{ fontSize: 12 }}>待拣货</span>} />,
+    EXCEPTION: <Badge status="error"   text={<span style={{ fontSize: 12 }}>异常</span>} />,
+    SKIP:      <Badge status="warning" text={<span style={{ fontSize: 12 }}>已跳过</span>} />,
+  }[line.status] ?? <Badge status="default" text="未知" />;
 
   return (
     <Card
       size="small"
-      style={{ marginBottom: 10, borderLeft: `4px solid ${methodColor}` }}
-      bodyStyle={{ padding: '10px 14px' }}
+      style={{
+        marginBottom: 10,
+        borderLeft: `4px solid ${methodColor}`,
+        background: line.status === 'DONE' ? '#f6ffed' : line.status === 'EXCEPTION' ? '#fff2f0' : '#fff',
+      }}
+      bodyStyle={{ padding: '12px 16px' }}
     >
-      <Row gutter={12} align="middle">
-        <Col span={1}>
-          <span style={{ color: '#999', fontSize: 12 }}>#{line.lineNo}</span>
+      {/* ── 行一：物料名 + 编码规格 + 标签 ── */}
+      <Row gutter={8} align="middle" style={{ marginBottom: 8 }}>
+        <Col flex="none">
+          <span style={{
+            display: 'inline-block', width: 22, height: 22, lineHeight: '22px',
+            textAlign: 'center', background: '#f0f0f0', borderRadius: '50%',
+            fontSize: 11, color: '#666', fontWeight: 600,
+          }}>
+            {line.lineNo}
+          </span>
         </Col>
-        <Col span={5}>
-          <div style={{ fontWeight: 600, fontSize: 13 }}>{line.itemName}</div>
-          <div style={{ fontSize: 11, color: '#888' }}>{line.itemCode} · {line.spec}</div>
-        </Col>
-        <Col span={3}>
-          <Tag color={methodColor} style={{ fontSize: 10 }}>
-            {ISSUE_METHOD_LABEL[line.issueMethod]}
-          </Tag>
-          {line.operationCode && (
-            <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{line.operationCode}</div>
-          )}
-        </Col>
-        <Col span={4}>
-          <div style={{ fontSize: 12 }}>
-            需求：<b>{line.planQty}</b> {line.unit}
+        <Col flex="1">
+          <Space size={6} wrap>
+            <span style={{ fontWeight: 700, fontSize: 14, color: '#1a1a1a' }}>{line.itemName}</span>
+            <Tag style={{ fontSize: 10, lineHeight: '18px', padding: '0 6px', margin: 0 }}
+                 color={methodColor}>
+              {ISSUE_METHOD_LABEL[line.issueMethod]}
+            </Tag>
+            {isColdChain && (
+              <Tag color="cyan" style={{ fontSize: 10, lineHeight: '18px', padding: '0 6px', margin: 0 }}>
+                ❄ 冷链
+              </Tag>
+            )}
+            {nearExpiry && (
+              <Tag color="orange" style={{ fontSize: 10, lineHeight: '18px', padding: '0 6px', margin: 0 }}>
+                ⚠ 近效期
+              </Tag>
+            )}
+          </Space>
+          <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+            {line.itemCode}
+            {line.spec ? <Tooltip title={line.spec}><span style={{ cursor: 'help' }}> · {line.spec.length > 30 ? line.spec.slice(0, 30) + '…' : line.spec}</span></Tooltip> : null}
           </div>
-          <div style={{ fontSize: 12, color: '#52c41a' }}>
-            实发：<b>{line.actualQty}</b> {line.unit}
+        </Col>
+        <Col flex="none">
+          {statusBadge}
+        </Col>
+      </Row>
+
+      {/* ── 行二：数量 + 进度 + 仓位 ── */}
+      <Row gutter={16} align="middle">
+        {/* 需求 / 实发 */}
+        <Col span={6}>
+          <div style={{ fontSize: 12, color: '#595959' }}>
+            计划需求：<b style={{ color: '#1677ff' }}>{line.planQty.toLocaleString()}</b>
+            <span style={{ color: '#888', marginLeft: 2 }}>{line.unit}</span>
+          </div>
+          <div style={{ fontSize: 12, color: '#595959', marginTop: 2 }}>
+            实际发料：<b style={{ color: pct >= 100 ? '#52c41a' : pct > 0 ? '#faad14' : '#d9d9d9' }}>
+              {line.actualQty.toLocaleString()}
+            </b>
+            <span style={{ color: '#888', marginLeft: 2 }}>{line.unit}</span>
           </div>
         </Col>
-        <Col span={5}>
+
+        {/* 进度条 */}
+        <Col span={8}>
           <Progress
             percent={pct}
             size="small"
+            strokeColor={pct >= 100 ? '#52c41a' : pct > 0 ? '#1677ff' : undefined}
             status={pct >= 100 ? 'success' : pct > 0 ? 'active' : 'normal'}
+            format={p => <span style={{ fontSize: 11 }}>{p}%</span>}
           />
-          {line.batchPicks.length > 0 && (
-            <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
-              批次：{line.batchPicks.map(b => b.batchNo).join(' / ')}
+        </Col>
+
+        {/* 仓位流向 */}
+        <Col span={10}>
+          <div style={{ fontSize: 11, color: '#595959' }}>
+            <span style={{ color: '#888' }}>来源：</span>
+            <b style={{ color: '#262626' }}>{line.sourceWarehouse ?? '—'}</b>
+            <span style={{ color: '#bbb', margin: '0 4px' }}>→</span>
+            <b style={{ color: isColdChain ? '#13c2c2' : '#722ed1' }}>{line.wipWarehouse}</b>
+          </div>
+          {line.operationCode && (
+            <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>
+              关联工序：{line.operationCode}
             </div>
           )}
         </Col>
-        <Col span={3}>
-          <div style={{ fontSize: 12 }}>→ {line.wipWarehouse}</div>
-        </Col>
-        <Col span={3}>
-          {line.status === 'DONE' && <Badge status="success" text="已完成" />}
-          {line.status === 'PENDING' && <Badge status="default" text="待拣货" />}
-          {line.status === 'EXCEPTION' && <Badge status="error" text="异常" />}
-          {line.status === 'SKIP' && <Badge status="warning" text="已跳过" />}
-        </Col>
       </Row>
+
+      {/* ── 行三：批次明细（有批次时展开显示）── */}
+      {line.batchPicks.length > 0 && (
+        <div style={{
+          marginTop: 10, paddingTop: 8,
+          borderTop: '1px dashed #f0f0f0',
+        }}>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>
+            批次拣货明细（共 {line.batchPicks.length} 个批次）：
+          </div>
+          <Space size={6} wrap>
+            {line.batchPicks.map((b, i) => (
+              <Tooltip
+                key={i}
+                title={
+                  <div style={{ fontSize: 12 }}>
+                    <div>批次号：{b.batchNo}</div>
+                    <div>数量：{b.qty} {line.unit}</div>
+                    {b.inboundDate && <div>入库日期：{b.inboundDate}</div>}
+                    {b.expiryDate  && <div style={{ color: '#ff7a45' }}>效期至：{b.expiryDate}</div>}
+                    <div>来源仓：{b.warehouseCode}</div>
+                  </div>
+                }
+              >
+                <Tag
+                  style={{ fontSize: 10, cursor: 'default', margin: 0 }}
+                  color={b.expiryDate && (new Date(b.expiryDate).getTime() - Date.now()) / 86400000 <= 180 ? 'orange' : 'blue'}
+                >
+                  {b.batchNo} · {b.qty}{line.unit}
+                  {b.expiryDate ? ` · 效期${b.expiryDate}` : ''}
+                </Tag>
+              </Tooltip>
+            ))}
+          </Space>
+        </div>
+      )}
+
+      {/* ── 异常备注 ── */}
+      {line.exceptionRemark && (
+        <Alert
+          type="error" showIcon banner
+          message={line.exceptionRemark}
+          style={{ marginTop: 8, fontSize: 12, padding: '4px 8px' }}
+        />
+      )}
     </Card>
   );
 };
@@ -453,7 +552,11 @@ const MaterialIssuancePage: React.FC = () => {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="源仓库">{detailOrder.warehouse}</Descriptions.Item>
-              <Descriptions.Item label="目标线边仓">{detailOrder.wipWarehouse}</Descriptions.Item>
+              <Descriptions.Item label="目标线边仓">
+                <span style={{ color: (detailOrder.wipWarehouse ?? '').includes('冷') ? '#13c2c2' : '#722ed1', fontWeight: 600 }}>
+                  {detailOrder.wipWarehouse}
+                </span>
+              </Descriptions.Item>
               <Descriptions.Item label="计划日期">{detailOrder.planDate}</Descriptions.Item>
               <Descriptions.Item label="创建人/时间">{detailOrder.createdBy} · {detailOrder.createdAt}</Descriptions.Item>
               {detailOrder.pickedBy && (
@@ -462,10 +565,20 @@ const MaterialIssuancePage: React.FC = () => {
               {detailOrder.receivedBy && (
                 <Descriptions.Item label="签收人/时间">{detailOrder.receivedBy} · {detailOrder.receivedAt}</Descriptions.Item>
               )}
+              {detailOrder.moNo && (
+                <Descriptions.Item label="关联生产订单">{detailOrder.moNo}</Descriptions.Item>
+              )}
+              {detailOrder.remark && (
+                <Descriptions.Item label="备注" span={2}>
+                  <span style={{ color: '#595959' }}>{detailOrder.remark}</span>
+                </Descriptions.Item>
+              )}
             </Descriptions>
 
             {/* 物料明细 */}
-            <Divider style={{ margin: '12px 0 10px' }}>物料明细 ({detailOrder.lines.length} 种)</Divider>
+            <Divider style={{ margin: '12px 0 10px' }}>
+              物料明细（共 {detailOrder.lines.length} 种，已完成 {detailOrder.lines.filter(l => l.status === 'DONE').length} 种）
+            </Divider>
             {detailOrder.lines.map(line => (
               <LineCard key={line.id} line={line} onUpdate={updatedLine => {
                 const newOrder = {
