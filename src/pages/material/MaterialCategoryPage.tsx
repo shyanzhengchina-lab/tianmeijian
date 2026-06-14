@@ -197,9 +197,30 @@ const MaterialCategoryPage: React.FC = () => {
       if (Array.isArray(records) && records.length > 0) {
         const flat = records.map(mapApiToCategory);
         const tree = buildCategoryTree(flat);
-        if (tree.length > 0) setCats(tree);
+        if (tree.length > 0) {
+          setCats(tree);
+          localStorage.setItem('bip_material_categories', JSON.stringify(flat));
+        } else {
+          // tree 为空 → fallback localStorage
+          throw new Error('empty tree');
+        }
+      } else {
+        // API 返回空 → fallback localStorage
+        throw new Error('empty records');
       }
-    } catch { /* graceful fallback to localStorage */ } finally { setApiLoading(false); }
+    } catch {
+      // 后端离线或返回空 → 读取 localStorage 演示数据
+      try {
+        const ls = localStorage.getItem('bip_material_categories');
+        if (ls) {
+          const parsed: MaterialCategory[] = JSON.parse(ls);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const tree = buildCategoryTree(parsed);
+            if (tree.length > 0) setCats(tree);
+          }
+        }
+      } catch { /* ignore */ }
+    } finally { setApiLoading(false); }
   }, [setCats]);
 
   useEffect(() => { loadFromApi(); }, [loadFromApi]);

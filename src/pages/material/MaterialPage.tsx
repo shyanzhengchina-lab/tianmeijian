@@ -108,7 +108,27 @@ const MaterialPage: React.FC = () => {
             description: item.description ?? '',
           }));
           setMaterials(mapped);
+          // 同步到 localStorage 供离线使用
+          localStorage.setItem('bip_materials', JSON.stringify(mapped));
+        } else {
+          // API 返回空数据 → 尝试 localStorage fallback
+          try {
+            const lsMat = localStorage.getItem('bip_materials');
+            if (lsMat) {
+              const parsed = JSON.parse(lsMat);
+              if (Array.isArray(parsed) && parsed.length > 0) setMaterials(parsed);
+            }
+          } catch { /* ignore */ }
         }
+      } else {
+        // API 请求失败 → 尝试 localStorage fallback
+        try {
+          const lsMat = localStorage.getItem('bip_materials');
+          if (lsMat) {
+            const parsed = JSON.parse(lsMat);
+            if (Array.isArray(parsed) && parsed.length > 0) setMaterials(parsed);
+          }
+        } catch { /* ignore */ }
       }
       // 分类树
       if (catResp.status === 'fulfilled') {
@@ -149,7 +169,16 @@ const MaterialPage: React.FC = () => {
           if (baseUnits.length > 0) setApiUnits(baseUnits);
         }
       }
-    } catch { /* keep mock data on error */ } finally {
+    } catch {
+      // 后端离线 → 读取 localStorage 演示数据
+      try {
+        const lsMat = localStorage.getItem('bip_materials');
+        if (lsMat) {
+          const parsed = JSON.parse(lsMat);
+          if (Array.isArray(parsed) && parsed.length > 0) setMaterials(parsed);
+        }
+      } catch { /* ignore */ }
+    } finally {
       setApiLoading(false);
     }
   }, []);

@@ -1056,15 +1056,122 @@ const DemoDataInjectorPage: React.FC = () => {
       const deviations = buildDeviationData();
 
       switch (stepKey) {
-        case 'bom':
-          localStorage.setItem('bip_demo_bom', JSON.stringify({
-            productCode: DEMO_BATCH.productCode,
-            productName: DEMO_BATCH.productName,
-            productSpec: DEMO_BATCH.productSpec,
-            bomVersion: 'V1.0',
-            items: pickList.items.slice(0, 5),
-          }));
+        case 'bom': {
+          // ── 1. 物料分类（flat数组，供MaterialCategoryPage读取）─────
+          const demoMaterialCategories = [
+            { id: '10', code: '01', name: '原材料', parentId: undefined },
+            { id: '11', code: '0101', name: '主原料', parentId: '10' },
+            { id: '12', code: '0102', name: '辅料', parentId: '10' },
+            { id: '20', code: '02', name: '半成品', parentId: undefined },
+            { id: '21', code: '0201', name: '颗粒中间品', parentId: '20' },
+            { id: '22', code: '0202', name: '压片中间品', parentId: '20' },
+            { id: '30', code: '03', name: '成品', parentId: undefined },
+            { id: '31', code: '0301', name: '内包装成品', parentId: '30' },
+            { id: '32', code: '0302', name: '外包装成品', parentId: '30' },
+            { id: '40', code: '04', name: '包装材料', parentId: undefined },
+            { id: '41', code: '0401', name: '内包材', parentId: '40' },
+            { id: '42', code: '0402', name: '外包材', parentId: '40' },
+          ];
+          localStorage.setItem('bip_material_categories', JSON.stringify(demoMaterialCategories));
+
+          // ── 2. 物料档案（供MaterialPage读取）──────────────────────
+          const demoMaterials = [
+            { id: 'M001', code: 'RM-VitC-001',  name: '维生素C（抗坏血酸）',  categoryId: '11', type: '原材料', unit: 'kg',   spec: '药用级 USP',          brand: 'DSM',     supplier: '荷兰帝斯曼',       status: 'active', minStock: 500,  maxStock: 5000, price: 85.00 },
+            { id: 'M002', code: 'RM-XYL-001',   name: '木糖醇',               categoryId: '11', type: '原材料', unit: 'kg',   spec: '食品级',              brand: '',        supplier: '山东福田药业',     status: 'active', minStock: 200,  maxStock: 2000, price: 18.50 },
+            { id: 'M003', code: 'RM-CIT-001',   name: '柠檬酸',               categoryId: '12', type: '辅料',  unit: 'kg',   spec: '食品级 GB/T 8269',    brand: '',        supplier: '安徽柠檬生化',     status: 'active', minStock: 100,  maxStock: 1000, price: 7.20  },
+            { id: 'M004', code: 'RM-SIO2-001',  name: '二氧化硅（助流剂）',   categoryId: '12', type: '辅料',  unit: 'kg',   spec: '气相法 SiO2≥99%',    brand: '科宁',    supplier: '广州科宁',         status: 'active', minStock: 50,   maxStock: 500,  price: 32.00 },
+            { id: 'M005', code: 'RM-MgSt-001',  name: '硬脂酸镁（润滑剂）',   categoryId: '12', type: '辅料',  unit: 'kg',   spec: '药用级 CP2020',       brand: '',        supplier: '山东信谊',         status: 'active', minStock: 20,   maxStock: 200,  price: 45.00 },
+            { id: 'M006', code: 'RM-MCC-001',   name: '微晶纤维素（MCC）',    categoryId: '12', type: '辅料',  unit: 'kg',   spec: 'PH-102',              brand: 'FMC',     supplier: '美国FMC',          status: 'active', minStock: 100,  maxStock: 1000, price: 22.00 },
+            { id: 'S001', code: 'WIP-GRAN-001', name: 'VitC制粒中间品',       categoryId: '21', type: '半成品', unit: 'kg',   spec: '粒径20~60目',         brand: '',        supplier: '',                 status: 'active', minStock: 0,    maxStock: 0,    price: 0     },
+            { id: 'S002', code: 'WIP-TAB-001',  name: 'VitC压片中间品',       categoryId: '22', type: '半成品', unit: '万片', spec: '直径14mm 重量1.2g',   brand: '',        supplier: '',                 status: 'active', minStock: 0,    maxStock: 0,    price: 0     },
+            { id: 'F001', code: DEMO_BATCH.productCode, name: DEMO_BATCH.productName, categoryId: '32', type: '成品', unit: '瓶',  spec: DEMO_BATCH.productSpec, brand: '天美健',  supplier: '',                 status: 'active', minStock: 1000, maxStock: 50000, price: 58.00 },
+            { id: 'P001', code: 'PKG-BOTTLE-001', name: 'HDPE白色圆瓶',       categoryId: '41', type: '包装材料', unit: '个', spec: '500ml 带干燥剂孔',     brand: '',        supplier: '广州申菱',         status: 'active', minStock: 5000, maxStock: 50000, price: 1.20 },
+            { id: 'P002', code: 'PKG-CAP-001',  name: '防儿童安全盖',         categoryId: '41', type: '包装材料', unit: '个', spec: '53mm 白色 PP',         brand: '',        supplier: '广州申菱',         status: 'active', minStock: 5000, maxStock: 50000, price: 0.35 },
+            { id: 'P003', code: 'PKG-LABEL-001', name: '产品标签',            categoryId: '41', type: '包装材料', unit: '张', spec: '100×80mm 铜版纸',      brand: '',        supplier: '深圳正方形印刷',   status: 'active', minStock: 5000, maxStock: 50000, price: 0.08 },
+            { id: 'P004', code: 'PKG-BOX-001',  name: '彩色纸盒',             categoryId: '42', type: '包装材料', unit: '个', spec: '105×105×110mm E瓦',   brand: '',        supplier: '深圳正方形印刷',   status: 'active', minStock: 1000, maxStock: 20000, price: 0.65 },
+            { id: 'P005', code: 'PKG-CATON-001', name: '外箱纸箱',            categoryId: '42', type: '包装材料', unit: '个', spec: '600×400×400mm 五层B瓦', brand: '',       supplier: '东莞兴宇包装',     status: 'active', minStock: 200,  maxStock: 2000, price: 3.20 },
+          ];
+          localStorage.setItem('bip_materials', JSON.stringify(demoMaterials));
+
+          // ── 3. BOM列表（BomHeader[]格式，供BomIndex读取）───────────
+          const demoBomList = [
+            {
+              id: 'BOM-VitC-001',
+              code: 'BOM-VitC-1000-120',
+              name: DEMO_BATCH.productName,
+              spec: DEMO_BATCH.productSpec,
+              unit: '瓶',
+              version: 'V1.0',
+              bomType: '主BOM',
+              status: 'approved',
+              mainQty: 1000,
+              mainUnit: '瓶',
+              batchQty: 3000,
+              calcUnit: '瓶',
+              effectDate: '2026-01-01',
+              createdBy: '工艺员林工',
+              createdAt: '2026-01-01 09:00:00',
+              remark: '天美健维生素C咀嚼片标准BOM V1.0',
+              children: [
+                { id: 'BC001', rowNo: 10, childCode: 'RM-VitC-001', childName: '维生素C（抗坏血酸）', spec: '药用级 USP', freeDesc: '', type: '标准', qty: 120, unit: 'g', childQty: 120, calcUnit: 'g', scrapRate: 0, issueMethod: undefined, remark: '每片120mg，3000瓶×1000片=360000g' },
+                { id: 'BC002', rowNo: 20, childCode: 'RM-XYL-001',  childName: '木糖醇',              spec: '食品级',     freeDesc: '', type: '标准', qty: 20,  unit: 'g', childQty: 20,  calcUnit: 'g', scrapRate: 0, issueMethod: undefined, remark: '甜味剂' },
+                { id: 'BC003', rowNo: 30, childCode: 'RM-CIT-001',  childName: '柠檬酸',              spec: '食品级',     freeDesc: '', type: '标准', qty: 4,   unit: 'g', childQty: 4,   calcUnit: 'g', scrapRate: 0, issueMethod: undefined, remark: '酸味调节' },
+                { id: 'BC004', rowNo: 40, childCode: 'RM-SIO2-001', childName: '二氧化硅（助流剂）',  spec: '气相法',     freeDesc: '', type: '标准', qty: 2,   unit: 'g', childQty: 2,   calcUnit: 'g', scrapRate: 0, issueMethod: undefined, remark: '助流' },
+                { id: 'BC005', rowNo: 50, childCode: 'RM-MgSt-001', childName: '硬脂酸镁（润滑剂）',  spec: '药用级',     freeDesc: '', type: '标准', qty: 0.6, unit: 'g', childQty: 0.6, calcUnit: 'g', scrapRate: 0, issueMethod: undefined, remark: '润滑剂' },
+                { id: 'BC006', rowNo: 60, childCode: 'PKG-BOTTLE-001', childName: 'HDPE白色圆瓶',     spec: '500ml',      freeDesc: '', type: '标准', qty: 1,   unit: '个', childQty: 1,   calcUnit: '个', scrapRate: 0.5, issueMethod: undefined, remark: '内包装' },
+                { id: 'BC007', rowNo: 70, childCode: 'PKG-CAP-001',  childName: '防儿童安全盖',        spec: '53mm',       freeDesc: '', type: '标准', qty: 1,   unit: '个', childQty: 1,   calcUnit: '个', scrapRate: 0.5, issueMethod: undefined, remark: '' },
+                { id: 'BC008', rowNo: 80, childCode: 'PKG-LABEL-001', childName: '产品标签',           spec: '100×80mm',   freeDesc: '', type: '标准', qty: 1,   unit: '张', childQty: 1,   calcUnit: '张', scrapRate: 1,   issueMethod: undefined, remark: '' },
+                { id: 'BC009', rowNo: 90, childCode: 'PKG-BOX-001',  childName: '彩色纸盒',            spec: '105×105×110mm', freeDesc: '', type: '标准', qty: 1, unit: '个', childQty: 1,   calcUnit: '个', scrapRate: 0.5, issueMethod: undefined, remark: '' },
+              ],
+            },
+          ];
+          localStorage.setItem('bip_demo_bom', JSON.stringify(demoBomList));
+
+          // ── 4. 工艺路径（供RoutingMasterListPage读取，key=bip_routings）
+          const demoRoutings = [
+            {
+              routingCode: 'GMP-PACKAGE-V1',
+              routingName: '天美健保健品GMP包装路线 V1.0',
+              seriesCode: 'TMJ-VitC',
+              status: 'ENABLED',
+              variantType: 'STANDARD',
+              currentVersion: 'V1.0',
+              remark: '适用于维生素C咀嚼片保健品GMP生产全工序',
+              steps: [
+                { stepNo: 10, opCode: 'OP-GMP-WEIGH',  opName: '称量配料', leadTime: 90,  workCenter: '称量间-GMP' },
+                { stepNo: 20, opCode: 'OP-GMP-MIX',    opName: '混合',     leadTime: 120, workCenter: '混合间-GMP' },
+                { stepNo: 30, opCode: 'OP-GMP-GRAN',   opName: '制粒干燥', leadTime: 180, workCenter: '制粒间-GMP' },
+                { stepNo: 40, opCode: 'OP-GMP-INNER',  opName: '内包装',   leadTime: 120, workCenter: '内包装间-GMP' },
+                { stepNo: 50, opCode: 'OP-GMP-OUTER',  opName: '外包装',   leadTime: 90,  workCenter: '外包装间-GMP' },
+              ],
+              createdAt: '2026-01-01 09:00:00',
+              updatedAt: '2026-06-01 09:00:00',
+            },
+          ];
+          localStorage.setItem('bip_routings', JSON.stringify(demoRoutings));
+
+          // ── 5. 产品系列（供ProductSeriesPage/SeriesContext读取，key=bip_product_series）
+          const demoProductSeries = [
+            {
+              id: 'PS-TMJ-001',
+              seriesCode: 'TMJ-VitC',
+              seriesName: '天美健维生素C系列',
+              productFamily: '维生素类保健品',
+              defaultRoutingCode: 'GMP-PACKAGE-V1',
+              status: 'active',
+              remark: '核心产品系列，含咀嚼片、泡腾片等多个规格',
+              createdAt: '2026-01-01',
+              updatedAt: '2026-06-14',
+            },
+          ];
+          localStorage.setItem('bip_product_series', JSON.stringify(demoProductSeries));
+          // 同步产品族枚举
+          const existingFamilies: string[] = JSON.parse(localStorage.getItem('bip_product_families') || '[]');
+          if (!existingFamilies.includes('维生素类保健品')) {
+            localStorage.setItem('bip_product_families', JSON.stringify([...existingFamilies, '维生素类保健品']));
+          }
           break;
+        }
 
         case 'po': {
           const existingPOs = JSON.parse(localStorage.getItem('bip_production_orders') || '[]');
@@ -1142,6 +1249,17 @@ const DemoDataInjectorPage: React.FC = () => {
       }
 
       setInjectedKeys(prev => new Set([...prev, stepKey]));
+      // 同步版本号，防止 mesStore 下次加载时清除演示数据
+      localStorage.setItem('bip_demo_injected', 'true');
+      localStorage.setItem('bip_data_version', 'v20260606_e');
+      // 通知 useLocalStorage 监听者（同页面内 storage 事件不触发自身）
+      const keysToNotify = ['bip_routings', 'bip_product_series', 'bip_product_families',
+                            'bip_materials', 'bip_material_categories', 'bip_demo_bom'];
+      keysToNotify.forEach(k => {
+        if (localStorage.getItem(k)) {
+          window.dispatchEvent(new CustomEvent('bip-storage-updated', { detail: { key: k } }));
+        }
+      });
       message.success(`✅ ${DEMO_STEPS.find(s => s.key === stepKey)?.title} 数据注入成功！`);
     } catch (e) {
       message.error('注入失败: ' + String(e));
@@ -1156,6 +1274,9 @@ const DemoDataInjectorPage: React.FC = () => {
     for (const step of DEMO_STEPS) {
       await injectStep(step.key);
     }
+    // 写入演示数据标记 + 同步版本号，防止 mesStore ensureVersion 在下次加载时清除演示数据
+    localStorage.setItem('bip_demo_injected', 'true');
+    localStorage.setItem('bip_data_version', 'v20260606_e'); // 与 mesStore.ts DATA_VERSION 保持一致
     message.success('🎉 全部演示数据注入完成！请前往各功能模块验证。');
   };
 
@@ -1166,6 +1287,10 @@ const DemoDataInjectorPage: React.FC = () => {
       'bip_pad_exec_map', 'bip_demo_inspections', 'bip_ebr_records',
       'bip_demo_release', 'bip_demo_deviations', 'bip_demo_pick_list',
       'bip_demo_semi_receipt', 'bip_demo_fg_receipt',
+      // 基础资料（bom step注入的）
+      'bip_materials', 'bip_material_categories',
+      'bip_routings', 'bip_product_series', 'bip_product_families',
+      'bip_demo_injected', // 清除演示标记
     ];
     keys.forEach(k => localStorage.removeItem(k));
     setInjectedKeys(new Set());

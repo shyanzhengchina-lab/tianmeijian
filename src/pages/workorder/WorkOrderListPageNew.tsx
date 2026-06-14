@@ -126,6 +126,40 @@ const WorkOrderListPageNew: React.FC<WorkOrderListPageNewProps> = ({ onNavigate 
   const token = localStorage.getItem('token') || localStorage.getItem('mes_token') || '';
   const headers = { Authorization: `Bearer ${token}` };
 
+  /** 从 localStorage bip_work_orders 读取演示/离线数据，映射为页面所用 WorkOrder 结构 */
+  const loadFromLocalStorage = (): WorkOrder[] => {
+    try {
+      const raw: any[] = JSON.parse(localStorage.getItem('bip_work_orders') || '[]');
+      if (!raw.length) return [];
+      const woStatusMap: Record<string, number> = {
+        CREATED: 1, RELEASED: 1, IN_PROGRESS: 2, COMPLETED: 6, CLOSED: 7, PAUSED: 8,
+      };
+      return raw.map((item: any): WorkOrder => ({
+        id: Number(item.id) || 1,
+        wo_code: item.woNo ?? item.wo_code ?? '',
+        product_code: item.productCode ?? item.product_code ?? '',
+        product_name: item.productName ?? item.product_name ?? '',
+        batch_no: item.batchNo ?? item.batch_no ?? '',
+        bom_version: item.bomVersion ?? item.bom_version ?? '',
+        route_code: item.routingCode ?? item.route_code ?? '',
+        plan_qty: String(item.planQty ?? item.plan_qty ?? 0),
+        actual_qty: String(item.actualQty ?? item.actual_qty ?? 0),
+        unit_name: item.unitName ?? item.unit_name ?? '瓶',
+        wo_status: woStatusMap[item.status ?? ''] ?? 1,
+        order_type: item.orderType ?? item.order_type ?? 'NORMAL',
+        channel_type: item.channelType ?? item.channel_type ?? '',
+        priority: item.priority === 'HIGH' ? 2 : item.priority === 'URGENT' ? 1 : 3,
+        plan_start: item.planStart ?? item.plan_start ?? '',
+        plan_end: item.planEnd ?? item.plan_end ?? '',
+        actual_start: item.actualStart ?? item.actual_start ?? null,
+        actual_end: item.actualEnd ?? item.actual_end ?? null,
+        remark: item.remark ?? '',
+        workshop_code: item.workshopCode ?? item.workshop_code ?? '',
+        create_time: item.createdAt ?? item.create_time ?? '',
+      }));
+    } catch { return []; }
+  };
+
   const loadRecords = useCallback(async () => {
     setLoading(true);
     try {
@@ -134,10 +168,25 @@ const WorkOrderListPageNew: React.FC<WorkOrderListPageNewProps> = ({ onNavigate 
       if (searchText) params.keyword = searchText;
       const res = await axios.get('/api/plan/work-orders', { headers, params });
       const data = res.data?.data ?? {};
-      setRecords(data.list ?? []);
-      setTotal(data.total ?? 0);
+      const list = data.list ?? [];
+      if (list.length > 0) {
+        setRecords(list);
+        setTotal(data.total ?? 0);
+      } else {
+        // API无数据时尝试localStorage
+        const lsData = loadFromLocalStorage();
+        setRecords(lsData);
+        setTotal(lsData.length);
+      }
     } catch {
-      message.error('加载生产工单失败');
+      // API失败时fallback到localStorage
+      const lsData = loadFromLocalStorage();
+      if (lsData.length > 0) {
+        setRecords(lsData);
+        setTotal(lsData.length);
+      } else {
+        message.error('加载生产工单失败');
+      }
     } finally {
       setLoading(false);
     }

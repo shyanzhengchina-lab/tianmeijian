@@ -76,6 +76,45 @@ const EbrListPageNew: React.FC<EbrListPageNewProps> = ({ onNavigate }) => {
   const token = localStorage.getItem('token') || localStorage.getItem('mes_token') || '';
   const headers = { Authorization: `Bearer ${token}` };
 
+  /** 从 localStorage bip_ebr_records 读取演示/离线数据，映射为页面所用 EbrRecord 结构 */
+  const loadFromLocalStorage = (): EbrRecord[] => {
+    try {
+      const raw: any[] = JSON.parse(localStorage.getItem('bip_ebr_records') || '[]');
+      if (!raw.length) return [];
+      // 状态映射：注入数据中的 COMPLETED → APPROVED（归档）
+      const statusMap: Record<string, string> = {
+        COMPLETED: 'APPROVED', APPROVED: 'APPROVED',
+        DRAFT: 'DRAFT', IN_PROGRESS: 'DRAFT',
+        REVIEWED: 'REVIEWED', REJECTED: 'REJECTED',
+      };
+      return raw.map((item: any, idx: number): EbrRecord => ({
+        id: Number(item.id) || idx + 1,
+        ebr_code: item.ebrNo ?? item.ebr_code ?? item.id ?? '',
+        wo_id: 1,
+        wo_code: item.woNo ?? item.wo_code ?? '',
+        batch_no: item.batchNo ?? item.batch_no ?? '',
+        product_code: item.productCode ?? item.product_code ?? '',
+        product_name: item.productName ?? item.product_name ?? '',
+        plan_qty: String(item.planQty ?? item.plan_qty ?? 0),
+        actual_qty: String(
+          item.reportQtyTotal ?? item.actualQty ?? item.actual_qty ?? item.planQty ?? 0
+        ),
+        material_balance_rate: item.yieldRate != null ? String(item.yieldRate) :
+          item.material_balance_rate ?? null,
+        yield_rate: item.yieldRate != null ? String(item.yieldRate) : item.yield_rate ?? null,
+        ebr_status: statusMap[item.status ?? ''] ?? 'APPROVED',
+        operator_sign: item.signatures?.[0]?.name ?? null,
+        operator_sign_time: item.signatures?.[0]?.signedAt ?? null,
+        reviewer_sign: item.signatures?.[4]?.name ?? null,
+        reviewer_sign_time: item.signatures?.[4]?.signedAt ?? null,
+        qa_sign: item.signatures?.[5]?.name ?? null,
+        qa_sign_time: item.signatures?.[5]?.signedAt ?? null,
+        archive_time: item.endTime ?? item.updatedAt ?? null,
+        create_time: item.createdAt ?? item.startTime ?? '',
+      }));
+    } catch { return []; }
+  };
+
   const loadRecords = useCallback(async () => {
     setLoading(true);
     try {
@@ -84,10 +123,24 @@ const EbrListPageNew: React.FC<EbrListPageNewProps> = ({ onNavigate }) => {
       if (searchText) params.batch_no = searchText;
       const res = await axios.get('/api/ebr/batch-records', { headers, params });
       const data = res.data?.data ?? {};
-      setRecords(data.list ?? []);
-      setTotal(data.total ?? 0);
+      const list = data.list ?? [];
+      if (list.length > 0) {
+        setRecords(list);
+        setTotal(data.total ?? 0);
+      } else {
+        const lsData = loadFromLocalStorage();
+        setRecords(lsData);
+        setTotal(lsData.length);
+      }
     } catch (e) {
-      message.error('加载电子批记录失败');
+      // API失败时fallback到localStorage
+      const lsData = loadFromLocalStorage();
+      if (lsData.length > 0) {
+        setRecords(lsData);
+        setTotal(lsData.length);
+      } else {
+        message.error('加载电子批记录失败');
+      }
     } finally {
       setLoading(false);
     }

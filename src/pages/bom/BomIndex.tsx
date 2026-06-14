@@ -73,7 +73,20 @@ const BomIndex: React.FC = () => {
       });
 
       setBomList(newBoms);
-    } catch { /* backend offline — keep mock data */ }
+      // 同步保存到 localStorage，方便离线使用
+      localStorage.setItem('bip_demo_bom', JSON.stringify(newBoms));
+    } catch {
+      // 后端离线 → 从 localStorage 读取演示数据
+      try {
+        const ls = localStorage.getItem('bip_demo_bom');
+        if (ls) {
+          const parsed = JSON.parse(ls);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setBomList(parsed as BomHeader[]);
+          }
+        }
+      } catch { /* ignore */ }
+    }
   }, []);
 
   useEffect(() => { loadFromApi(); }, [loadFromApi]);

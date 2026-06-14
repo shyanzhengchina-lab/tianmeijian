@@ -38,13 +38,57 @@ const FACTORIES = [
 ];
 
 const DEMO_USERS = [
-  { id: 'admin', label: '系统管理员', role: '全集团 · 所有工厂', badge: '#f5222d', password: '123456' },
-  { id: 'E001',  label: '李四',      role: '班组长 · 南京工厂', badge: '#1677ff', password: '123456' },
-  { id: 'E040',  label: '沈美玲',   role: '追溯专员 · 多工厂', badge: '#13c2c2', password: '123456' },
-  { id: 'E010',  label: '吴晓燕',   role: '质检员 · 南京工厂', badge: '#722ed1', password: '123456' },
-  { id: 'E020',  label: '郑国强',   role: '质检主管',           badge: '#531dab', password: '123456' },
-  { id: 'E030',  label: '冯建军',   role: '设备管理员',         badge: '#d4380d', password: '123456' },
+  { id: 'admin',  label: '系统管理员', role: '全集团 · 所有工厂', badge: '#f5222d', password: 'admin123' },
+  { id: 'op001',  label: '生产操作员', role: '生产班组 · 南京工厂', badge: '#1677ff', password: 'op123456' },
+  { id: 'qc001',  label: '质量检验员', role: '质检部 · 南京工厂',  badge: '#722ed1', password: 'qc123456' },
+  { id: 'E001',   label: '李四',       role: '班组长 · 南京工厂', badge: '#1677ff', password: '123456' },
+  { id: 'E010',   label: '吴晓燕',     role: '质检员 · 南京工厂', badge: '#722ed1', password: '123456' },
+  { id: 'E040',   label: '沈美玲',     role: '追溯专员 · 多工厂', badge: '#13c2c2', password: '123456' },
 ];
+
+/** 演示模式本地用户表（API离线时直接使用） */
+const DEMO_ACCOUNTS: Record<string, { realName: string; roleNames: string[]; factoryIds: string[] }> = {
+  'admin':    { realName: '系统管理员',   roleNames: ['超级管理员'],  factoryIds: ['F001', 'F002', 'F003'] },
+  'admin123': { realName: '系统管理员',   roleNames: ['超级管理员'],  factoryIds: ['F001', 'F002', 'F003'] },
+  'op001':    { realName: '张建国(操作员)', roleNames: ['生产操作员'],  factoryIds: ['F001'] },
+  'qc001':    { realName: '王芳(质检员)',   roleNames: ['质量检验员'],  factoryIds: ['F001'] },
+  'E001':     { realName: '李四',           roleNames: ['班组长'],      factoryIds: ['F001'] },
+  'E010':     { realName: '吴晓燕',         roleNames: ['质检员'],      factoryIds: ['F001'] },
+  'E040':     { realName: '沈美玲',         roleNames: ['追溯专员'],    factoryIds: ['F001', 'F002'] },
+  'E020':     { realName: '郑国强',         roleNames: ['质检主管'],    factoryIds: ['F001'] },
+  'E030':     { realName: '冯建军',         roleNames: ['设备管理员'],  factoryIds: ['F001'] },
+};
+
+const DEMO_PASSWORDS: Record<string, string[]> = {
+  'admin':  ['admin123', '123456', 'admin'],
+  'op001':  ['op123456', '123456'],
+  'qc001':  ['qc123456', '123456'],
+  'E001':   ['123456'], 'E010': ['123456'], 'E040': ['123456'],
+  'E020':   ['123456'], 'E030': ['123456'],
+};
+
+/** 演示模式本地登录：直接写入localStorage，无需后端 */
+function demoLocalLogin(username: string, password: string): boolean {
+  const acct = DEMO_ACCOUNTS[username];
+  if (!acct) return false;
+  const allowed = DEMO_PASSWORDS[username] ?? ['123456'];
+  if (!allowed.includes(password)) return false;
+
+  const demoUser = {
+    id: username, username, realName: acct.realName,
+    roleIds: [], roleNames: acct.roleNames,
+    factoryIds: acct.factoryIds, defaultFactoryId: acct.factoryIds[0],
+    permissions: ['*'], status: 'active',
+  };
+  const demoToken = `demo-token-${username}-${Date.now()}`;
+  localStorage.setItem('mes_user',    JSON.stringify(demoUser));
+  localStorage.setItem('mes_token',   demoToken);
+  localStorage.setItem('mes_permissions', JSON.stringify(['*']));
+  localStorage.setItem('bip_cur_factory', acct.factoryIds[0]);
+  localStorage.setItem('currentFactoryId',   acct.factoryIds[0]);
+  localStorage.setItem('currentFactoryName', '南京工厂');
+  return true;
+}
 
 /**
  * 新版登录页面组件
@@ -86,7 +130,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
     setLoading(true);
     try {
       const loginRequest: LoginRequest = {
-        username: values.username,  // 表单字段名 username，对应 LoginRequest.username
+        username: values.username,
         password: values.password,
       };
 
@@ -96,31 +140,24 @@ const LoginPage: React.FC<LoginPageProps> = () => {
       const user = useAuthStore.getState().user;
 
       if (user) {
-        // 获取用户的工厂权限
-        // 注意：后端当前版本暂未在 LoginResponse 中返回 factoryIds，
-        // 此时回退到默认工厂 F001，待后端扩展后会自动生效。
         const factoryIds: string[] = user.factoryIds ?? [];
         const factories = factoryIds.length > 0
           ? FACTORIES.filter(f => factoryIds.includes(f.id))
-          : FACTORIES; // 无工厂限制时开放全部工厂
+          : FACTORIES;
 
         if (factories.length === 1) {
-          // 只有一个工厂：直接进入
           const factory = factories[0];
           localStorage.setItem('currentFactoryId', factory.id);
           localStorage.setItem('currentFactoryName', factory.name);
-
           const from = (location.state as any)?.from || '/dashboard';
           navigate(from, { replace: true });
           message.success(`欢迎回来，${user.realName}！当前工厂：${factory.name}`);
         } else if (factories.length > 1) {
-          // 多工厂：显示工厂选择步骤
           const defaultId = user.defaultFactoryId || factories[0].id;
           setAvailableFactories(factories);
           setSelectedFactoryId(defaultId);
           setStep('factory');
         } else {
-          // 兜底：使用系统默认工厂直接进入
           const defaultFactory = FACTORIES[0];
           localStorage.setItem('currentFactoryId', defaultFactory.id);
           localStorage.setItem('currentFactoryName', defaultFactory.name);
@@ -130,6 +167,22 @@ const LoginPage: React.FC<LoginPageProps> = () => {
         }
       }
     } catch (error: any) {
+      // ── 演示模式：API离线时尝试本地账号绕过 ──────────────────────────
+      const ok = demoLocalLogin(values.username, values.password);
+      if (ok) {
+        const acct = DEMO_ACCOUNTS[values.username];
+        message.success(`欢迎回来，${acct.realName}！（演示模式）`);
+        const from = (location.state as any)?.from || '/dashboard';
+        // 给 Zustand store 同步一下状态，让 PrivateRoute 通过
+        useAuthStore.setState({
+          isAuthenticated: true,
+          token: localStorage.getItem('mes_token'),
+          user: JSON.parse(localStorage.getItem('mes_user') || 'null'),
+        } as any);
+        navigate(from, { replace: true });
+        return;
+      }
+      // ── 真实错误提示 ──────────────────────────────────────────────────
       console.error('登录失败:', error);
       const errorMessage = error?.response?.data?.message || error?.message || '登录失败，请检查用户名和密码';
       message.error(errorMessage);
@@ -268,8 +321,8 @@ const LoginPage: React.FC<LoginPageProps> = () => {
       <div className="login-main-card">
         {/* 红色标题栏 */}
         <div className="login-card-header">
-          <div className="login-card-title">YonBIP/SY 医疗器械 · 生产执行系统</div>
-          <div className="login-card-subtitle">医疗器械GMP合规生产管理系统 · 新认证版</div>
+          <div className="login-card-title">天美健 保健品MES · 生产执行系统</div>
+          <div className="login-card-subtitle">天美健大自然生物工程有限公司 · 保健品GMP生产管理系统</div>
         </div>
 
         {/* 双栏内容区 */}
@@ -289,7 +342,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
                 name="login"
                 onFinish={handleLogin}
                 autoComplete="off"
-                initialValues={{ username: 'admin', password: '123456' }}
+                initialValues={{ username: 'admin', password: 'admin123' }}
               >
                 <div className="form-field-label">用户名</div>
                 <Form.Item
@@ -339,7 +392,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
                     }
                   />
                 </Form.Item>
-                <div className="demo-users-hint">Demo 密码：123456（所有账号通用）</div>
+                <div className="demo-users-hint">演示账号：admin/admin123，op001/op123456，qc001/qc123456</div>
 
                 <Form.Item style={{ marginTop: 14, marginBottom: 12 }}>
                   <Checkbox

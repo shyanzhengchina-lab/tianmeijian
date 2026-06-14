@@ -28,6 +28,34 @@ export function useLocalStorage<T>(key: string, initial: T): [T, React.Dispatch<
     }
   }, [key, value]);
 
+  // 监听外部 localStorage 变更（例如演示数据注入后触发重渲染）
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key !== key) return;
+      try {
+        const newVal = e.newValue !== null ? JSON.parse(e.newValue) as T : initial;
+        setValue(newVal);
+      } catch {
+        /* ignore parse errors */
+      }
+    };
+    // 同时监听同页面内的自定义事件（同源 storage 事件不触发自身页面）
+    const handleCustom = (e: Event) => {
+      const ce = e as CustomEvent;
+      if (ce.detail?.key !== key) return;
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored !== null) setValue(JSON.parse(stored) as T);
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('bip-storage-updated', handleCustom);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('bip-storage-updated', handleCustom);
+    };
+  }, [key, initial]);
+
   const setValueWrapped = useCallback<React.Dispatch<React.SetStateAction<T>>>(
     (action) => setValue(action),
     []

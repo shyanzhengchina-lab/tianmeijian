@@ -210,14 +210,27 @@ const Error500 = () => (
   </div>
 );
 
-// ── 版本缓存清除：当APP_VERSION变更时清空旧mock数据（保留登录态）─────────
+// ── 版本缓存清除：当APP_VERSION变更时清空旧mock数据（保留登录态和演示数据）─────────
 const APP_VERSION = 'tmj-mes-v2.3';
 if (localStorage.getItem('app_version') !== APP_VERSION) {
-  // 只清除旧mock数据，不清除登录token，避免已登录用户被强制退出
-  const mockKeysToRemove = [
-    'bip_material_categories', 'bip_materials', 'bip_units', 'bip_boms',
-    'bip_work_orders', 'bip_task_orders', 'bip_equipments',
-  ];
+  // 只清除旧mock数据，不清除登录token和演示数据
+  // 注意：如果有演示数据标记，保护所有基础资料 key 不被清除
+  const hasDemoInjected = !!localStorage.getItem('bip_demo_injected');
+  const mockKeysToRemove = hasDemoInjected
+    ? [
+        // 演示数据已注入：只清除无关的旧key，保留基础资料
+        'bip_units', 'bip_boms',
+        'bip_task_orders', 'bip_equipments',
+        // 注意：bip_work_orders、bip_production_orders、bip_ebr_records、
+        //       bip_materials、bip_material_categories、bip_routings、bip_product_series
+        //       均由演示数据注入，不清除
+      ]
+    : [
+        // 无演示数据：清除所有旧mock数据（下次注入时会重写）
+        'bip_material_categories', 'bip_materials', 'bip_units', 'bip_boms',
+        'bip_task_orders', 'bip_equipments',
+        // 注意：bip_work_orders、bip_production_orders、bip_ebr_records 由演示数据注入，不清除
+      ];
   mockKeysToRemove.forEach(k => localStorage.removeItem(k));
   localStorage.setItem('app_version', APP_VERSION);
 }

@@ -36,6 +36,54 @@ const DEMO_USERS = [
   { id: 'qc001',  label: '质量检验员', role: '质检员 · qc123456', badge: '#722ed1',  password: 'qc123456'  },
 ];
 
+/** 演示账号本地表：API离线时直接使用 */
+const DEMO_ACCOUNTS: Record<string, { realName: string; role: string; factoryIds: string[] }> = {
+  'admin':  { realName: '系统管理员',      role: '超级管理员',  factoryIds: ['F001'] },
+  'op001':  { realName: '张建国(操作员)',   role: '生产操作员',  factoryIds: ['F001'] },
+  'qc001':  { realName: '王芳(质检员)',     role: '质量检验员',  factoryIds: ['F001'] },
+  'E001':   { realName: '李四',             role: '班组长',      factoryIds: ['F001'] },
+  'E010':   { realName: '吴晓燕',           role: '质检员',      factoryIds: ['F001'] },
+  'E040':   { realName: '沈美玲',           role: '追溯专员',    factoryIds: ['F001'] },
+  'E020':   { realName: '郑国强',           role: '质检主管',    factoryIds: ['F001'] },
+  'E030':   { realName: '冯建军',           role: '设备管理员',  factoryIds: ['F001'] },
+};
+const DEMO_PASSWORDS: Record<string, string[]> = {
+  'admin': ['admin123','123456','admin'],
+  'op001': ['op123456','123456'],
+  'qc001': ['qc123456','123456'],
+  'E001':  ['123456'], 'E010': ['123456'], 'E040': ['123456'],
+  'E020':  ['123456'], 'E030': ['123456'],
+};
+
+/** 演示模式本地登录：写入localStorage完成认证，无需后端 */
+function demoLocalLogin(username: string, password: string): { realName: string; role: string; factoryIds: string[] } | null {
+  const acct = DEMO_ACCOUNTS[username];
+  if (!acct) return null;
+  const allowed = DEMO_PASSWORDS[username] ?? ['123456'];
+  if (!allowed.includes(password)) return null;
+  const demoUser = {
+    id: username, username, realName: acct.realName,
+    roleIds: [acct.role], roleNames: [acct.role],
+    factoryIds: acct.factoryIds, defaultFactoryId: acct.factoryIds[0],
+    permissions: ['*'], status: 'active',
+  };
+  const demoToken = `demo-token-${username}-${Date.now()}`;
+  localStorage.setItem('mes_user',        JSON.stringify(demoUser));
+  localStorage.setItem('mes_token',       demoToken);
+  localStorage.setItem('mes_permissions', JSON.stringify(['*']));
+  localStorage.setItem('bip_cur_factory', acct.factoryIds[0]);
+  localStorage.setItem('currentFactoryId',   acct.factoryIds[0]);
+  localStorage.setItem('currentFactoryName', '南京工厂');
+  // 同步 Zustand authStore
+  useAuthStore.setState({
+    isAuthenticated: true,
+    token: demoToken,
+    user: demoUser as any,
+    permissions: ['*'],
+  } as any);
+  return acct;
+}
+
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [loading, setLoading]         = useState(false);
   const [activeTab, setActiveTab]     = useState('password');
@@ -106,6 +154,35 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         navigate('/dashboard', { replace: true });
       }
     } catch (err: any) {
+      // ── 演示模式：API离线时尝试本地账号绕过 ──────────────────────────
+      const demoResult = demoLocalLogin(values.username, values.password);
+      if (demoResult) {
+        const { realName, role, factoryIds } = demoResult;
+        const factories = FACTORIES.filter(f => factoryIds.includes(f.id));
+        const factory = factories[0] ?? FACTORIES[0];
+        setCurrentFactoryId(factory.id);
+        // 必须调用 onLogin 更新 App.tsx 的 user 状态，否则 MainLayout 拿到 null
+        onLogin({
+          id: values.username,
+          name: realName,
+          employeeId: values.username,
+          userId: values.username,
+          role,
+          factoryId: factory.id,
+          factoryName: factory.name,
+        });
+        if (factories.length > 1) {
+          setPendingUser({ name: realName, employeeId: values.username, userId: values.username, role });
+          setAvailableFactories(factories);
+          setSelectedFactoryId(factoryIds[0]);
+          setStep('factory');
+        } else {
+          message.success(`欢迎回来，${realName}！（演示模式 · ${factory.name}）`);
+          navigate('/dashboard', { replace: true });
+        }
+        return;
+      }
+      // ── 真实错误提示 ──────────────────────────────────────────────────
       const errMsg = err?.response?.data?.message || err?.message || '登录失败，请检查用户名和密码';
       message.error(errMsg);
     } finally {

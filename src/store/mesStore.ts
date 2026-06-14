@@ -82,12 +82,31 @@ function save<T>(key: string, value: T): void {
 
 // ── 核心清除：删除所有 bip_ 前缀的 localStorage 键 ──────────────
 function clearAllBipKeys(): void {
-  // 保护名单：登录态/工厂选择/用户信息不能被清除
+  // 保护名单：以下 key 不能被版本清除覆盖
   const KEEP_KEYS = new Set([
     'bip_user_cleared',   // USER_CLEARED_KEY — 直接用字符串避免 TDZ 问题
     'bip_cur_factory',
     'bip_login_user',
     'bip_auth_token',
+    // ── 演示数据保护：以下 key 由 DemoDataInjectorPage 写入，不能被版本清除覆盖 ──
+    'bip_production_orders',
+    'bip_work_orders',
+    'bip_ebr_records',
+    'bip_pad_exec_map',
+    'bip_demo_bom',
+    'bip_demo_pick_list',
+    'bip_demo_inspections',
+    'bip_demo_release',
+    'bip_demo_deviations',
+    'bip_demo_semi_receipt',
+    'bip_demo_fg_receipt',
+    'bip_demo_injected',
+    // ── 基础资料演示数据保护 ──
+    'bip_materials',
+    'bip_material_categories',
+    'bip_routings',
+    'bip_product_series',
+    'bip_product_families',
   ]);
   const keys: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -106,14 +125,17 @@ function clearAllBipKeys(): void {
 function ensureVersion(): void {
   const stored = localStorage.getItem(VERSION_KEY);
   if (stored !== DATA_VERSION) {
-    // 清除所有 bip_ 旧数据（包括不在 STORE_KEYS 里的遗留键）
+    // 清除所有 bip_ 旧数据（演示数据相关 key 已在 KEEP_KEYS 中保护，不会被清除）
     clearAllBipKeys();
-    // 写入 mock 初始数据（现在均为空数组）
-    save(STORE_KEYS.PRODUCTION_ORDERS, mockProductionOrders);  // []
-    save(STORE_KEYS.WORK_ORDERS,       mockWorkOrders);         // []
-    save(STORE_KEYS.TASK_ORDERS,       mockTaskOrders);         // []
-    save(STORE_KEYS.FLOAT_TICKETS,     mockFloatTicketsV2);     // []
-    // 车间执行初始数据
+    // 写入 mock 初始数据（仅在没有演示数据时写入，避免覆盖注入的演示数据）
+    const hasDemoData = !!localStorage.getItem('bip_demo_injected');
+    if (!hasDemoData) {
+      save(STORE_KEYS.PRODUCTION_ORDERS, mockProductionOrders);  // []
+      save(STORE_KEYS.WORK_ORDERS,       mockWorkOrders);         // []
+      save(STORE_KEYS.TASK_ORDERS,       mockTaskOrders);         // []
+      save(STORE_KEYS.FLOAT_TICKETS,     mockFloatTicketsV2);     // []
+    }
+    // 车间执行初始数据（不含演示业务数据，始终写入）
     save(STORE_KEYS.WORKSHOP_STATIONS, mockStations);
     // 设备管理模块
     save(STORE_KEYS.EQUIP_RECORDS,     mockEquipRecords);
