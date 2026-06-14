@@ -433,8 +433,8 @@ const EquipArchivePage: React.FC<EquipArchivePageProps> = ({ initialQuickFilter 
         okText="保存" cancelText="取消" width={760} destroyOnClose>
         <Form form={form} layout="vertical" size="middle" style={{ marginTop: 14 }}>
           <Row gutter={14}>
-            <Col span={8}><Form.Item name="equipCode" label="设备编码" rules={[{ required: true }]}><Input placeholder="EQ-GRIND-001" /></Form.Item></Col>
-            <Col span={8}><Form.Item name="equipName" label="设备名称" rules={[{ required: true }]}><Input placeholder="数控五轴磨床 #1" /></Form.Item></Col>
+            <Col span={8}><Form.Item name="equipCode" label="设备编码" rules={[{ required: true }]}><Input placeholder="EQ-GRAN-001" /></Form.Item></Col>
+            <Col span={8}><Form.Item name="equipName" label="设备名称" rules={[{ required: true }]}><Input placeholder="湿法制粒机 #1" /></Form.Item></Col>
             <Col span={8}><Form.Item name="category" label="设备类别" rules={[{ required: true }]}>
               <Select>{Object.entries(EQUIP_CATEGORY_MAP).map(([k, v]) => <Option key={k} value={k}>{v.icon} {v.label}</Option>)}</Select>
             </Form.Item></Col>

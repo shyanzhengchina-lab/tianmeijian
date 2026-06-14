@@ -59,107 +59,107 @@ const STATUS_MAP: Record<EquipStatus, { label: string; color: string; badge: any
 
 const genId = () => `eq_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-// ── Mock Data ──────────────────────────────────────────────
+// ── Mock Data（API失败时降级，保健品行业设备）─────────────────
 const initData: Equipment[] = [
   {
-    id: 'eq-001', equipCode: 'EQ-GRIND-001', equipName: '数控五轴磨床',
-    category: 'MACHINE', model: 'WALTER HELITRONIC POWER', brand: '瓦尔特',
-    workshop: '精密加工车间', workCenter: 'WC-GRIND-01', location: 'A区-01号',
+    id: 'eq-001', equipCode: 'EQ-GRAN-001', equipName: '湿法制粒机 #1',
+    category: 'MACHINE', model: 'GHL-200', brand: '重庆英格',
+    workshop: '固体制剂车间（D级）', workCenter: 'WC-GRAN-01', location: 'A区-01号位',
+    purchaseDate: '2023-04-01', warrantyDate: '2026-04-01',
+    lastMaintDate: '2026-05-10', nextMaintDate: '2026-06-10',
+    status: 'ACTIVE', precision: '搅拌转速±5rpm',
+    remark: 'VitC咀嚼片湿法制粒关键工序，需IQ/OQ/PQ验证',
+    createdAt: '2023-04-20', updatedAt: '2026-05-10',
+  },
+  {
+    id: 'eq-002', equipCode: 'EQ-FLUID-001', equipName: '流化床干燥机 #1',
+    category: 'MACHINE', model: 'FL-200', brand: '常州永信',
+    workshop: '固体制剂车间（D级）', workCenter: 'WC-DRY-01', location: 'A区-02号位',
+    purchaseDate: '2023-04-01', warrantyDate: '2026-04-01',
+    lastMaintDate: '2026-05-12', nextMaintDate: '2026-06-12',
+    status: 'ACTIVE', precision: '进风温度±2℃',
+    remark: '湿颗粒干燥，过滤袋每月更换',
+    createdAt: '2023-04-22', updatedAt: '2026-05-12',
+  },
+  {
+    id: 'eq-003', equipCode: 'EQ-PRESS-001', equipName: '旋转式压片机 #1',
+    category: 'MACHINE', model: 'ZP-35', brand: '上海天祥',
+    workshop: '固体制剂车间（D级）', workCenter: 'WC-PRESS-01', location: 'B区-01号位',
     purchaseDate: '2023-06-01', warrantyDate: '2026-06-01',
-    lastMaintDate: '2026-03-15', nextMaintDate: '2026-06-15',
-    status: 'ACTIVE', precision: '±0.002mm',
-    remark: '主要用于根管锉锥度磨削，瓶颈设备',
-    createdAt: '2023-06-01', updatedAt: '2026-03-15',
+    lastMaintDate: '2026-05-20', nextMaintDate: '2026-06-20',
+    status: 'ACTIVE', precision: '片重差异≤±5%',
+    remark: 'VitC咀嚼片500mg关键设备；冲模每批检查',
+    createdAt: '2023-06-15', updatedAt: '2026-05-20',
   },
   {
-    id: 'eq-002', equipCode: 'EQ-GRIND-002', equipName: '数控五轴磨床',
-    category: 'MACHINE', model: 'WALTER HELITRONIC POWER', brand: '瓦尔特',
-    workshop: '精密加工车间', workCenter: 'WC-GRIND-01', location: 'A区-02号',
-    purchaseDate: '2023-08-01', warrantyDate: '2026-08-01',
-    lastMaintDate: '2026-03-15', nextMaintDate: '2026-06-15',
-    status: 'ACTIVE', precision: '±0.002mm',
-    remark: '',
-    createdAt: '2023-08-01', updatedAt: '2026-03-15',
+    id: 'eq-004', equipCode: 'EQ-COAT-001', equipName: '高效包衣机 BFC-150',
+    category: 'MACHINE', model: 'BFC-150', brand: '常州英格',
+    workshop: '固体制剂车间（D级）', workCenter: 'WC-COAT-01', location: 'B区-02号位',
+    purchaseDate: '2024-01-10', warrantyDate: '2027-01-10',
+    lastMaintDate: '2026-05-15', nextMaintDate: '2026-06-15',
+    status: 'ACTIVE', precision: '包衣增重率±0.2%',
+    remark: 'OPADRY薄膜包衣，关键参数：增重率2~4%',
+    createdAt: '2024-01-25', updatedAt: '2026-05-15',
   },
   {
-    id: 'eq-003', equipCode: 'EQ-HT-001', equipName: '镍钛丝热处理炉',
-    category: 'MACHINE', model: 'KSL-1400X', brand: '科晶',
-    workshop: '热处理车间', workCenter: 'WC-HT-01', location: 'B区-01号',
-    purchaseDate: '2023-03-01', warrantyDate: '2026-03-01',
-    lastMaintDate: '2026-02-10', nextMaintDate: '2026-05-10',
-    status: 'ACTIVE', precision: '±2℃',
-    remark: '特殊工序设备，需定期校准温控系统',
-    createdAt: '2023-03-01', updatedAt: '2026-02-10',
-  },
-  {
-    id: 'eq-004', equipCode: 'EQ-COAT-001', equipName: 'PVD镀膜机',
-    category: 'MACHINE', model: 'PLATIT π80', brand: 'PLATIT',
-    workshop: '涂层车间', workCenter: 'WC-COAT-01', location: 'C区-01号',
-    purchaseDate: '2022-10-01', warrantyDate: '2025-10-01',
-    lastMaintDate: '2026-01-20', nextMaintDate: '2026-04-20',
-    status: 'MAINTENANCE', precision: '',
-    remark: '靶材更换中，预计4月25日恢复',
-    createdAt: '2022-10-01', updatedAt: '2026-04-20',
-  },
-  {
-    id: 'eq-005', equipCode: 'EQ-LASER-001', equipName: '光纤激光打标机',
-    category: 'MACHINE', model: 'JPT M7 20W', brand: '杰普特',
-    workshop: '标识车间', workCenter: 'WC-LASER-01', location: 'D区-01号',
-    purchaseDate: '2024-01-15', warrantyDate: '2027-01-15',
-    lastMaintDate: '2026-03-01', nextMaintDate: '2026-06-01',
-    status: 'ACTIVE', precision: '0.01mm',
-    remark: 'UDI打标专用，需定期清洁镜头',
-    createdAt: '2024-01-15', updatedAt: '2026-03-01',
-  },
-  {
-    id: 'eq-006', equipCode: 'EQ-USC-001', equipName: '超声波清洗机',
-    category: 'CLEAN', model: 'GT-2200QTS', brand: '固特',
-    workshop: '清洗车间', workCenter: 'WC-CLEAN-01', location: 'E区-01号',
+    id: 'eq-005', equipCode: 'EQ-MIX-001', equipName: '三维运动混合机',
+    category: 'MACHINE', model: 'SYH-500', brand: '无锡新达',
+    workshop: '固体制剂车间（D级）', workCenter: 'WC-MIX-01', location: 'A区-03号位',
     purchaseDate: '2023-05-01', warrantyDate: '2026-05-01',
-    lastMaintDate: '2026-02-28', nextMaintDate: '2026-05-28',
-    status: 'ACTIVE', precision: '',
-    remark: '',
-    createdAt: '2023-05-01', updatedAt: '2026-02-28',
+    lastMaintDate: '2026-04-25', nextMaintDate: '2026-07-25',
+    status: 'ACTIVE', precision: '混合转速10~20rpm',
+    remark: '总混工序，每季度检查密封圈',
+    createdAt: '2023-05-15', updatedAt: '2026-04-25',
   },
   {
-    id: 'eq-007', equipCode: 'EQ-INSP-001', equipName: '投影仪（万能工具显微镜）',
-    category: 'INSPECT', model: 'PH-A14', brand: '尼康',
-    workshop: '检验室', workCenter: 'WC-QC-01', location: 'F区-QC室',
-    purchaseDate: '2022-06-01', warrantyDate: '2025-06-01',
-    lastMaintDate: '2026-01-10', nextMaintDate: '2026-07-10',
-    status: 'ACTIVE', precision: '±0.001mm',
-    remark: '每半年由计量所校准',
-    createdAt: '2022-06-01', updatedAt: '2026-01-10',
+    id: 'eq-006', equipCode: 'EQ-COUNT-001', equipName: '全自动数片机',
+    category: 'PACK', model: 'PPC-3000', brand: '杭州中亚',
+    workshop: '包装车间（D级）', workCenter: 'WC-COUNT-01', location: 'C区-01号位',
+    purchaseDate: '2023-09-01', warrantyDate: '2026-09-01',
+    lastMaintDate: '2026-05-01', nextMaintDate: '2026-06-01',
+    status: 'ACTIVE', precision: '数片精度±0片',
+    remark: '内包装瓶装数片，光电传感器每月校准',
+    createdAt: '2023-09-15', updatedAt: '2026-05-01',
   },
   {
-    id: 'eq-008', equipCode: 'EQ-INSP-002', equipName: '扭转试验机',
-    category: 'INSPECT', model: 'TT-01', brand: '悦尚自制',
-    workshop: '检验室', workCenter: 'WC-QC-01', location: 'F区-QC室',
+    id: 'eq-007', equipCode: 'EQ-LABEL-001', equipName: '激光喷码机（批号打印）',
+    category: 'MACHINE', model: 'CL-650C', brand: '科迪华激光',
+    workshop: '包装车间（D级）', workCenter: 'WC-MARK-01', location: 'C区-02号位',
     purchaseDate: '2024-03-01', warrantyDate: '2027-03-01',
-    lastMaintDate: '2026-03-01', nextMaintDate: '2026-09-01',
-    status: 'ACTIVE', precision: '0.1N·cm',
-    remark: 'ISO 3630-1合规性测试专用',
-    createdAt: '2024-03-01', updatedAt: '2026-03-01',
+    lastMaintDate: '2026-04-15', nextMaintDate: '2026-07-15',
+    status: 'ACTIVE', precision: '字符高度±0.1mm',
+    remark: 'GMP批号/生产日期/有效期激光喷印',
+    createdAt: '2024-03-15', updatedAt: '2026-04-15',
   },
   {
-    id: 'eq-009', equipCode: 'EQ-STER-001', equipName: 'EO灭菌柜',
-    category: 'OTHER', model: 'HDX-YMQ-100', brand: '华道昕',
-    workshop: '灭菌间', workCenter: 'WC-STER-01', location: 'G区-灭菌间',
-    purchaseDate: '2021-08-01', warrantyDate: '2024-08-01',
-    lastMaintDate: '2026-01-05', nextMaintDate: '2026-04-05',
-    status: 'DISABLED', precision: '',
-    remark: '保质期已过，待采购新设备，暂停使用',
-    createdAt: '2021-08-01', updatedAt: '2026-04-05',
+    id: 'eq-008', equipCode: 'EQ-CAPS-001', equipName: '全自动胶囊充填机',
+    category: 'MACHINE', model: 'NJP-1200C', brand: '常州金远',
+    workshop: '胶囊充填车间（C级）', workCenter: 'WC-CAPS-01', location: 'A区-01号位（溧水厂）',
+    purchaseDate: '2023-07-01', warrantyDate: '2026-07-01',
+    lastMaintDate: '2026-05-18', nextMaintDate: '2026-06-18',
+    status: 'ACTIVE', precision: '装量差异≤±7.5%',
+    remark: '益生菌胶囊关键工序；操作间温度≤20℃',
+    createdAt: '2023-07-20', updatedAt: '2026-05-18',
   },
   {
-    id: 'eq-010', equipCode: 'EQ-PACK-001', equipName: '全自动热封机',
-    category: 'PACK', model: 'SF-300', brand: '顺丰封装',
-    workshop: '包装车间', workCenter: 'WC-PACK-01', location: 'H区-01号',
-    purchaseDate: '2023-11-01', warrantyDate: '2026-11-01',
-    lastMaintDate: '2026-02-20', nextMaintDate: '2026-05-20',
-    status: 'ACTIVE', precision: '',
-    remark: '初包装热封专用，封口强度≥15N/15mm',
-    createdAt: '2023-11-01', updatedAt: '2026-02-20',
+    id: 'eq-009', equipCode: 'EQ-COLDCHAIN-001', equipName: '冷链储存柜（益生菌专用）',
+    category: 'OTHER', model: 'YC-1000', brand: '中科美菱',
+    workshop: '冷链储存区（≤8℃）', workCenter: 'WC-COLD-01', location: 'G区-冷链1号（溧水厂）',
+    purchaseDate: '2023-06-01', warrantyDate: '2026-06-01',
+    lastMaintDate: '2026-05-20', nextMaintDate: '2026-06-20',
+    status: 'ACTIVE', precision: '温度±0.5℃',
+    remark: '益生菌冷链存储，24h温度监控；超标自动报警',
+    createdAt: '2023-06-15', updatedAt: '2026-05-20',
+  },
+  {
+    id: 'eq-010', equipCode: 'EQ-HPLC-001', equipName: 'HPLC高效液相色谱仪',
+    category: 'INSPECT', model: 'LC-2030C 3D', brand: '岛津（Shimadzu）',
+    workshop: '质检实验室', workCenter: 'WC-QC-HPLC', location: 'QC实验室-仪器间A',
+    purchaseDate: '2022-08-01', warrantyDate: '2025-08-01',
+    lastMaintDate: '2026-04-01', nextMaintDate: '2026-07-01',
+    status: 'ACTIVE', precision: 'RSD≤2%，波长精度±0.5nm',
+    remark: 'VitC含量HPLC法检测；每季度外部校准',
+    createdAt: '2022-08-20', updatedAt: '2026-04-01',
   },
 ];
 
@@ -548,12 +548,12 @@ const EquipmentPage: React.FC = () => {
           <Row gutter={14}>
             <Col span={12}>
               <Form.Item name="equipCode" label="设备编码" rules={[{ required: true, message: '请输入设备编码' }]}>
-                <Input placeholder="如：EQ-GRIND-001" />
+                <Input placeholder="如：EQ-GRAN-001" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="equipName" label="设备名称" rules={[{ required: true, message: '请输入设备名称' }]}>
-                <Input placeholder="如：数控五轴磨床" />
+                <Input placeholder="如：湿法制粒机 #1" />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -577,12 +577,12 @@ const EquipmentPage: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="model" label="型号" rules={[{ required: true, message: '请输入型号' }]}>
-                <Input placeholder="如：WALTER HELITRONIC POWER" />
+                <Input placeholder="如：GHL-200" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="brand" label="品牌/厂商">
-                <Input placeholder="如：瓦尔特" />
+                <Input placeholder="如：重庆英格" />
               </Form.Item>
             </Col>
             <Col span={12}>

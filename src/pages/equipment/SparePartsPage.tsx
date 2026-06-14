@@ -1,6 +1,6 @@
 /**
  * SparePartsPage.tsx — 备件管理
- * GMP医疗器械MES 设备管理模块 - 备件库存子页
+ * 天美健保健品MES 设备管理模块 - 备件库存子页
  *
  * 增强功能：
  *   1. 汇总卡片可点击快速过滤库存状态
@@ -77,78 +77,77 @@ const SPARE_STATUS_MAP: Record<SpareStatus, { label: string; color: string; badg
 // ══════════════════════════════════════════════════════════════
 const initTransactions: StockTransaction[] = [
   {
-    id: 'tx-001', txNo: 'TX-20260415-001',
-    partId: 'sp-001', partCode: 'SP-GRIND-001', partName: '磨削液',
-    txType: 'IN', qty: 20, unit: 'L', unitCost: 35, totalCost: 700,
-    stockBefore: 25, stockAfter: 45,
-    operator: '张仓管', remark: '月度采购补库', txDate: '2026-04-15', createdAt: '2026-04-15',
+    id: 'tx-001', txNo: 'TX-20260510-001',
+    partId: 'sp-001', partCode: 'SP-GRAN-001', partName: '湿法制粒机密封圈套装',
+    txType: 'OUT', qty: 1, unit: '套', unitCost: 180, totalCost: 180,
+    stockBefore: 6, stockAfter: 5,
+    relatedEquip: 'EQ-GRAN-001', operator: '张师傅', remark: '月度维保更换密封圈', txDate: '2026-05-10', createdAt: '2026-05-10',
   },
   {
-    id: 'tx-002', txNo: 'TX-20260415-002',
-    partId: 'sp-001', partCode: 'SP-GRIND-001', partName: '磨削液',
-    txType: 'OUT', qty: 5, unit: 'L', unitCost: 35, totalCost: 175,
-    stockBefore: 45, stockAfter: 40,
-    relatedEquip: 'EQ-GRIND-001', operator: '张师傅', remark: '月度保养更换磨削液', txDate: '2026-04-15', createdAt: '2026-04-15',
+    id: 'tx-002', txNo: 'TX-20260425-001',
+    partId: 'sp-001', partCode: 'SP-GRAN-001', partName: '湿法制粒机密封圈套装',
+    txType: 'IN', qty: 3, unit: '套', unitCost: 180, totalCost: 540,
+    stockBefore: 3, stockAfter: 6,
+    operator: '张仓管', remark: '定期备件采购补库', txDate: '2026-04-25', createdAt: '2026-04-25',
   },
   {
-    id: 'tx-003', txNo: 'TX-20260410-001',
-    partId: 'sp-002', partCode: 'SP-GRIND-002', partName: '供液泵密封件套装',
-    txType: 'OUT', qty: 1, unit: '套', unitCost: 280, totalCost: 280,
-    stockBefore: 4, stockAfter: 3,
-    relatedEquip: 'EQ-GRIND-001', relatedFault: 'FT-20260410-001',
-    operator: '张维修员', remark: '故障维修更换密封件', txDate: '2026-04-10', createdAt: '2026-04-10',
+    id: 'tx-003', txNo: 'TX-20260605-001',
+    partId: 'sp-002', partCode: 'SP-FLUID-001', partName: '流化床过滤袋（F7级）',
+    txType: 'OUT', qty: 1, unit: '套', unitCost: 320, totalCost: 320,
+    stockBefore: 7, stockAfter: 6,
+    relatedEquip: 'EQ-FLUID-001', operator: '张师傅', remark: '月度维保更换过滤袋', txDate: '2026-06-05', createdAt: '2026-06-05',
   },
   {
-    id: 'tx-004', txNo: 'TX-20260320-001',
-    partId: 'sp-002', partCode: 'SP-GRIND-002', partName: '供液泵密封件套装',
-    txType: 'IN', qty: 2, unit: '套', unitCost: 280, totalCost: 560,
-    stockBefore: 2, stockAfter: 4,
-    operator: '张仓管', remark: '日常库存补充', txDate: '2026-03-20', createdAt: '2026-03-20',
+    id: 'tx-004', txNo: 'TX-20260501-001',
+    partId: 'sp-002', partCode: 'SP-FLUID-001', partName: '流化床过滤袋（F7级）',
+    txType: 'IN', qty: 4, unit: '套', unitCost: 320, totalCost: 1280,
+    stockBefore: 3, stockAfter: 7,
+    operator: '张仓管', remark: '季度采购批量补库', txDate: '2026-05-01', createdAt: '2026-05-01',
   },
   {
-    id: 'tx-005', txNo: 'TX-20260410-002',
-    partId: 'sp-003', partCode: 'SP-HT-001', partName: '热电偶（K型）',
-    txType: 'OUT', qty: 1, unit: '支', unitCost: 180, totalCost: 180,
-    stockBefore: 5, stockAfter: 4,
-    relatedEquip: 'EQ-HT-001', operator: '李师傅', remark: '季度保养更换热电偶', txDate: '2026-04-10', createdAt: '2026-04-10',
-  },
-  {
-    id: 'tx-006', txNo: 'TX-20260301-001',
-    partId: 'sp-003', partCode: 'SP-HT-001', partName: '热电偶（K型）',
-    txType: 'IN', qty: 3, unit: '支', unitCost: 180, totalCost: 540,
-    stockBefore: 2, stockAfter: 5,
-    operator: '张仓管', remark: '备用库存采购', txDate: '2026-03-01', createdAt: '2026-03-01',
-  },
-  {
-    id: 'tx-007', txNo: 'TX-20260420-001',
-    partId: 'sp-004', partCode: 'SP-HT-002', partName: 'PID控制器',
-    txType: 'OUT', qty: 1, unit: '台', unitCost: 3500, totalCost: 3500,
-    stockBefore: 1, stockAfter: 0,
-    relatedEquip: 'EQ-HT-002', relatedFault: 'FT-20260420-001',
-    operator: '科晶工程师', remark: '紧急故障更换PID控制器', txDate: '2026-04-20', createdAt: '2026-04-20',
-  },
-  {
-    id: 'tx-008', txNo: 'TX-20260325-001',
-    partId: 'sp-005', partCode: 'SP-COAT-001', partName: '真空泵油',
-    txType: 'OUT', qty: 1, unit: '桶', unitCost: 680, totalCost: 680,
+    id: 'tx-005', txNo: 'TX-20260520-001',
+    partId: 'sp-003', partCode: 'SP-PRESS-001', partName: 'ZP-35压片机冲模套装',
+    txType: 'OUT', qty: 1, unit: '套', unitCost: 8500, totalCost: 8500,
     stockBefore: 3, stockAfter: 2,
-    relatedEquip: 'EQ-COAT-001', relatedFault: 'FT-20260325-001',
-    operator: 'PLATIT工程师', remark: '故障维修换油', txDate: '2026-03-25', createdAt: '2026-03-25',
+    relatedEquip: 'EQ-PRESS-001', operator: '王师傅', remark: '月度维保：主压力轮磨损更换冲模套装', txDate: '2026-05-15', createdAt: '2026-05-15',
   },
   {
-    id: 'tx-009', txNo: 'TX-20260201-001',
-    partId: 'sp-005', partCode: 'SP-COAT-001', partName: '真空泵油',
-    txType: 'IN', qty: 2, unit: '桶', unitCost: 680, totalCost: 1360,
-    stockBefore: 1, stockAfter: 3,
-    operator: '张仓管', remark: '定期采购', txDate: '2026-02-01', createdAt: '2026-02-01',
+    id: 'tx-006', txNo: 'TX-20260401-001',
+    partId: 'sp-003', partCode: 'SP-PRESS-001', partName: 'ZP-35压片机冲模套装',
+    txType: 'IN', qty: 1, unit: '套', unitCost: 8500, totalCost: 8500,
+    stockBefore: 2, stockAfter: 3,
+    operator: '张仓管', remark: '备用冲模采购，维持2套安全库存', txDate: '2026-04-01', createdAt: '2026-04-01',
   },
   {
-    id: 'tx-010', txNo: 'TX-20260415-003',
-    partId: 'sp-006', partCode: 'SP-USC-001', partName: '超声波换能器',
-    txType: 'OUT', qty: 4, unit: '支', unitCost: 450, totalCost: 1800,
-    stockBefore: 6, stockAfter: 2,
-    relatedEquip: 'EQ-USC-001', relatedFault: 'FT-20260315-001',
-    operator: '赵维修员', remark: '故障更换换能器4支', txDate: '2026-03-16', createdAt: '2026-03-16',
+    id: 'tx-007', txNo: 'TX-20260528-001',
+    partId: 'sp-006', partCode: 'SP-CAPS-001', partName: '胶囊充填机计量盘套装',
+    txType: 'OUT', qty: 1, unit: '套', unitCost: 12000, totalCost: 12000,
+    stockBefore: 2, stockAfter: 1,
+    relatedEquip: 'EQ-CAPS-001', relatedFault: 'FT-20260528-001',
+    operator: '李维修员', remark: '故障维修：计量盘碎屑清理后复用（未消耗），记录出库后入库核销', txDate: '2026-05-28', createdAt: '2026-05-28',
+  },
+  {
+    id: 'tx-008', txNo: 'TX-20260510-002',
+    partId: 'sp-007', partCode: 'SP-COLD-001', partName: '冷链柜温度传感器（PT100）',
+    txType: 'OUT', qty: 1, unit: '支', unitCost: 280, totalCost: 280,
+    stockBefore: 6, stockAfter: 5,
+    relatedEquip: 'EQ-COLDCHAIN-001', relatedFault: 'FT-20260510-001',
+    operator: '李维修员', remark: '冷链超温故障维修：更换门磁感应器兼换温度传感器', txDate: '2026-05-10', createdAt: '2026-05-10',
+  },
+  {
+    id: 'tx-009', txNo: 'TX-20260601-001',
+    partId: 'sp-008', partCode: 'SP-HPLC-001', partName: 'HPLC色谱柱（C18反相）',
+    txType: 'OUT', qty: 1, unit: '支', unitCost: 2800, totalCost: 2800,
+    stockBefore: 3, stockAfter: 2,
+    relatedEquip: 'EQ-HPLC-001',
+    operator: '陈检验员', remark: '色谱柱使用达500次更换，保留旧柱备用', txDate: '2026-06-01', createdAt: '2026-06-01',
+  },
+  {
+    id: 'tx-010', txNo: 'TX-20260601-002',
+    partId: 'sp-008', partCode: 'SP-HPLC-001', partName: 'HPLC色谱柱（C18反相）',
+    txType: 'IN', qty: 1, unit: '支', unitCost: 2800, totalCost: 2800,
+    stockBefore: 2, stockAfter: 3,
+    operator: '张仓管', remark: '采购补库，维持2支安全库存', txDate: '2026-06-01', createdAt: '2026-06-01',
   },
 ];
 
@@ -790,7 +789,7 @@ const SparePartsPage: React.FC<SparePartsPageProps> = ({ initialCardFilter }) =>
             <Input type="number" min={1} max={issueItem?.currentStock} addonAfter={issueItem?.unit} />
           </Form.Item>
           <Form.Item name="equipCode" label="领用设备编码">
-            <Input placeholder="EQ-GRIND-001" />
+            <Input placeholder="EQ-GRAN-001" />
           </Form.Item>
           <Form.Item name="remark" label="用途/备注">
             <Input placeholder="设备维修/保养使用" />
