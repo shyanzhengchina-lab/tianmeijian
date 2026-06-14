@@ -103,6 +103,8 @@ const AuditTrailPage        = lazy(() => import('./pages/gmp/AuditTrailPage'));
 const DeviationEnhancedPage = lazy(() => import('./pages/gmp/DeviationEnhancedPage'));
 // 演示数据注入工具
 const DemoDataInjectorPage = lazy(() => import('./pages/demo/DemoDataInjectorPage'));
+// 浮动排程模块
+const SchedulingPage = lazy(() => import('./pages/scheduling/SchedulingPage'));
 
 
 // 配置dayjs中文
@@ -367,6 +369,7 @@ const App: React.FC = () => {
       case 'urgent-order':     return ['生产管理', '插单管理'];
       case 'mrb':              return ['质量管理', 'MRB不合格品评审'];
       case 'demo-injector':     return ['演示工具', '完整演示数据注入'];
+      case 'scheduling':          return ['生产管理', '浮动排程（FSE）'];
       default:                  return [];
     }
   };
@@ -439,6 +442,8 @@ const App: React.FC = () => {
       case 'urgent-order':        return <PageWrapper><UrgentOrderPage /></PageWrapper>;
       // 演示工具
       case 'demo-injector':        return <PageWrapper><DemoDataInjectorPage /></PageWrapper>;
+      // 浮动排程
+      case 'scheduling':             return <PageWrapper><SchedulingPage /></PageWrapper>;
       default:
         return (
           <div style={{

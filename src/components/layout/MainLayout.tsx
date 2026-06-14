@@ -102,6 +102,7 @@ const menuItems = [
       { key: 'task-order',       label: '生产任务单', icon: <ScheduleOutlined /> },
       { key: 'floatticket',      label: '生产浮票',  icon: <FileTextOutlined /> },
       { key: 'urgent-order',     label: '插单管理',  icon: <ThunderboltOutlined /> },
+      { key: 'scheduling',       label: '浮动排程（FSE）', icon: <ScheduleOutlined /> },
     ],
   },
   {
@@ -328,6 +329,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     'batch-record-print': '批记录自动生成（SOR-MF-PE-02-05格式）',
     mrb:              'MRB不合格品评审',
     'urgent-order':   '插单管理',
+    'scheduling':     '浮动排程引擎（FSE）',
     reports:          '数据报表中心',
     'fg-receipt':     '成品入库',
     'sales-shipment':     '成品出库',
