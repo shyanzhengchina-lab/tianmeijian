@@ -38,6 +38,8 @@ import {
   type CalibRecord,
   type SparePartRecord,
 } from '../pages/equipment/equipmentData';
+import { mockCategories, mockMaterials, mockUnitGroups } from './mockData';
+import { mockProductSeries, mockRoutingMasters } from '../pages/pro/seriesData';
 
 // ── 键名常量 ──────────────────────────────────────────────────────
 export const STORE_KEYS = {
@@ -148,8 +150,115 @@ function ensureVersion(): void {
   }
 }
 
+// ── POC 数据自动种子（保健品行业演示数据常驻）────────────────────────
+/**
+ * 启动时自动将保健品 POC 数据写入 localStorage，无需手动点击"演示数据注入"。
+ * 判断逻辑：
+ *  1. bip_material_categories 为空 → 必须写入
+ *  2. bip_material_categories 含有旧医疗器械关键词（镍钛/根管）→ 覆盖写入
+ *  3. 其余基础资料 key 为空时各自补写，不覆盖已存在的有效数据
+ */
+function seedPocData(): void {
+  // ── 1. 物料分类：扁平化 mockCategories 写入 ────────────────────────
+  const existingCats = localStorage.getItem('bip_material_categories');
+  let needsCatSeed = !existingCats;
+  if (!needsCatSeed && existingCats) {
+    try {
+      const parsed = JSON.parse(existingCats);
+      const flat = JSON.stringify(parsed);
+      // 旧数据含医疗器械关键词或数据为空数组 → 重新种入
+      if (flat.includes('镍钛') || flat.includes('根管') || flat.includes('锉') ||
+          !Array.isArray(parsed) || parsed.length === 0) {
+        needsCatSeed = true;
+      }
+    } catch { needsCatSeed = true; }
+  }
+
+  if (needsCatSeed) {
+    // 扁平化分类树（去掉 children 字段写入 localStorage）
+    const flatCats: Array<{ id: string; code: string; name: string; parentId?: string }> = [];
+    const walkCats = (items: typeof mockCategories[0]['children']) => {
+      if (!items) return;
+      items.forEach((c: any) => {
+        flatCats.push({ id: c.id, code: c.code, name: c.name, parentId: c.parentId });
+        if (c.children) walkCats(c.children);
+      });
+    };
+    // mockCategories[0] 是 "全部" 根节点，将其本身也写入
+    const root = mockCategories[0];
+    flatCats.push({ id: root.id, code: root.code, name: root.name });
+    walkCats(root.children);
+    localStorage.setItem('bip_material_categories', JSON.stringify(flatCats));
+  }
+
+  // ── 2. 物料档案：为空或含旧医疗器械数据时写入 ─────────────────────
+  const existingMats = localStorage.getItem('bip_materials');
+  let needsMatSeed = !existingMats;
+  if (!needsMatSeed && existingMats) {
+    try {
+      const parsed = JSON.parse(existingMats);
+      const flat = JSON.stringify(parsed);
+      if (flat.includes('根管') || flat.includes('镍钛') || !Array.isArray(parsed) || parsed.length === 0) {
+        needsMatSeed = true;
+      }
+    } catch { needsMatSeed = true; }
+  }
+  if (needsMatSeed) {
+    localStorage.setItem('bip_materials', JSON.stringify(mockMaterials));
+  }
+
+  // ── 3. 计量单位：为空时写入 ──────────────────────────────────────────
+  const existingUnits = localStorage.getItem('bip_units');
+  if (!existingUnits) {
+    localStorage.setItem('bip_units', JSON.stringify(mockUnitGroups));
+  }
+
+  // ── 4. 工艺路径：为空或含旧医疗器械数据时写入 ─────────────────────
+  const existingRoutings = localStorage.getItem('bip_routings');
+  let needsRoutingSeed = !existingRoutings;
+  if (!needsRoutingSeed && existingRoutings) {
+    try {
+      const parsed = JSON.parse(existingRoutings);
+      const flat = JSON.stringify(parsed);
+      if (flat.includes('根管锉') || flat.includes('机用根管') || !Array.isArray(parsed) || parsed.length === 0) {
+        needsRoutingSeed = true;
+      }
+    } catch { needsRoutingSeed = true; }
+  }
+  if (needsRoutingSeed) {
+    localStorage.setItem('bip_routings', JSON.stringify(mockRoutingMasters));
+  }
+
+  // ── 5. 产品系列：为空或含旧医疗器械数据时写入 ─────────────────────
+  const existingSeries = localStorage.getItem('bip_product_series');
+  let needsSeriesSeed = !existingSeries;
+  if (!needsSeriesSeed && existingSeries) {
+    try {
+      const parsed = JSON.parse(existingSeries);
+      const flat = JSON.stringify(parsed);
+      if (flat.includes('根管锉') || flat.includes('机用根管') || !Array.isArray(parsed) || parsed.length === 0) {
+        needsSeriesSeed = true;
+      }
+    } catch { needsSeriesSeed = true; }
+  }
+  if (needsSeriesSeed) {
+    localStorage.setItem('bip_product_series', JSON.stringify(mockProductSeries));
+    // 同时写入产品族
+    localStorage.setItem('bip_product_families', JSON.stringify([
+      '维生素/矿物质族', '植物提取物族', '益生菌族', '功能性食品族',
+    ]));
+  }
+
+  // ── 6. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
+  if (!localStorage.getItem('bip_demo_injected')) {
+    localStorage.setItem('bip_demo_injected', '1');
+  }
+}
+
 // 应用启动时调用一次
 ensureVersion();
+// POC 数据常驻种入（保健品行业基础资料自动写入 localStorage）
+seedPocData();
 
 // ── 生产订单 ─────────────────────────────────────────────────────
 export function loadProductionOrders(): ProductionOrder[] {

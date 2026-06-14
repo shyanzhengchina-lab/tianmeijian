@@ -6,8 +6,8 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { ProductSeries, mockProductSeries } from './seriesData';
 
-// ── 产品族初始值 ──────────────────────────────────────────────────
-export const DEFAULT_FAMILIES = ['机用根管锉族', '手用根管锉族', '热牙胶充填针族', '冲洗系列族'];
+// ── 产品族初始值（天美健保健品行业）────────────────────────────────
+export const DEFAULT_FAMILIES = ['维生素/矿物质族', '植物提取物族', '益生菌族', '功能性食品族'];
 
 // ── Context 类型 ──────────────────────────────────────────────────
 interface SeriesContextType {
