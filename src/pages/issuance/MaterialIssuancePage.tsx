@@ -373,6 +373,29 @@ const MaterialIssuancePage: React.FC = () => {
       },
     },
     {
+      title: '物料名称', width: 220,
+      render: (_: any, r: IssueOrder) => {
+        if (!r.lines || r.lines.length === 0)
+          return <span style={{ color: '#bbb' }}>—</span>;
+        const first = r.lines[0];
+        const rest  = r.lines.slice(1);
+        return (
+          <Tooltip
+            title={r.lines.length > 1
+              ? (<>{r.lines.map((l, i) => <div key={i}>{i + 1}. {l.itemName}</div>)}</>)
+              : undefined}
+          >
+            <span>
+              <span style={{ fontWeight: 500 }}>{first.itemName}</span>
+              {rest.length > 0 && (
+                <span style={{ color: '#888', fontSize: 11 }}>&nbsp;等{r.lines.length}种</span>
+              )}
+            </span>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: '状态', dataIndex: 'status', width: 120,
       render: (v: IssueStatus) => (
         <Badge status={ISSUE_STATUS_COLOR[v] as any} text={ISSUE_STATUS_LABEL[v]} />
