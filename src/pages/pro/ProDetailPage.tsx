@@ -88,33 +88,46 @@ const ProDetailPage: React.FC<Props> = ({ routing, onBack }) => {
       const resp = await getOperationList() as any;
       const apiList: any[] = resp?.data ?? [];
       if (apiList.length > 0) {
-        const newOps: Operation[] = apiList.map((item: any) => ({
-          id:            `api-${item.id}`,
-          opCode:        item.operationCode ?? `OP-${item.id}`,
-          opName:        item.operationName ?? '',
-          opShort:       item.aliasName ?? item.operationName ?? '',
-          category:      'PROD' as any,
-          workshop:      '',
-          productLine:   '',
-          workCenter:    item.workCenterName ?? '',
-          equipType:     '',
-          stdTimeMin:    Number(item.standardTime ?? 0),
-          prepTimeMin:   0,
-          hasFirstPiece: false,
-          hasLastPiece:  false,
-          hasPatrol:     false,
-          hasCleanup:    false,
-          isBottleneck:  item.isKeyOperation === 1,
-          isReportPoint: item.reportRequired === 1,
-          isQcPoint:     !!item.inspectionTrigger,
-          status:        'ACTIVE' as any,
-          version:       'V1.0',
-          effectDate:    item.createTime?.slice(0, 10) ?? '',
-          createdBy:     item.createBy ?? '',
-          updatedAt:     item.updateTime ?? '',
-          phases:        [],
-        }));
-        setAllOperations(newOps);
+        const newOps: Operation[] = apiList.map((item: any) => {
+          const apiCode = item.operationCode ?? `OP-${item.id}`;
+          const apiName = item.operationName ?? '';
+          // 从 mockOperations 补充 phases（API 不返回阶段字段）
+          // 策略：① opCode精确匹配 → ② opCode前缀匹配 → ③ opName匹配
+          const mockOp = findOperationByCode(apiCode)
+            ?? findOperationByName(apiName);
+          return {
+            id:            `api-${item.id}`,
+            opCode:        apiCode,
+            opName:        apiName,
+            opShort:       item.aliasName ?? apiName,
+            category:      'PROD' as any,
+            workshop:      '',
+            productLine:   '',
+            workCenter:    item.workCenterName ?? '',
+            equipType:     '',
+            stdTimeMin:    Number(item.standardTime ?? 0),
+            prepTimeMin:   0,
+            hasFirstPiece: false,
+            hasLastPiece:  false,
+            hasPatrol:     false,
+            hasCleanup:    false,
+            isBottleneck:  item.isKeyOperation === 1,
+            isReportPoint: item.reportRequired === 1,
+            isQcPoint:     !!item.inspectionTrigger,
+            status:        'ACTIVE' as any,
+            version:       'V1.0',
+            effectDate:    item.createTime?.slice(0, 10) ?? '',
+            createdBy:     item.createBy ?? '',
+            updatedAt:     item.updateTime ?? '',
+            // 优先用 mock 里的 phases（含完整字段定义），API 无此字段
+            phases:        mockOp?.phases ?? [],
+          };
+        });
+        // 合并：将 API 数据与 mockOperations 做去重合并
+        // mockOperations 中 API 未覆盖到的工序保留（保证 phases 完整性）
+        const apiCodes = new Set(newOps.map(o => o.opCode));
+        const mockOnly = mockOperations.filter(m => !apiCodes.has(m.opCode));
+        setAllOperations([...newOps, ...mockOnly]);
       }
     } catch { /* 保留 mock */ }
   }, []);
