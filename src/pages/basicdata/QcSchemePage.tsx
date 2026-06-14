@@ -57,7 +57,7 @@ function initScheme(base?: QcScheme): EditScheme {
 type SchemeQuickFilter = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'IQC' | 'IPQC' | 'FQC_OQC';
 
 const QcSchemePage: React.FC = () => {
-  const [schemes, setSchemes] = useState<QcScheme[]>([]);  // 启动时为空，loadFromApi 加载真实数据，失败才降级到 mock
+  const [schemes, setSchemes] = useState<QcScheme[]>(mockQcSchemes);  // 默认使用mock数据，API成功后替换
   const [apiLoading, setApiLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<QcSchemeType | 'ALL'>('ALL');
@@ -143,10 +143,9 @@ const QcSchemePage: React.FC = () => {
           items:         [],
         }));
         setSchemes(mapped);
-      } else {
-        setSchemes([]);
       }
-    } catch { /* 保留本地状态 */ } finally { setApiLoading(false); }
+      // API返回空数组时保持mockQcSchemes，不调用 setSchemes([])
+    } catch { /* 保留本地状态（mockQcSchemes） */ } finally { setApiLoading(false); }
   }, []);
 
   useEffect(() => { loadFromApi(); }, [loadFromApi]);

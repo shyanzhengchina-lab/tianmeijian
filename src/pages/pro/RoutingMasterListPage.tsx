@@ -36,7 +36,19 @@ interface Props {
 }
 
 const RoutingMasterListPage: React.FC<Props> = ({ onViewDetail, onNavigateToSeries, initialHighlightCode }) => {
-  const [routings, setRoutings] = useLocalStorage<RoutingMaster[]>('bip_routings', []);
+  // bip_routings 默认使用 mockRoutingMasters，包含 GMP-PACKAGE-V1 等完整工序数据
+  const [rawRoutings, setRoutings] = useLocalStorage<RoutingMaster[]>('bip_routings', mockRoutingMasters);
+
+  // 修复localStorage中groups为空的历史记录：用mockRoutingMasters中的完整数据补全
+  const routings = rawRoutings.map(r => {
+    if (!r.groups || r.groups.length === 0) {
+      const fallback = mockRoutingMasters.find(m => m.routingCode === r.routingCode && m.version === r.version);
+      if (fallback && fallback.groups && fallback.groups.length > 0) {
+        return { ...r, groups: fallback.groups, opCount: fallback.opCount, totalTimeMin: fallback.totalTimeMin };
+      }
+    }
+    return r;
+  });
 
   // ── 从后端加载工艺路径列表，与本地数据去重合并 ────────────────────
   const loadFromApi = useCallback(async () => {

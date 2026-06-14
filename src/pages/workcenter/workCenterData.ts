@@ -11,18 +11,24 @@ export interface WorkCenterOption {
 }
 
 export const WORK_CENTER_LIST: WorkCenterOption[] = [
-  { code: 'WC-GRIND-01', name: '数控磨削工作中心',   workshop: '精密加工车间', status: 'ACTIVE' },
-  { code: 'WC-HT-01',    name: '热处理工作中心',     workshop: '热处理车间',   status: 'ACTIVE' },
-  { code: 'WC-COAT-01',  name: 'PVD涂层工作中心',    workshop: '涂层车间',     status: 'MAINTENANCE' },
-  { code: 'WC-LASER-01', name: '激光打标工作中心',   workshop: '标识车间',     status: 'ACTIVE' },
-  { code: 'WC-CLEAN-01', name: '超声清洗工作中心',   workshop: '清洗车间',     status: 'ACTIVE' },
-  { code: 'WC-QC-01',    name: '成品检验工作中心',   workshop: '检验室',       status: 'ACTIVE' },
-  { code: 'WC-STER-01',  name: 'EO灭菌工作中心',     workshop: '灭菌间',       status: 'DISABLED' },
-  { code: 'WC-PACK-01',  name: '包装工作中心',       workshop: '包装车间',     status: 'ACTIVE' },
-  { code: 'WC-ASM-01',   name: '组装工作中心',       workshop: '组装车间',     status: 'ACTIVE' },
-  { code: 'WC-LINE-01',  name: '刻线工作中心',       workshop: '精密加工车间', status: 'ACTIVE' },
-  { code: 'WC-RING-01',  name: '环规检验工作中心',   workshop: '质检车间',     status: 'ACTIVE' },
-  { code: 'WC-STORE-01', name: '仓储工作中心',       workshop: '仓储',         status: 'ACTIVE' },
+  // ── 南京工厂·固体制剂车间（D级洁净）────────────────────────────
+  { code: 'WC-GRAN-01',   name: '制粒工作中心',       workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-FLUID-01',  name: '干燥工作中心',       workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-MIX-01',    name: '混合工作中心',       workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-PRESS-01',  name: '压片工作中心',       workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-COAT-01',   name: '包衣工作中心',       workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-INNERPACK-01', name: '内包装工作中心',  workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-COUNT-01',  name: '数片工作中心',       workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-CARTONER-01', name: '装盒工作中心',     workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  { code: 'WC-CODE-01',   name: '喷码赋码工作中心',   workshop: '固体制剂车间（D级）', status: 'ACTIVE' },
+  // ── 溧水工厂·益生菌车间（C级洁净，冷链≤8℃）─────────────────────
+  { code: 'WC-CAPS-01',   name: '胶囊充填工作中心',   workshop: '益生菌车间（C级，≤8℃）', status: 'ACTIVE' },
+  { code: 'WC-COLDPACK-01', name: '冷链包装工作中心', workshop: '益生菌车间（C级，≤8℃）', status: 'ACTIVE' },
+  { code: 'WC-COLDSTORE-01', name: '冷链仓储工作中心', workshop: '溧水冷链仓（≤8℃）', status: 'ACTIVE' },
+  // ── QC实验室（双工厂共用）────────────────────────────────────────
+  { code: 'WC-QC-CHEM-01', name: '理化检验工作中心',  workshop: 'QC实验室',     status: 'ACTIVE' },
+  { code: 'WC-QC-MICRO-01', name: '微生物检验工作中心', workshop: 'QC实验室',   status: 'ACTIVE' },
+  { code: 'WC-QC-COLD-01', name: '冷链检验工作中心',  workshop: 'QC实验室（低温区）', status: 'ACTIVE' },
 ];
 
 /** 仅获取状态为正常的工作中心 */

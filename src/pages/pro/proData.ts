@@ -340,6 +340,75 @@ export const mockRoutings: ProcessRouting[] = [
   },
 
   // ══════════════════════════════════════════════════════════════════════
+  // GMP-PACKAGE-V1：天美健保健品GMP包装通用方案 V1.0【TMJ VitC系列】
+  // 路线：清场确认→称量领料→内包装（数片装瓶）→外包装（装盒装箱）→喷码赋码→QA放行确认
+  // 说明：适用于VitC咀嚼片GMP包装段，已通过QA审核
+  // ══════════════════════════════════════════════════════════════════════
+  {
+    id: 'TMJ-R-PKG-V1',
+    routingCode: 'GMP-PACKAGE-V1',
+    routingName: '天美健保健品GMP包装通用方案 V1.0',
+    productCode: 'PROD-TAB-025',
+    productName: 'VitC咀嚼片（包装段）',
+    productModel: '0.5g×60片/瓶，HDPE瓶装',
+    version: 'V1.0',
+    isDefault: false,
+    status: 'ACTIVE' as const,
+    workshop: '南京工厂·固体制剂车间（D级）',
+    productLine: '片剂包装线',
+    applicableSpec: 'TMJ VitC系列 | 瓶装/盒装 | GMP包装段通用',
+    remark: 'GMP包装通用路线；适用VitC咀嚼片系列；物料平衡率96.0~102.0%；电子批记录全程归档',
+    auditBy: '孔翠萍(QA)',
+    auditAt: '2026-01-10',
+    auditRemark: '包装段关键控制点：清场完整性、装量差异、密封性、批号有效期打印、三级码赋码；已通过GMP审核',
+    createdBy: '王建国',
+    createdAt: '2026-01-01',
+    updatedAt: '2026-04-01',
+    groups: [
+      serialGroup('PKG-G01', 10, step(
+        'PKG-S01','op-pkg-clean','PKG-01','清场确认','清场','WC-INNERPACK-01',
+        30, false, false, true, 2,
+        '包装线开线前清场确认；上批遗留物料清除；清场合格证核查；操作人+班长双签',
+      )),
+      serialGroup('PKG-G02', 20, step(
+        'PKG-S02','op-pkg-weigh','PKG-02','称量领料','称量领料','WC-INNERPACK-01',
+        60, false, true, true, 3,
+        '包材/原料按BOM双人核对；HDPE瓶/铝箔/说明书/外盒数量核对；批号有效期与打印件核对；EBR记录点',
+      )),
+      serialGroup('PKG-G03', 30, step(
+        'PKG-S03','op-pkg-count','PKG-03','数片装瓶','数片装瓶','WC-COUNT-01',
+        180, true, true, true, 5,
+        '⚡关键工序：全自动数片机APC-60；装量差异±5%抽检（每30min取样20粒）；HDPE瓶铝箔感应封口；密封性100%检查；OPC UA实时采集',
+      )),
+      serialGroup('PKG-G04', 40, step(
+        'PKG-S04','op-pkg-inner','PKG-04','内包装（加盖/贴标）','内包','WC-INNERPACK-01',
+        90, false, true, true, 3,
+        '旋盖扭矩检查≥1.8N·m；贴标机自动贴标；批号/有效期视觉核对；密封性抽检≥10粒/批',
+      )),
+      serialGroup('PKG-G05', 50, step(
+        'PKG-S05','op-pkg-cartoner','PKG-05','装盒装箱','装盒装箱','WC-CARTONER-01',
+        120, false, false, true, 3,
+        '自动装盒机ZH-120；说明书版本核对；装盒规格60片/瓶×1瓶/盒；装箱12盒/箱；收率96.0~100.0%；EBR记录',
+      )),
+      serialGroup('PKG-G06', 60, step(
+        'PKG-S06','op-pkg-code','PKG-06','喷码赋码','喷码赋码','WC-CODE-01',
+        60, false, true, true, 3,
+        '激光喷码机打生产批号+有效期+流水号；GS1-128三级码：产品码→箱码→托盘码关联；批记录追溯链闭合',
+      )),
+      serialGroup('PKG-G07', 70, step(
+        'PKG-S07','op-pkg-balance','PKG-07','物料平衡计算','物料平衡','WC-INNERPACK-01',
+        30, false, true, true, 2,
+        '物料平衡率=（成品数量+残品+取样量）/投料量×100%；标准96.0~102.0%；超限触发偏差调查',
+      )),
+      serialGroup('PKG-G08', 80, step(
+        'PKG-S08','op-pkg-qa','PKG-08','QA放行审核','QA放行','WC-QC-CHEM-01',
+        30, false, true, true, 2,
+        'QA专员审核EBR完整性；检验报告合格确认；三级签名放行；成品入库WH-FG区',
+      )),
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
   // NJ-GD-TAB-002：维C咀嚼片 旧版 V0.9【已停用】（保留用于历史对比）
   // ══════════════════════════════════════════════════════════════════════
   {

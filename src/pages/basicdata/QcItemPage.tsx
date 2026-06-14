@@ -104,8 +104,16 @@ function initEdit(base?: QcItem): EditItem {
 type QuickFilter = 'ALL' | 'ACTIVE' | 'CRITICAL' | 'REFERENCED';
 
 const QcItemPage: React.FC = () => {
-  const [items, setItems] = useLocalStorage<QcItem[]>('bip_qc_items', []);
+  // bip_qc_items 存储的空数组[]也算"未初始化"，此时用mockQcItems填充
+  const [rawItems, setItems] = useLocalStorage<QcItem[]>('bip_qc_items', mockQcItems);
+  const items: QcItem[] = (rawItems && rawItems.length > 0) ? rawItems : mockQcItems;
   const [apiSaving, setApiSaving] = useState(false);
+
+  // ── 确保初始化时有mock数据（处理localStorage空值情况）─────────
+  useEffect(() => {
+    setItems(prev => (prev && prev.length > 0) ? prev : mockQcItems);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── 从后端加载质检项目（API-first replace）─────────────────
   const loadFromApi = useCallback(async () => {
@@ -115,6 +123,7 @@ const QcItemPage: React.FC = () => {
       if (apiList.length > 0) {
         setItems(apiList.map(mapApiToQcItem));
       }
+      // API返回空时保持mockQcItems，不清空
     } catch { /* 保留 mock */ }
   }, [setItems]);
   useEffect(() => { loadFromApi(); }, [loadFromApi]);

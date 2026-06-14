@@ -496,4 +496,85 @@ export const mockRoutingMasters: RoutingMaster[] = [
       },
     ],
   },
+
+  // ── GMP-PACKAGE-V1：天美健保健品GMP包装通用方案（启用）────────────
+  {
+    id: 'RM-PKG-V1',
+    routingCode: 'GMP-PACKAGE-V1',
+    version: 'V1.0',
+    routingName: '天美健保健品GMP包装通用方案 V1.0',
+    seriesCode: 'VitC-TAB',
+    seriesName: '维生素C咀嚼片系列',
+    workshop: '固体制剂车间（D级）',
+    productLine: '片剂包装线',
+    isDefault: false,
+    status: 'ENABLED',
+    variantType: 'STANDARD',
+    bindMode: 'RANGE',
+    opCount: 8,
+    parallelGroupCount: 0,
+    totalTimeMin: 600,
+    groups: [
+      { id:'pkg-g01', seq:10, steps:[{
+        id:'pkg-s01', opId:'op-pkg-01', opCode:'PKG-01', opName:'清场确认', opShort:'清场',
+        workCenter:'WC-INNERPACK-01', stdTimeMin:30, isKeyOp:false, isQcPoint:false, isReportPoint:true,
+        phaseCount:2, remark:'开线前清场确认；清场合格证核查；双人签字',
+      }]},
+      { id:'pkg-g02', seq:20, steps:[{
+        id:'pkg-s02', opId:'op-pkg-02', opCode:'PKG-02', opName:'称量领料', opShort:'领料',
+        workCenter:'WC-INNERPACK-01', stdTimeMin:60, isKeyOp:false, isQcPoint:true, isReportPoint:true,
+        phaseCount:3, remark:'包材/原料按BOM双人核对；批号/有效期与打印件核对',
+      }]},
+      { id:'pkg-g03', seq:30, steps:[{
+        id:'pkg-s03', opId:'op-pkg-03', opCode:'PKG-03', opName:'数片装瓶', opShort:'装瓶',
+        workCenter:'WC-COUNT-01', stdTimeMin:180, isKeyOp:true, isQcPoint:true, isReportPoint:true,
+        phaseCount:5, remark:'⚡关键：全自动数片机APC-60；装量差异±5%；铝箔感应封口；密封性100%检查',
+      }]},
+      { id:'pkg-g04', seq:40, steps:[{
+        id:'pkg-s04', opId:'op-pkg-04', opCode:'PKG-04', opName:'内包装（加盖/贴标）', opShort:'内包',
+        workCenter:'WC-INNERPACK-01', stdTimeMin:90, isKeyOp:false, isQcPoint:true, isReportPoint:true,
+        phaseCount:3, remark:'旋盖扭矩≥1.8N·m；贴标机自动贴标；批号/有效期视觉核对',
+      }]},
+      { id:'pkg-g05', seq:50, steps:[{
+        id:'pkg-s05', opId:'op-pkg-05', opCode:'PKG-05', opName:'装盒装箱', opShort:'装盒',
+        workCenter:'WC-CARTONER-01', stdTimeMin:120, isKeyOp:false, isQcPoint:false, isReportPoint:true,
+        phaseCount:3, remark:'自动装盒机ZH-120；说明书版本核对；收率96.0~100.0%',
+      }]},
+      { id:'pkg-g06', seq:60, steps:[{
+        id:'pkg-s06', opId:'op-pkg-06', opCode:'PKG-06', opName:'喷码赋码', opShort:'赋码',
+        workCenter:'WC-CODE-01', stdTimeMin:60, isKeyOp:false, isQcPoint:true, isReportPoint:true,
+        phaseCount:3, remark:'激光喷码批号+有效期；GS1-128三级码关联；追溯链闭合',
+      }]},
+      { id:'pkg-g07', seq:70, steps:[{
+        id:'pkg-s07', opId:'op-pkg-07', opCode:'PKG-07', opName:'物料平衡计算', opShort:'物平',
+        workCenter:'WC-INNERPACK-01', stdTimeMin:30, isKeyOp:false, isQcPoint:true, isReportPoint:true,
+        phaseCount:2, remark:'物料平衡率96.0~102.0%；超限触发偏差调查',
+      }]},
+      { id:'pkg-g08', seq:80, steps:[{
+        id:'pkg-s08', opId:'op-pkg-08', opCode:'PKG-08', opName:'QA放行审核', opShort:'放行',
+        workCenter:'WC-QC-CHEM-01', stdTimeMin:30, isKeyOp:true, isQcPoint:true, isReportPoint:true,
+        phaseCount:2, remark:'QA专员审核EBR完整性；检验报告合格确认；三级签名放行',
+      }]},
+    ],
+    auditBy: '孔翠萍(QA)',
+    auditAt: '2026-01-10',
+    auditRemark: '包装段关键控制点：清场、装量、密封性、批号有效期、三级码赋码；已通过GMP审核',
+    effectiveDate: '2026-01-10',
+    remark: 'GMP包装通用路线；适用VitC咀嚼片系列TMJ VitC；物料平衡率96.0~102.0%；EBR全程归档',
+    createdBy: '王建国',
+    createdAt: '2026-01-01',
+    updatedAt: '2026-04-01',
+    history: [
+      {
+        id: 'H-PKG-01', operationType: 'CREATE', toVersion: 'V1.0',
+        operator: '王建国', operationTime: '2026-01-01 09:00:00',
+        remark: '新建VitC咀嚼片包装段通用工艺路线',
+      },
+      {
+        id: 'H-PKG-02', operationType: 'AUDIT', toVersion: 'V1.0',
+        operator: '孔翠萍(QA)', operationTime: '2026-01-10 14:00:00',
+        remark: '审核通过，GMP包装控制点核查合格',
+      },
+    ],
+  },
 ];
