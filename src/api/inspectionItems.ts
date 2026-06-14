@@ -21,14 +21,14 @@ export interface InspectionItemRecord {
 
 /** 查询全部质检项目（不分页） */
 export const getInspectionItemList = (params?: { category?: string; status?: number }): Promise<any> =>
-  http.get('/inspection-items/list', { params });
+  http.get('/inspection-items/list', { params, silent: true });
 
 /** 分页查询 */
 export const getInspectionItemPage = (params?: {
   current?: number; pageSize?: number;
   code?: string; category?: string; status?: number;
 }): Promise<any> =>
-  http.get('/inspection-items/page', { params });
+  http.get('/inspection-items/page', { params, silent: true });
 
 /** 根据ID查询 */
 export const getInspectionItemById = (id: number): Promise<any> =>

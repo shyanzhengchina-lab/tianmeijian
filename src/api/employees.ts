@@ -29,11 +29,11 @@ export interface PageResult<T> {
 
 /** 分页查询员工 */
 export const getEmployeePage = (current = 1, pageSize = 15): Promise<{ data: PageResult<EmployeeRecord> }> =>
-  http.get(`/employees/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/employees/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部员工（不分页） */
 export const getEmployeeList = (): Promise<{ data: EmployeeRecord[] }> =>
-  http.get('/employees/list');
+  http.get('/employees/list', { silent: true });
 
 /** 根据 ID 查询员工 */
 export const getEmployeeById = (id: number): Promise<{ data: EmployeeRecord }> =>

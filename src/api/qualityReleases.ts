@@ -33,11 +33,11 @@ export interface QualityReleaseRecord {
 
 /** 查询全部质量放行 */
 export const getQualityReleaseList = (params?: { status?: string; releaseType?: string }): Promise<any> =>
-  http.get('/quality-releases/list', { params });
+  http.get('/quality-releases/list', { params, silent: true });
 
 /** 分页查询质量放行 */
 export const getQualityReleasePage = (params?: { current?: number; pageSize?: number; releaseNo?: string; status?: string }): Promise<any> =>
-  http.get('/quality-releases/page', { params });
+  http.get('/quality-releases/page', { params, silent: true });
 
 /** 根据ID查询 */
 export const getQualityReleaseById = (id: number): Promise<any> =>

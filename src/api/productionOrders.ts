@@ -26,11 +26,11 @@ export interface ProductionOrderRecord {
 export const getProductionOrderPage = (params?: {
   current?: number; pageSize?: number;
   orderNo?: string; status?: string; customerName?: string;
-}): Promise<any> => http.get('/production-orders/page', { params });
+}): Promise<any> => http.get('/production-orders/page', { params, silent: true });
 
 /** 查询全部生产订单（不分页） */
 export const getProductionOrderList = (params?: { status?: string }): Promise<any> =>
-  http.get('/production-orders/list', { params });
+  http.get('/production-orders/list', { params, silent: true });
 
 /** 根据ID查询 */
 export const getProductionOrderById = (id: number): Promise<any> =>

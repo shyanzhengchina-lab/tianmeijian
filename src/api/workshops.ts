@@ -27,11 +27,11 @@ export interface PageResult<T> {
 
 /** 分页查询车间 */
 export const getWorkshopPage = (current = 1, pageSize = 15): Promise<{ data: PageResult<WorkshopRecord> }> =>
-  http.get(`/workshops/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/workshops/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部车间（不分页） */
 export const getWorkshopList = (): Promise<{ data: WorkshopRecord[] }> =>
-  http.get('/workshops/list');
+  http.get('/workshops/list', { silent: true });
 
 /** 根据 ID 查询车间 */
 export const getWorkshopById = (id: number): Promise<{ data: WorkshopRecord }> =>

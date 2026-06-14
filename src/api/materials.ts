@@ -34,11 +34,11 @@ export interface MaterialPageQuery {
 
 /** 分页查询物料 */
 export const getMaterialPage = (query: MaterialPageQuery = {}): Promise<any> =>
-  http.get('/materials/page', { params: query });
+  http.get('/materials/page', { params: query, silent: true });
 
 /** 查询全部（不分页） */
 export const getMaterialList = (params?: { categoryId?: number; status?: number }): Promise<any> =>
-  http.get('/materials/list', { params });
+  http.get('/materials/list', { params, silent: true });
 
 /** 根据ID查询 */
 export const getMaterialById = (id: number): Promise<any> =>

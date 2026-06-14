@@ -27,11 +27,11 @@ export const getUnitPage = (params?: {
   name?: string;
   status?: number;
 }): Promise<any> =>
-  http.get('/units/page', { params });
+  http.get('/units/page', { params, silent: true });
 
 /** 查询全部（不分页） */
 export const getUnitList = (params?: { groupId?: number; status?: number }): Promise<any> =>
-  http.get('/units/list', { params });
+  http.get('/units/list', { params, silent: true });
 
 /** 根据ID查询 */
 export const getUnitById = (id: number): Promise<any> =>

@@ -4,10 +4,10 @@
 import http from './http';
 
 export const getMaterialIssuanceList = (params?: { status?: string }) =>
-  http.get('/material-issuances/list', { params });
+  http.get('/material-issuances/list', { params, silent: true });
 
 export const getMaterialIssuancePage = (params?: { current?: number; pageSize?: number; status?: string }) =>
-  http.get('/material-issuances/page', { params });
+  http.get('/material-issuances/page', { params, silent: true });
 
 export const getMaterialIssuanceById = (id: number) =>
   http.get(`/material-issuances/${id}`);
@@ -28,7 +28,7 @@ export const deleteMaterialIssuance = (id: number) =>
   http.delete(`/material-issuances/${id}`);
 
 export const getMaterialIssuanceDetailList = (issuanceId?: number) =>
-  http.get('/material-issuance-details/list', { params: { issuanceId } });
+  http.get('/material-issuance-details/list', { params: { issuanceId }, silent: true });
 
 export const createMaterialIssuanceDetail = (data: any) =>
   http.post('/material-issuance-details', data);

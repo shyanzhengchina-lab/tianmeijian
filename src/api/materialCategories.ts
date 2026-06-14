@@ -19,7 +19,7 @@ export interface MaterialCategoryRecord {
 
 /** 查询全部分类（flat list，前端自行组树） */
 export const getMaterialCategoryList = (params?: { parentId?: number; status?: number }): Promise<any> =>
-  http.get('/material-categories/list', { params });
+  http.get('/material-categories/list', { params, silent: true });
 
 /** 新增分类 */
 export const createMaterialCategory = (data: MaterialCategoryRecord): Promise<any> =>

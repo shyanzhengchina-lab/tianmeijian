@@ -29,11 +29,11 @@ export interface PageResult<T> {
 
 /** 分页查询垫片发放 */
 export const getPadIssuancePage = (current = 1, pageSize = 15): Promise<{ data: PageResult<PadIssuanceRecord> }> =>
-  http.get(`/pad-issuances/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/pad-issuances/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部垫片发放（不分页） */
 export const getPadIssuanceList = (): Promise<{ data: PadIssuanceRecord[] }> =>
-  http.get('/pad-issuances/list');
+  http.get('/pad-issuances/list', { silent: true });
 
 /** 根据 ID 查询垫片发放 */
 export const getPadIssuanceById = (id: number): Promise<{ data: PadIssuanceRecord }> =>

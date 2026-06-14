@@ -36,11 +36,11 @@ export interface RoutingStepRecord {
 
 /** 查询全部工艺路径 */
 export const getProcessRoutingList = (params?: { status?: string; routingCode?: string }): Promise<any> =>
-  http.get('/process-routings/list', { params });
+  http.get('/process-routings/list', { params, silent: true });
 
 /** 分页查询工艺路径 */
 export const getProcessRoutingPage = (params?: { current?: number; pageSize?: number; routingCode?: string; status?: string }): Promise<any> =>
-  http.get('/process-routings/page', { params });
+  http.get('/process-routings/page', { params, silent: true });
 
 /** 根据ID查询 */
 export const getProcessRoutingById = (id: number): Promise<any> =>
@@ -64,7 +64,7 @@ export const batchDeleteProcessRoutings = (ids: number[]): Promise<any> =>
 
 /** 查询路径步骤 */
 export const getRoutingStepList = (params?: { routingId?: number }): Promise<any> =>
-  http.get('/routing-steps/list', { params });
+  http.get('/routing-steps/list', { params, silent: true });
 
 /** 新增路径步骤 */
 export const createRoutingStep = (data: RoutingStepRecord): Promise<any> =>

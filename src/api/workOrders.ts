@@ -39,11 +39,11 @@ export interface WorkOrderRecord {
 export const getWorkOrderPage = (params?: {
   current?: number; pageSize?: number;
   workOrderNo?: string; orderId?: number; status?: string; materialName?: string;
-}): Promise<any> => http.get('/work-orders/page', { params });
+}): Promise<any> => http.get('/work-orders/page', { params, silent: true });
 
 /** 查询全部工单（不分页） */
 export const getWorkOrderList = (params?: { orderId?: number; status?: string }): Promise<any> =>
-  http.get('/work-orders/list', { params });
+  http.get('/work-orders/list', { params, silent: true });
 
 /** 根据ID查询 */
 export const getWorkOrderById = (id: number): Promise<any> =>

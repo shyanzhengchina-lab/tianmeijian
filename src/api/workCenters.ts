@@ -32,11 +32,11 @@ export interface PageResult<T> {
 
 /** 分页查询工作中心 */
 export const getWorkCenterPage = (current = 1, pageSize = 15): Promise<{ data: PageResult<WorkCenterRecord> }> =>
-  http.get(`/work-centers/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/work-centers/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部工作中心（不分页） */
 export const getWorkCenterList = (): Promise<{ data: WorkCenterRecord[] }> =>
-  http.get('/work-centers/list');
+  http.get('/work-centers/list', { silent: true });
 
 /** 根据 ID 查询工作中心 */
 export const getWorkCenterById = (id: number): Promise<{ data: WorkCenterRecord }> =>

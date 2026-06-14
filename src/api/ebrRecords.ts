@@ -36,12 +36,12 @@ export interface EbrRecordApiRecord {
 export const getEbrRecordPage = (params?: {
   current?: number; pageSize?: number;
   batchNo?: string; productCode?: string; status?: string;
-}): Promise<any> => http.get('/ebr-records/page', { params });
+}): Promise<any> => http.get('/ebr-records/page', { params, silent: true });
 
 /** 查询全部 EBR（不分页） */
 export const getEbrRecordList = (params?: {
   status?: string; productCode?: string;
-}): Promise<any> => http.get('/ebr-records/list', { params });
+}): Promise<any> => http.get('/ebr-records/list', { params, silent: true });
 
 /** 根据ID查询 */
 export const getEbrRecordById = (id: number): Promise<any> =>

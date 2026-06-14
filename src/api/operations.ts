@@ -25,11 +25,11 @@ export interface OperationRecord {
 
 /** 查询全部工序 */
 export const getOperationList = (params?: { routingStepId?: number; operationCode?: string }): Promise<any> =>
-  http.get('/operations/list', { params });
+  http.get('/operations/list', { params, silent: true });
 
 /** 分页查询工序 */
 export const getOperationPage = (params?: { current?: number; pageSize?: number; operationCode?: string; operationName?: string }): Promise<any> =>
-  http.get('/operations/page', { params });
+  http.get('/operations/page', { params, silent: true });
 
 /** 根据ID查询 */
 export const getOperationById = (id: number): Promise<any> =>

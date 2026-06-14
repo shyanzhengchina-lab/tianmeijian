@@ -31,13 +31,13 @@ export interface PadTaskRecord {
 
 /** 全量列表 */
 export const getPadTaskList = (params?: { status?: string; operationCode?: string }): Promise<any> =>
-  http.get('/pad-tasks/list', { params });
+  http.get('/pad-tasks/list', { params, silent: true });
 
 /** 分页查询 */
 export const getPadTaskPage = (params?: {
   current?: number; pageSize?: number; status?: string; taskNo?: string;
 }): Promise<any> =>
-  http.get('/pad-tasks/page', { params });
+  http.get('/pad-tasks/page', { params, silent: true });
 
 /** 根据ID查询 */
 export const getPadTaskById = (id: number): Promise<any> =>

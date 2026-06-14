@@ -35,11 +35,11 @@ export interface PageResult<T> {
 
 /** 分页查询设备 */
 export const getEquipmentPage = (current = 1, pageSize = 15): Promise<{ data: PageResult<EquipmentRecord> }> =>
-  http.get(`/equipment/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/equipment/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部设备（不分页） */
 export const getEquipmentList = (): Promise<{ data: EquipmentRecord[] }> =>
-  http.get('/equipment/list');
+  http.get('/equipment/list', { silent: true });
 
 /** 根据 ID 查询设备 */
 export const getEquipmentById = (id: number): Promise<{ data: EquipmentRecord }> =>

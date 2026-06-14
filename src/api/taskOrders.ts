@@ -41,11 +41,11 @@ export interface TaskOrderRecord {
 export const getTaskOrderPage = (params?: {
   current?: number; pageSize?: number;
   taskNo?: string; workOrderId?: number; status?: string; assignedToName?: string;
-}): Promise<any> => http.get('/task-orders/page', { params });
+}): Promise<any> => http.get('/task-orders/page', { params, silent: true });
 
 /** 查询全部任务单（不分页） */
 export const getTaskOrderList = (params?: { workOrderId?: number; status?: string }): Promise<any> =>
-  http.get('/task-orders/list', { params });
+  http.get('/task-orders/list', { params, silent: true });
 
 /** 根据ID查询 */
 export const getTaskOrderById = (id: number): Promise<any> =>

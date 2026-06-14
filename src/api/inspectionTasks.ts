@@ -33,11 +33,11 @@ export interface InspectionTaskRecord {
 
 /** 查询全部质检任务 */
 export const getInspectionTaskList = (params?: { status?: string; taskType?: string }): Promise<any> =>
-  http.get('/inspection-tasks/list', { params });
+  http.get('/inspection-tasks/list', { params, silent: true });
 
 /** 分页查询质检任务 */
 export const getInspectionTaskPage = (params?: { current?: number; pageSize?: number; taskNo?: string; status?: string; taskType?: string }): Promise<any> =>
-  http.get('/inspection-tasks/page', { params });
+  http.get('/inspection-tasks/page', { params, silent: true });
 
 /** 根据ID查询 */
 export const getInspectionTaskById = (id: number): Promise<any> =>

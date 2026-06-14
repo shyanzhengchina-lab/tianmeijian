@@ -30,7 +30,7 @@ export const getBackflushLogList = (params?: {
   materialCode?: string;
   status?: string;
 }): Promise<any> =>
-  http.get('/backflush-logs/list', { params });
+  http.get('/backflush-logs/list', { params, silent: true });
 
 /** 新增倒扣日志 */
 export const createBackflushLog = (data: BackflushLogRecord): Promise<any> =>

@@ -31,11 +31,11 @@ export interface MrbRecordRecord {
 
 /** 查询全部MRB记录 */
 export const getMrbRecordList = (params?: { status?: string; mrbNo?: string }): Promise<any> =>
-  http.get('/mrb-records/list', { params });
+  http.get('/mrb-records/list', { params, silent: true });
 
 /** 分页查询MRB记录 */
 export const getMrbRecordPage = (params?: { current?: number; pageSize?: number; mrbNo?: string; status?: string }): Promise<any> =>
-  http.get('/mrb-records/page', { params });
+  http.get('/mrb-records/page', { params, silent: true });
 
 /** 根据ID查询 */
 export const getMrbRecordById = (id: number): Promise<any> =>

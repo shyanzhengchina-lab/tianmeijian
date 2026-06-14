@@ -27,11 +27,11 @@ export interface PageResult<T> {
 
 /** 分页查询质检方案 */
 export const getQcSchemePage = (current = 1, pageSize = 15): Promise<{ data: PageResult<QcSchemeRecord> }> =>
-  http.get(`/qc-schemes/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/qc-schemes/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部质检方案（不分页） */
 export const getQcSchemeList = (): Promise<{ data: QcSchemeRecord[] }> =>
-  http.get('/qc-schemes/list');
+  http.get('/qc-schemes/list', { silent: true });
 
 /** 根据 ID 查询质检方案 */
 export const getQcSchemeById = (id: number): Promise<{ data: QcSchemeRecord }> =>

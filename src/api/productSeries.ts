@@ -25,11 +25,11 @@ export interface PageResult<T> {
 
 /** 分页查询产品系列 */
 export const getProductSeriesPage = (current = 1, pageSize = 15): Promise<{ data: PageResult<ProductSeriesRecord> }> =>
-  http.get(`/product-series/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/product-series/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部产品系列（不分页） */
 export const getProductSeriesList = (): Promise<{ data: ProductSeriesRecord[] }> =>
-  http.get('/product-series/list');
+  http.get('/product-series/list', { silent: true });
 
 /** 根据 ID 查询产品系列 */
 export const getProductSeriesById = (id: number): Promise<{ data: ProductSeriesRecord }> =>

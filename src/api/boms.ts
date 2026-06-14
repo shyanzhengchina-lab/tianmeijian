@@ -43,11 +43,11 @@ export interface BomDetailRecord {
 
 /** 查询全部BOM（不分页） */
 export const getBomList = (params?: { status?: string; code?: string }): Promise<any> =>
-  http.get('/boms/list', { params });
+  http.get('/boms/list', { params, silent: true });
 
 /** 分页查询BOM */
 export const getBomPage = (params?: { current?: number; pageSize?: number; code?: string; status?: string }): Promise<any> =>
-  http.get('/boms/page', { params });
+  http.get('/boms/page', { params, silent: true });
 
 /** 根据ID查询BOM */
 export const getBomById = (id: number): Promise<any> =>
@@ -75,7 +75,7 @@ export const batchDeleteBoms = (ids: number[]): Promise<any> =>
 
 /** 查询BOM明细列表 */
 export const getBomDetailList = (params?: { bomId?: number }): Promise<any> =>
-  http.get('/bom-details/list', { params });
+  http.get('/bom-details/list', { params, silent: true });
 
 /** 新增BOM明细 */
 export const createBomDetail = (data: BomDetailRecord): Promise<any> =>

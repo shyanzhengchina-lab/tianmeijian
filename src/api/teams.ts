@@ -27,11 +27,11 @@ export interface PageResult<T> {
 
 /** 分页查询班组 */
 export const getTeamPage = (current = 1, pageSize = 15): Promise<{ data: PageResult<TeamRecord> }> =>
-  http.get(`/teams/page?current=${current}&pageSize=${pageSize}`);
+  http.get(`/teams/page?current=${current}&pageSize=${pageSize}`, { silent: true });
 
 /** 查询全部班组（不分页） */
 export const getTeamList = (): Promise<{ data: TeamRecord[] }> =>
-  http.get('/teams/list');
+  http.get('/teams/list', { silent: true });
 
 /** 根据 ID 查询班组 */
 export const getTeamById = (id: number): Promise<{ data: TeamRecord }> =>

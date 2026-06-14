@@ -23,12 +23,12 @@ export const getFloatTicketPage = (params?: {
   ticketNo?: string;
   workOrderId?: number;
   status?: string;
-}): Promise<any> => http.get('/float-tickets/page', { params });
+}): Promise<any> => http.get('/float-tickets/page', { params, silent: true });
 
 export const getFloatTicketList = (params?: {
   workOrderId?: number;
   status?: string;
-}): Promise<any> => http.get('/float-tickets/list', { params });
+}): Promise<any> => http.get('/float-tickets/list', { params, silent: true });
 
 export const getFloatTicketById = (id: number): Promise<any> =>
   http.get(`/float-tickets/${id}`);
