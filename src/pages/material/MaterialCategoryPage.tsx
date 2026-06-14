@@ -171,6 +171,19 @@ const deleteNode = (tree: MaterialCategory[], id: string): MaterialCategory[] =>
 
 // ── 主页面组件 ────────────────────────────────────────────────────────────
 const MaterialCategoryPage: React.FC = () => {
+  // ── 版本号机制：清除旧 DemoData 分类 id 体系的缓存 ────────────────
+  React.useMemo(() => {
+    try {
+      const VER_KEY = 'bip_mat_cat_version';
+      const VER    = 'TMJ-CAT-V2';
+      if (localStorage.getItem(VER_KEY) !== VER) {
+        localStorage.removeItem('bip_material_categories');
+        localStorage.removeItem('bip_materials');
+        localStorage.setItem(VER_KEY, VER);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   // 不再用 useLocalStorage 初始化旧mock数据，直接从API加载
   const [cats, setCats] = useState<MaterialCategory[]>([]);
   const [selectedId, setSelectedId] = useState<string>('1');

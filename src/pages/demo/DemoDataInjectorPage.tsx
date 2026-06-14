@@ -1058,38 +1058,52 @@ const DemoDataInjectorPage: React.FC = () => {
       switch (stepKey) {
         case 'bom': {
           // ── 1. 物料分类（flat数组，供MaterialCategoryPage读取）─────
+          // ⚠️ 分类 id 必须与 src/store/mockData.ts 的 mockCategories 完全一致
           const demoMaterialCategories = [
-            { id: '10', code: '01', name: '原材料', parentId: undefined },
-            { id: '11', code: '0101', name: '主原料', parentId: '10' },
-            { id: '12', code: '0102', name: '辅料', parentId: '10' },
-            { id: '20', code: '02', name: '半成品', parentId: undefined },
-            { id: '21', code: '0201', name: '颗粒中间品', parentId: '20' },
-            { id: '22', code: '0202', name: '压片中间品', parentId: '20' },
-            { id: '30', code: '03', name: '成品', parentId: undefined },
-            { id: '31', code: '0301', name: '内包装成品', parentId: '30' },
-            { id: '32', code: '0302', name: '外包装成品', parentId: '30' },
-            { id: '40', code: '04', name: '包装材料', parentId: undefined },
-            { id: '41', code: '0401', name: '内包材', parentId: '40' },
-            { id: '42', code: '0402', name: '外包材', parentId: '40' },
+            { id: '1',  code: '00', name: '全部物料',    parentId: undefined },
+            { id: '2',  code: '01', name: '01 原料',     parentId: '1' },
+            { id: '21', code: '0101', name: '主原料',    parentId: '2' },
+            { id: '22', code: '0102', name: '辅料',      parentId: '2' },
+            { id: '23', code: '0103', name: '营养强化剂', parentId: '2' },
+            { id: '3',  code: '02', name: '02 中间品',   parentId: '1' },
+            { id: '31', code: '0201', name: '颗粒中间品', parentId: '3' },
+            { id: '32', code: '0202', name: '压片中间品', parentId: '3' },
+            { id: '33', code: '0203', name: '包衣中间品', parentId: '3' },
+            { id: '4',  code: '03', name: '03 成品',     parentId: '1' },
+            { id: '41', code: '0301', name: '片剂成品',  parentId: '4' },
+            { id: '42', code: '0302', name: '胶囊成品',  parentId: '4' },
+            { id: '43', code: '0303', name: '软糖成品',  parentId: '4' },
+            { id: '5',  code: '04', name: '04 内包材',   parentId: '1' },
+            { id: '51', code: '0401', name: 'HDPE瓶/瓶盖', parentId: '5' },
+            { id: '52', code: '0402', name: '铝塑泡罩',  parentId: '5' },
+            { id: '53', code: '0403', name: '干燥剂',    parentId: '5' },
+            { id: '6',  code: '05', name: '05 外包材',   parentId: '1' },
+            { id: '61', code: '0501', name: '纸盒/说明书', parentId: '6' },
+            { id: '62', code: '0502', name: '外箱',      parentId: '6' },
+            { id: '63', code: '0503', name: '标签',      parentId: '6' },
+            { id: '7',  code: '06', name: '06 生产辅料', parentId: '1' },
+            { id: '71', code: '0601', name: '清洁剂',    parentId: '7' },
+            { id: '72', code: '0602', name: '消毒剂',    parentId: '7' },
           ];
           localStorage.setItem('bip_material_categories', JSON.stringify(demoMaterialCategories));
 
           // ── 2. 物料档案（供MaterialPage读取）──────────────────────
+          // ⚠️ categoryId 必须与上方 demoMaterialCategories 的 id 一致
           const demoMaterials = [
-            { id: 'M001', code: 'RM-VitC-001',  name: '维生素C（抗坏血酸）',  categoryId: '11', type: '原材料', unit: 'kg',   spec: '药用级 USP',          brand: 'DSM',     supplier: '荷兰帝斯曼',       status: 'active', minStock: 500,  maxStock: 5000, price: 85.00 },
-            { id: 'M002', code: 'RM-XYL-001',   name: '木糖醇',               categoryId: '11', type: '原材料', unit: 'kg',   spec: '食品级',              brand: '',        supplier: '山东福田药业',     status: 'active', minStock: 200,  maxStock: 2000, price: 18.50 },
-            { id: 'M003', code: 'RM-CIT-001',   name: '柠檬酸',               categoryId: '12', type: '辅料',  unit: 'kg',   spec: '食品级 GB/T 8269',    brand: '',        supplier: '安徽柠檬生化',     status: 'active', minStock: 100,  maxStock: 1000, price: 7.20  },
-            { id: 'M004', code: 'RM-SIO2-001',  name: '二氧化硅（助流剂）',   categoryId: '12', type: '辅料',  unit: 'kg',   spec: '气相法 SiO2≥99%',    brand: '科宁',    supplier: '广州科宁',         status: 'active', minStock: 50,   maxStock: 500,  price: 32.00 },
-            { id: 'M005', code: 'RM-MgSt-001',  name: '硬脂酸镁（润滑剂）',   categoryId: '12', type: '辅料',  unit: 'kg',   spec: '药用级 CP2020',       brand: '',        supplier: '山东信谊',         status: 'active', minStock: 20,   maxStock: 200,  price: 45.00 },
-            { id: 'M006', code: 'RM-MCC-001',   name: '微晶纤维素（MCC）',    categoryId: '12', type: '辅料',  unit: 'kg',   spec: 'PH-102',              brand: 'FMC',     supplier: '美国FMC',          status: 'active', minStock: 100,  maxStock: 1000, price: 22.00 },
-            { id: 'S001', code: 'WIP-GRAN-001', name: 'VitC制粒中间品',       categoryId: '21', type: '半成品', unit: 'kg',   spec: '粒径20~60目',         brand: '',        supplier: '',                 status: 'active', minStock: 0,    maxStock: 0,    price: 0     },
-            { id: 'S002', code: 'WIP-TAB-001',  name: 'VitC压片中间品',       categoryId: '22', type: '半成品', unit: '万片', spec: '直径14mm 重量1.2g',   brand: '',        supplier: '',                 status: 'active', minStock: 0,    maxStock: 0,    price: 0     },
-            { id: 'F001', code: DEMO_BATCH.productCode, name: DEMO_BATCH.productName, categoryId: '32', type: '成品', unit: '瓶',  spec: DEMO_BATCH.productSpec, brand: '天美健',  supplier: '',                 status: 'active', minStock: 1000, maxStock: 50000, price: 58.00 },
-            { id: 'P001', code: 'PKG-BOTTLE-001', name: 'HDPE白色圆瓶',       categoryId: '41', type: '包装材料', unit: '个', spec: '500ml 带干燥剂孔',     brand: '',        supplier: '广州申菱',         status: 'active', minStock: 5000, maxStock: 50000, price: 1.20 },
-            { id: 'P002', code: 'PKG-CAP-001',  name: '防儿童安全盖',         categoryId: '41', type: '包装材料', unit: '个', spec: '53mm 白色 PP',         brand: '',        supplier: '广州申菱',         status: 'active', minStock: 5000, maxStock: 50000, price: 0.35 },
-            { id: 'P003', code: 'PKG-LABEL-001', name: '产品标签',            categoryId: '41', type: '包装材料', unit: '张', spec: '100×80mm 铜版纸',      brand: '',        supplier: '深圳正方形印刷',   status: 'active', minStock: 5000, maxStock: 50000, price: 0.08 },
-            { id: 'P004', code: 'PKG-BOX-001',  name: '彩色纸盒',             categoryId: '42', type: '包装材料', unit: '个', spec: '105×105×110mm E瓦',   brand: '',        supplier: '深圳正方形印刷',   status: 'active', minStock: 1000, maxStock: 20000, price: 0.65 },
-            { id: 'P005', code: 'PKG-CATON-001', name: '外箱纸箱',            categoryId: '42', type: '包装材料', unit: '个', spec: '600×400×400mm 五层B瓦', brand: '',       supplier: '东莞兴宇包装',     status: 'active', minStock: 200,  maxStock: 2000, price: 3.20 },
+            { id: 'M001', code: 'RM-VitC-001',  name: '维生素C（抗坏血酸）',  categoryId: '21', type: '原材料',  unit: 'kg',   spec: '药用级 USP',          brand: 'DSM',     supplier: '荷兰帝斯曼',       status: 'active', minStock: 500,  maxStock: 5000, price: 85.00 },
+            { id: 'M002', code: 'RM-XYL-001',   name: '木糖醇',               categoryId: '21', type: '原材料',  unit: 'kg',   spec: '食品级',              brand: '',        supplier: '山东福田药业',     status: 'active', minStock: 200,  maxStock: 2000, price: 18.50 },
+            { id: 'M003', code: 'RM-CIT-001',   name: '柠檬酸',               categoryId: '22', type: '辅料',   unit: 'kg',   spec: '食品级 GB/T 8269',    brand: '',        supplier: '安徽柠檬生化',     status: 'active', minStock: 100,  maxStock: 1000, price: 7.20  },
+            { id: 'M004', code: 'RM-SIO2-001',  name: '二氧化硅（助流剂）',   categoryId: '22', type: '辅料',   unit: 'kg',   spec: '气相法 SiO2≥99%',    brand: '科宁',    supplier: '广州科宁',         status: 'active', minStock: 50,   maxStock: 500,  price: 32.00 },
+            { id: 'M005', code: 'RM-MgSt-001',  name: '硬脂酸镁（润滑剂）',   categoryId: '22', type: '辅料',   unit: 'kg',   spec: '药用级 CP2020',       brand: '',        supplier: '山东信谊',         status: 'active', minStock: 20,   maxStock: 200,  price: 45.00 },
+            { id: 'M006', code: 'RM-MCC-001',   name: '微晶纤维素（MCC）',    categoryId: '22', type: '辅料',   unit: 'kg',   spec: 'PH-102',              brand: 'FMC',     supplier: '美国FMC',          status: 'active', minStock: 100,  maxStock: 1000, price: 22.00 },
+            { id: 'S001', code: 'WIP-GRAN-001', name: 'VitC制粒中间品',       categoryId: '31', type: '半成品', unit: 'kg',   spec: '粒径20~60目',         brand: '',        supplier: '',                 status: 'active', minStock: 0,    maxStock: 0,    price: 0     },
+            { id: 'S002', code: 'WIP-TAB-001',  name: 'VitC压片中间品',       categoryId: '32', type: '半成品', unit: '万片', spec: '直径14mm 重量1.2g',   brand: '',        supplier: '',                 status: 'active', minStock: 0,    maxStock: 0,    price: 0     },
+            { id: 'F001', code: DEMO_BATCH.productCode, name: DEMO_BATCH.productName, categoryId: '41', type: '成品', unit: '瓶', spec: DEMO_BATCH.productSpec, brand: '天美健',   supplier: '',                 status: 'active', minStock: 1000, maxStock: 50000, price: 58.00 },
+            { id: 'P001', code: 'PKG-BOTTLE-001', name: 'HDPE白色圆瓶',       categoryId: '51', type: '内包材', unit: '个',   spec: '500ml 带干燥剂孔',     brand: '',        supplier: '广州申菱',         status: 'active', minStock: 5000, maxStock: 50000, price: 1.20 },
+            { id: 'P002', code: 'PKG-CAP-001',  name: '防儿童安全盖',         categoryId: '51', type: '内包材', unit: '个',   spec: '53mm 白色 PP',         brand: '',        supplier: '广州申菱',         status: 'active', minStock: 5000, maxStock: 50000, price: 0.35 },
+            { id: 'P003', code: 'PKG-LABEL-001', name: '产品标签',            categoryId: '63', type: '外包材', unit: '张',   spec: '100×80mm 铜版纸',      brand: '',        supplier: '深圳正方形印刷',   status: 'active', minStock: 5000, maxStock: 50000, price: 0.08 },
+            { id: 'P004', code: 'PKG-BOX-001',  name: '彩色纸盒',             categoryId: '61', type: '外包材', unit: '个',   spec: '105×105×110mm E瓦',   brand: '',        supplier: '深圳正方形印刷',   status: 'active', minStock: 1000, maxStock: 20000, price: 0.65 },
+            { id: 'P005', code: 'PKG-CATON-001', name: '外箱纸箱',            categoryId: '62', type: '外包材', unit: '个',   spec: '600×400×400mm 五层B瓦', brand: '',       supplier: '东莞兴宇包装',     status: 'active', minStock: 200,  maxStock: 2000, price: 3.20 },
           ];
           localStorage.setItem('bip_materials', JSON.stringify(demoMaterials));
 

@@ -62,15 +62,32 @@ const flattenCategories = (cats: MaterialCategory[]): MaterialCategory[] => {
 
 // 物料类型色标映射
 const TYPE_COLOR: Record<string, string> = {
-  '原材料': 'blue',
-  '半成品': 'orange',
-  '成品':   'green',
+  '原材料':  'blue',
+  '半成品':  'orange',
+  '成品':    'green',
   '包装材料': 'purple',
-  '辅料':   'cyan',
+  '内包材':  'purple',
+  '外包材':  'geekblue',
+  '辅料':    'cyan',
   '模具工装': 'red',
 };
 
 const MaterialPage: React.FC = () => {
+  // ── 版本号机制：清除使用旧分类 id 体系的 localStorage 缓存 ────────
+  // 旧 DemoDataInjector 使用 '10'/'11'/'12'/'40'/'41'/'42' 等独立体系
+  // 新体系与 mockData.ts 一致：'1'~'7', '21'~'72'
+  React.useMemo(() => {
+    try {
+      const MAT_CAT_VER_KEY = 'bip_mat_cat_version';
+      const CURRENT_VER = 'TMJ-CAT-V2';
+      if (localStorage.getItem(MAT_CAT_VER_KEY) !== CURRENT_VER) {
+        localStorage.removeItem('bip_material_categories');
+        localStorage.removeItem('bip_materials');
+        localStorage.setItem(MAT_CAT_VER_KEY, CURRENT_VER);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   // 初始化空数组，等API加载后填充天美健真实数据
   const [materials, setMaterials] = useState<any[]>([]);
   const [apiLoading, setApiLoading] = useState(false);
