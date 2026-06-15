@@ -60,7 +60,6 @@ const EquipmentPage = lazy(() => import('./pages/equipment/EquipmentPage'));
 const EquipmentManagementPage = lazy(() => import('./pages/equipment/EquipmentManagementPage'));
 const EquipmentManagementPageNew = lazy(() => import('./pages/equipment/EquipmentManagementPageNew'));
 const WorkCenterPage = lazy(() => import('./pages/workcenter/WorkCenterPage'));
-const PadIndex = lazy(() => import('./pages/pad/PadIndex'));
 const TeamPage = lazy(() => import('./pages/basicdata/TeamPage'));
 const EmployeePage = lazy(() => import('./pages/basicdata/EmployeePage'));
 const QcItemPage = lazy(() => import('./pages/basicdata/QcItemPage'));
@@ -338,7 +337,6 @@ const App: React.FC = () => {
       case 'mrb':               return ['质量管理', 'MRB不合格品评审'];
       case 'release':           return ['质量管理', '质量放行'];
       case 'pad-execution':     return ['车间执行', 'PAD工序执行'];
-      case 'tmj-pad-execution':  return ['车间执行', '工序执行（天美健GMP）'];
       case 'pad-taskpool':      return ['车间执行', 'PAD任务池'];
       case 'equip-conflict':    return ['生产管理', '设备冲突检测'];
       case 'ebr-list':          return ['电子批记录', '批记录管理'];
@@ -401,8 +399,7 @@ const App: React.FC = () => {
       case 'inspection':        return <PageWrapper><InspectionPage /></PageWrapper>;
       case 'mrb':               return <PageWrapper><MrbPage /></PageWrapper>;
       case 'release':           return <PageWrapper><ReleasePage /></PageWrapper>;
-      case 'pad-execution':     return <PageWrapper><PadIndex /></PageWrapper>;
-      case 'tmj-pad-execution':  return <PageWrapper><TMJPadExecutionPage /></PageWrapper>;
+      case 'pad-execution':     return <PageWrapper><TMJPadExecutionPage /></PageWrapper>;
       case 'pad-taskpool':      return <PageWrapper><PadTaskPoolPage onNavigate={handlePageChange} /></PageWrapper>;
       case 'equip-conflict':    return <PageWrapper><EquipConflictPage /></PageWrapper>;
       case 'ebr-list':          return <PageWrapper><EbrListPageNew /></PageWrapper>;
