@@ -105,6 +105,8 @@ const DeviationEnhancedPage = lazy(() => import('./pages/gmp/DeviationEnhancedPa
 const DemoDataInjectorPage = lazy(() => import('./pages/demo/DemoDataInjectorPage'));
 // 浮动排程模块
 const SchedulingPage = lazy(() => import('./pages/scheduling/SchedulingPage'));
+// 天美健PAD工序执行界面（保健品GMP）
+const TMJPadExecutionPage = lazy(() => import('./modules/execution/pad/components/TMJPadExecutionPage').then(m => ({ default: m.TMJPadExecutionPage })));
 
 
 // 配置dayjs中文
@@ -338,6 +340,7 @@ const App: React.FC = () => {
       case 'mrb':               return ['质量管理', 'MRB不合格品评审'];
       case 'release':           return ['质量管理', '质量放行'];
       case 'pad-execution':     return ['车间执行', 'PAD工序执行'];
+      case 'tmj-pad-execution':  return ['车间执行', '工序执行（天美健GMP）'];
       case 'pad-taskpool':      return ['车间执行', 'PAD任务池'];
       case 'equip-conflict':    return ['生产管理', '设备冲突检测'];
       case 'ebr-list':          return ['电子批记录', '批记录管理'];
@@ -402,6 +405,7 @@ const App: React.FC = () => {
       case 'mrb':               return <PageWrapper><MrbPage /></PageWrapper>;
       case 'release':           return <PageWrapper><ReleasePage /></PageWrapper>;
       case 'pad-execution':     return <PageWrapper><PadIndex /></PageWrapper>;
+      case 'tmj-pad-execution':  return <PageWrapper><TMJPadExecutionPage /></PageWrapper>;
       case 'pad-taskpool':      return <PageWrapper><PadTaskPoolPage onNavigate={handlePageChange} /></PageWrapper>;
       case 'equip-conflict':    return <PageWrapper><EquipConflictPage /></PageWrapper>;
       case 'ebr-list':          return <PageWrapper><EbrListPageNew /></PageWrapper>;

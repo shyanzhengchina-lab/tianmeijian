@@ -111,7 +111,8 @@ const menuItems = [
     label: '车间执行',
     group: '车间执行',
     children: [
-      { key: 'pad-execution', label: 'PAD工序执行', icon: <TabletOutlined /> },
+      { key: 'tmj-pad-execution', label: '工序执行（天美健GMP）', icon: <TabletOutlined /> },
+      { key: 'pad-execution', label: 'PAD工序执行（通用）', icon: <TabletOutlined /> },
       { key: 'pad-taskpool',  label: 'PAD任务池',   icon: <ThunderboltOutlined /> },
       { key: 'workshop',      label: '车间看板',   icon: <MonitorOutlined /> },
     ],
@@ -302,6 +303,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     workorder:          '生产工单',
     'task-order':       '生产任务单',
     'pad-execution':    'PAD工序执行',
+    'tmj-pad-execution': '工序执行（天美健GMP）',
     'pad-taskpool':     'PAD任务池',
     'equip-conflict':   '设备冲突检测',
     floatticket:        '生产浮票',
