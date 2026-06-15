@@ -1228,11 +1228,17 @@ export const ALL_MATERIAL_BALANCES: MaterialBalanceSheet[] = [
 // ────────────────────────────────────────────────────────────────────
 // 导出
 // ────────────────────────────────────────────────────────────────────
-export const MOCK_EBR_LIST: EbrRecord[] = [EBR_WO004, EBR_WO006, EBR_WO001];
+/**
+ * MOCK_EBR_LIST 故意设为空数组。
+ * EBR 批记录完全由 PAD 工序执行（PadIndex）实时生成并写入 localStorage，
+ * 与 MOCK_WORK_ORDERS（padExecutionData.ts）的批号/工单号一一对应。
+ * 不再预填与 PAD 工单无关的历史 Mock 数据，避免批次列表混乱。
+ */
+export const MOCK_EBR_LIST: EbrRecord[] = [];
 export const EBR_STORAGE_KEY = 'bip_ebr_records';
 
 /** 数据版本号 — 每次更新 Mock 数据时递增，强制刷新旧缓存 */
-export const EBR_DATA_VERSION = 'v20260614_probio';
+export const EBR_DATA_VERSION = 'v20260615_pad_linked';
 export const EBR_VERSION_KEY  = 'bip_ebr_version';
 
 /**
@@ -1253,13 +1259,15 @@ export function loadEbrRecords(): EbrRecord[] {
     const stored  = localStorage.getItem(EBR_STORAGE_KEY);
     const parsed  = stored ? JSON.parse(stored) as EbrRecord[] : null;
 
-    // 版本不一致 或 数据为空数组 → 强制重置（MOCK_EBR_LIST 现为 []，等于清空）
-    if (version !== EBR_DATA_VERSION || !parsed || parsed.length === 0) {
+    // 版本不一致 → 强制清空旧缓存（MOCK_EBR_LIST = []，不填入任何旧 Mock 数据）
+    // 注意：不再因为 parsed.length === 0 而重置，允许 PAD 执行后逐步填入
+    if (version !== EBR_DATA_VERSION) {
       localStorage.setItem(EBR_STORAGE_KEY, JSON.stringify(MOCK_EBR_LIST));
       localStorage.setItem(EBR_VERSION_KEY,  EBR_DATA_VERSION);
-      return MOCK_EBR_LIST;
+      return MOCK_EBR_LIST;   // 此时为 []，EBR 由 PadIndex 工单选择时动态创建
     }
-    return parsed;
+    // 版本匹配时，直接返回 localStorage 中已保存的 EBR（含 PAD 执行动态生成的记录）
+    return parsed ?? [];
   } catch {
     return MOCK_EBR_LIST;
   }

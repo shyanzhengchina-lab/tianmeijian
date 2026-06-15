@@ -5,12 +5,12 @@ import {
   MobileOutlined, RotateRightOutlined, FileTextOutlined,
 } from '@ant-design/icons';
 import type { OperationDef, WorkOrder, OperationExecution } from './padExecutionData';
-import { GMP_OPERATIONS, loadPadWorkOrders, writePadExecBackToWo, l2WoToPadWo } from './padExecutionData';
+import { GMP_OPERATIONS, MOCK_WORK_ORDERS, loadPadWorkOrders, writePadExecBackToWo, l2WoToPadWo } from './padExecutionData';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import PadOperationListPage from './PadOperationListPage';
 import PadExecutionPage from './PadExecutionPage';
 import type { EbrRecord } from '../ebr/ebrData';
-import { buildEbrFromExecMap, updateEbr, EBR_STORAGE_KEY } from '../ebr/ebrData';
+import { buildEbrFromExecMap, updateEbr, EBR_STORAGE_KEY, EBR_DATA_VERSION, EBR_VERSION_KEY } from '../ebr/ebrData';
 import { getWorkOrderList } from '../../api/workOrders';
 import { getFloatTicketList } from '../../api/floatTickets';
 import { saveWorkOrders, saveFloatTickets, isUserCleared } from '../../store/mesStore';
@@ -23,6 +23,34 @@ type View = 'list' | 'execution';
 /** 检测是否竖屏 */
 const isPortrait = () =>
   typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
+
+/** PAD 工单数据版本，与 EBR_DATA_VERSION 保持同步 */
+const PAD_WO_VERSION_KEY = 'bip_pad_wo_version';
+
+/**
+ * 当 EBR/工单数据版本升级时，清理旧的 PAD 执行缓存和旧 EBR 缓存。
+ * - 清理 execMap / selectedWo / view / currentOpCode（旧工单批号不再有效）
+ * - 清理 bip_ebr_records（旧EBR批号与新PAD工单不匹配，全部清空）
+ * - 清理 bip_ebr_version（强制下次 loadEbrRecords 重置为空）
+ */
+function clearStalePadCache(): void {
+  try {
+    const stored = localStorage.getItem(PAD_WO_VERSION_KEY);
+    if (stored !== EBR_DATA_VERSION) {
+      // 清空PAD执行相关缓存
+      localStorage.removeItem('bip_pad_exec_map');
+      localStorage.removeItem('bip_pad_selected_wo');
+      localStorage.removeItem('bip_pad_view');
+      localStorage.removeItem('bip_pad_current_op_code');
+      // 清空旧EBR数据（与新PAD工单批号不匹配的历史记录全部清除）
+      localStorage.removeItem(EBR_STORAGE_KEY);
+      localStorage.setItem(EBR_VERSION_KEY, EBR_DATA_VERSION);  // 更新EBR版本
+      localStorage.setItem(PAD_WO_VERSION_KEY, EBR_DATA_VERSION);
+    }
+  } catch { /* ignore */ }
+}
+// 模块加载时立即执行，确保在 useLocalStorage 初始化之前清理
+clearStalePadCache();
 
 const PadIndex: React.FC = () => {
   // 提升到顶层并持久化，使列表页与执行页共享同一份 execMap
