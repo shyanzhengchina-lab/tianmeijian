@@ -43,7 +43,6 @@ const ProIndex = lazy(() => import('./pages/pro/ProIndex'));
 const SeriesProvider = lazy(() => import('./pages/pro/SeriesContext').then(m => ({ default: m.SeriesProvider })));
 
 // ... 其他页面组件懒加载
-const OperationListPage = lazy(() => import('./pages/operation/OperationListPage'));
 const WorkshopPage = lazy(() => import('./pages/workshop/WorkshopPage'));
 const WorkshopPageNew = lazy(() => import('./pages/workshop/WorkshopPageNew'));
 const FloatTicketPage = lazy(() => import('./pages/floatticket/FloatTicketPage'));
@@ -319,7 +318,6 @@ const App: React.FC = () => {
       case 'material':          return ['基础资料', '物料档案'];
       case 'unit':              return ['基础资料', '计量单位'];
       case 'bom':               return ['基础资料', '物料清单'];
-      case 'operation':         return ['基础资料', '工序主数据'];
       case 'pro':               return ['基础资料', '工艺路径'];
       case 'equipment':         return ['基础资料', '设备档案'];
       case 'equipment-mgmt':    return ['设备管理'];
@@ -358,7 +356,7 @@ const App: React.FC = () => {
       case 'gmp-hygiene':      return ['GMP合规', '卫生管理记录'];
       case 'gmp-deviation':    return ['GMP合规', '偏差处理'];
       case 'gmp-capa':         return ['GMP合规', 'CAPA管理'];
-      case 'operation-archive': return ['基础资料', '工序档案(GMP增强版)'];
+      case 'operation-archive': return ['基础资料', '工序档案(GMP)'];
       case 'ebr-enhanced':      return ['电子批记录', 'EBR增强版'];
       case 'batch-pkg-ebr':     return ['电子批记录', '批包装记录（SOR-MF-PE-02-05）'];
       case 'batch-record-print': return ['电子批记录', '批记录自动生成打印'];
@@ -385,7 +383,6 @@ const App: React.FC = () => {
       case 'material':          return <PageWrapper><MaterialPage /></PageWrapper>;
       case 'unit':              return <PageWrapper><UnitPage /></PageWrapper>;
       case 'bom':               return <PageWrapper><BomIndex /></PageWrapper>;
-      case 'operation':         return <PageWrapper><OperationListPage /></PageWrapper>;
       case 'pro':               return <PageWrapper><ProIndex onNavigateToSeries={() => setCurrentPage('product-series')} initialHighlightCode={highlightRoutingCode} /></PageWrapper>;
       case 'equipment':         return <PageWrapper><EquipmentPage /></PageWrapper>;
       case 'equipment-mgmt':    return <PageWrapper><EquipmentManagementPageNew /></PageWrapper>;
