@@ -44,6 +44,11 @@ function clearStalePadCache(): void {
       localStorage.removeItem('bip_pad_current_op_code');
       // 清空旧EBR数据（与新PAD工单批号不匹配的历史记录全部清除）
       localStorage.removeItem(EBR_STORAGE_KEY);
+      // 清空旧的按工单分存的 execMap 快照
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k?.startsWith('bip_pad_exec_snap_')) localStorage.removeItem(k);
+      }
       localStorage.setItem(EBR_VERSION_KEY, EBR_DATA_VERSION);  // 更新EBR版本
       localStorage.setItem(PAD_WO_VERSION_KEY, EBR_DATA_VERSION);
     }
@@ -241,6 +246,14 @@ const PadIndex: React.FC = () => {
         const newMap = { ...prev, [code]: exec };
         const wo = selectedWo;
         if (!wo) return newMap;
+
+        // ── 按工单保存 execMap 快照（供批记录打印页多批次切换读取）──────
+        try {
+          localStorage.setItem(
+            `bip_pad_exec_snap_${wo.id}`,
+            JSON.stringify(newMap),
+          );
+        } catch { /* quota ignore */ }
 
         // ── 同步回 L2 工单进度 ─────────────────────────────────────
         const reportQty = exec.finishQty || 0;

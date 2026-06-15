@@ -1476,7 +1476,8 @@ const ProductionRecordSection: React.FC<{ ebr: EbrRecord | null; execMap: Record
 // ────────────────────────────────────────────────────────────────────────────
 const BatchRecordPrintPage: React.FC = () => {
   const [ebrRecords] = useLocalStorage<EbrRecord[]>(EBR_STORAGE_KEY, loadEbrRecords());
-  const [execMap]    = useLocalStorage<Record<string, OperationExecution>>('bip_pad_exec_map', {});
+  // 全局 execMap（当前 PAD 会话，作为兜底）
+  const [globalExecMap] = useLocalStorage<Record<string, OperationExecution>>('bip_pad_exec_map', {});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab,  setActiveTab]  = useState('cover');
   const printRef = useRef<HTMLDivElement>(null);
@@ -1493,9 +1494,29 @@ const BatchRecordPrintPage: React.FC = () => {
   }, []);
 
   const packEbrs = useMemo(() => ebrRecords.length > 0 ? ebrRecords : [], [ebrRecords]);
+
+  // 当列表更新时，若当前选中ID已失效，自动回到最新条目
+  React.useEffect(() => {
+    if (selectedId && !packEbrs.find(e => e.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [packEbrs, selectedId]);
+
   const selectedEbr = selectedId
     ? packEbrs.find(e => e.id === selectedId) ?? null
     : packEbrs[0] ?? null;
+
+  // 根据选中批次的 woId 读取对应的 execMap 快照；
+  // 若该工单尚无快照（首次进入或版本清理后），回退到全局 execMap
+  const execMap = useMemo<Record<string, OperationExecution>>(() => {
+    const woId = selectedEbr?.woId;
+    if (!woId) return globalExecMap;
+    try {
+      const snap = localStorage.getItem(`bip_pad_exec_snap_${woId}`);
+      if (snap) return JSON.parse(snap) as Record<string, OperationExecution>;
+    } catch { /* ignore */ }
+    return globalExecMap;
+  }, [selectedEbr?.woId, globalExecMap]);
 
   // 统计工序完成情况
   const completedOps = GMP_OPERATIONS.filter(op => execMap[op.code]?.status === 'completed').length;
@@ -1551,35 +1572,55 @@ const BatchRecordPrintPage: React.FC = () => {
 
   return (
     <div style={{ padding: '0 0 24px' }}>
-      {/* 批次选择 */}
-      {packEbrs.length > 1 && (
-        <Card size="small" style={{ marginBottom: 12 }} className="no-print">
-          <Space wrap>
-            <Text>选择批次：</Text>
-            {packEbrs.map(e => (
-              <Button
-                key={e.id}
-                type={selectedEbr?.id === e.id ? 'primary' : 'default'}
-                size="small"
-                onClick={() => setSelectedId(e.id)}
-              >
-                {e.batchNo} — {e.productName}
-              </Button>
-            ))}
-          </Space>
-        </Card>
-      )}
-
-      {/* 批次状态概览 */}
+      {/* 批次状态概览 + 批次筛选选择器 */}
       <Card
         style={{ marginBottom: 12 }}
         className="no-print"
         title={
-          <Space>
+          <Space wrap size={8}>
             <FileDoneOutlined style={{ color: '#1677ff' }} />
-            <Text strong>批包装记录（SOR-MF-PE-02-05）— {selectedEbr?.batchNo ?? '预览模式'}</Text>
+            <Text strong style={{ fontSize: 14 }}>批包装记录（SOR-MF-PE-02-05）</Text>
+            {/* ── 批次下拉筛选 ── */}
+            <Select
+              showSearch
+              placeholder="选择批次…"
+              value={selectedEbr?.id ?? undefined}
+              style={{ minWidth: 300 }}
+              size="middle"
+              optionFilterProp="label"
+              filterOption={(input, option) =>
+                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              onChange={(val: string) => {
+                setSelectedId(val);
+                setActiveTab('cover');
+              }}
+              options={packEbrs.map(e => ({
+                value: e.id,
+                label: `${e.batchNo}  ${e.productName}`,
+                title: `${e.batchNo} — ${e.productName}（${e.woNo ?? e.woId}）`,
+              }))}
+              notFoundContent={
+                <div style={{ padding: '8px 12px', color: '#999', fontSize: 12 }}>
+                  暂无批次，请先在PAD工序执行中选择工单
+                </div>
+              }
+              dropdownRender={menu => (
+                <div>
+                  <div style={{
+                    padding: '6px 12px 4px',
+                    fontSize: 11,
+                    color: '#888',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}>
+                    共 {packEbrs.length} 条批次，支持批号/品名搜索
+                  </div>
+                  {menu}
+                </div>
+              )}
+            />
             <Tag color={allDone ? 'success' : 'processing'}>
-              {allDone ? '全部工序完成，可打印正式记录' : `进行中（${completedOps}/${GMP_OPERATIONS.length}工序）`}
+              {allDone ? '全部工序完成，可打印' : `进行中（${completedOps}/${GMP_OPERATIONS.length}工序）`}
             </Tag>
           </Space>
         }
