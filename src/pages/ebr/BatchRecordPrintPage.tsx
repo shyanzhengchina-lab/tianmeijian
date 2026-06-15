@@ -153,6 +153,7 @@ const RecordCover: React.FC<CoverProps> = ({ ebr, execMap }) => {
   const productName = ebr?.productName ?? '　　　　　　　';
   const batchNo     = ebr?.batchNo     ?? '　　　　　　　';
   const planQty     = ebr?.planQtyTotal ?? 0;
+  const productSpec = ebr?.productSpec  ?? '';
 
   return (
     <div className="print-page" style={{ padding: '24px 32px', fontFamily: '宋体, SimSun, serif' }}>
@@ -188,11 +189,13 @@ const RecordCover: React.FC<CoverProps> = ({ ebr, execMap }) => {
           </tr>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>包装规格：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>　　片/粒/瓶，　　瓶/盒</td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>
+              {productSpec || '　　片/粒/瓶，　　瓶/盒'}
+            </td>
           </tr>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>待包装量：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{planQty > 0 ? `${planQty} 瓶` : '　　　　　　　'}</td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{planQty > 0 ? `${planQty} 片/粒` : '　　　　　　　'}</td>
           </tr>
         </tbody>
       </table>
@@ -259,6 +262,7 @@ const RecordCover: React.FC<CoverProps> = ({ ebr, execMap }) => {
 const Section1Instruction: React.FC<{ ebr: EbrRecord | null; execMap: Record<string, OperationExecution> }> = ({ ebr, execMap }) => {
   const weighReport = getReport(execMap, 'OP-GMP-WEIGH');
   const weighRows   = getDCRecords(execMap, 'OP-GMP-WEIGH');
+  const productSpec = ebr?.productSpec ?? '';
 
   return (
     <div className="print-page" style={{ padding: '16px 32px' }}>
@@ -277,9 +281,9 @@ const Section1Instruction: React.FC<{ ebr: EbrRecord | null; execMap: Record<str
           </tr>
           <tr>
             <th>包装规格</th>
-            <td>　　片/粒/瓶，　　瓶/盒</td>
+            <td>{productSpec || '　　片/粒/瓶，　　瓶/盒'}</td>
             <th>计划产量</th>
-            <td>{ebr?.planQtyTotal ?? '—'} 瓶</td>
+            <td>{ebr?.planQtyTotal ?? '—'} 片/粒</td>
           </tr>
           <tr>
             <th>包装开始时间</th>
@@ -363,6 +367,7 @@ const Section2InnerPack: React.FC<{ ebr: EbrRecord | null; execMap: Record<strin
   const report     = getReport(execMap, 'OP-GMP-INNERPACK');
   const cleanReport = getReport(execMap, 'OP-GMP-INNERCLEAN');
   const cleanData   = (execMap['OP-GMP-INNERCLEAN']?.stages?.POST_CLEAN?.data ?? {}) as Record<string, unknown>;
+  const productSpec = ebr?.productSpec ?? '';
 
   const preConfirmKeys = PRE_CONFIRM_LABELS;
 
@@ -380,7 +385,7 @@ const Section2InnerPack: React.FC<{ ebr: EbrRecord | null; execMap: Record<strin
             <th style={{ width: '12%' }}>品名</th>
             <td style={{ width: '20%' }}>{ebr?.productName ?? ''}</td>
             <th style={{ width: '12%' }}>规格</th>
-            <td style={{ width: '20%' }}>　　片/粒/瓶</td>
+            <td style={{ width: '20%' }}>{productSpec || '　　片/粒/瓶'}</td>
             <th style={{ width: '12%' }}>批号</th>
             <td>{ebr?.batchNo ?? ''}</td>
           </tr>
@@ -389,8 +394,8 @@ const Section2InnerPack: React.FC<{ ebr: EbrRecord | null; execMap: Record<strin
             <td>{fmtDate(report?.inTime)}</td>
             <th>装量</th>
             <td>{dcRows[0] ? `${String(dcRows[0].fill_qty ?? '')} 片/粒/瓶` : '—'}</td>
-            <th>设备</th>
-            <td>全自动数片机/瓶包线</td>
+            <th>规格</th>
+            <td>{productSpec || '—'}</td>
           </tr>
         </tbody>
       </table>
@@ -587,6 +592,7 @@ const Section3OuterPack: React.FC<{ ebr: EbrRecord | null; execMap: Record<strin
   const dcRows   = getDCRecords(execMap, 'OP-GMP-OUTERPACK');
   const report   = getReport(execMap, 'OP-GMP-OUTERPACK');
   const matVerifyData = (execMap['OP-GMP-OUTERPACK']?.stages?.MAT_VERIFY?.data ?? {}) as Record<string, unknown>;
+  const productSpec = ebr?.productSpec ?? '';
 
   return (
     <div className="print-page" style={{ padding: '16px 32px' }}>
@@ -602,7 +608,7 @@ const Section3OuterPack: React.FC<{ ebr: EbrRecord | null; execMap: Record<strin
             <th style={{ width: '12%' }}>品名</th>
             <td style={{ width: '20%' }}>{ebr?.productName ?? ''}</td>
             <th style={{ width: '12%' }}>规格</th>
-            <td style={{ width: '20%' }}>　　瓶/盒</td>
+            <td style={{ width: '20%' }}>{productSpec || '　　瓶/盒'}</td>
             <th style={{ width: '12%' }}>批号</th>
             <td>{ebr?.batchNo ?? ''}</td>
           </tr>
@@ -927,6 +933,7 @@ const Section5MaterialBalance: React.FC<{ ebr: EbrRecord | null; execMap: Record
   const innerReport = getReport(execMap, 'OP-GMP-INNERPACK');
   const outerReport = getReport(execMap, 'OP-GMP-OUTERPACK');
   const planQty     = ebr?.planQtyTotal ?? 0;
+  const productSpec = ebr?.productSpec ?? '';
 
   const totalIssuedKg = weighRows.reduce((s, r) => s + Number(r.plan_qty ?? 0), 0);
   const totalActualKg = weighRows.reduce((s, r) => s + Number(r.actual_qty ?? 0), 0);
@@ -988,9 +995,9 @@ const Section5MaterialBalance: React.FC<{ ebr: EbrRecord | null; execMap: Record
           </tr>
           <tr>
             <th>包装规格</th>
-            <td>　　片/粒/瓶，　　瓶/盒</td>
+            <td>{productSpec || '　　片/粒/瓶，　　瓶/盒'}</td>
             <th>计划待包装量</th>
-            <td>{planQty} 瓶</td>
+            <td>{planQty} 片/粒</td>
           </tr>
         </tbody>
       </table>
@@ -1101,6 +1108,7 @@ const Section5MaterialBalance: React.FC<{ ebr: EbrRecord | null; execMap: Record
 // ────────────────────────────────────────────────────────────────────────────
 const Section6QCReport: React.FC<{ ebr: EbrRecord | null; execMap: Record<string, OperationExecution> }> = ({ ebr, execMap }) => {
   const outerReport = getReport(execMap, 'OP-GMP-OUTERPACK');
+  const productSpec = ebr?.productSpec ?? '';
 
   const checkItems = [
     { item: '性状', spec: '符合规定', method: '目检', result: '' },
@@ -1130,9 +1138,9 @@ const Section6QCReport: React.FC<{ ebr: EbrRecord | null; execMap: Record<string
           </tr>
           <tr>
             <th>规格</th>
-            <td>　　片/粒/瓶，　　瓶/盒</td>
+            <td>{productSpec || '　　片/粒/瓶，　　瓶/盒'}</td>
             <th>送检数量</th>
-            <td>　　 瓶（件）</td>
+            <td>{getReport(execMap, 'OP-GMP-OUTERPACK')?.goodQty ? `${getReport(execMap, 'OP-GMP-OUTERPACK')?.goodQty} 片/粒` : '　　片/粒'}</td>
           </tr>
           <tr>
             <th>送检日期</th>
@@ -1208,6 +1216,7 @@ const Section6QCReport: React.FC<{ ebr: EbrRecord | null; execMap: Record<string
 //  §7 成品放行审核单
 // ────────────────────────────────────────────────────────────────────────────
 const Section7Release: React.FC<{ ebr: EbrRecord | null; execMap: Record<string, OperationExecution> }> = ({ ebr, execMap }) => {
+  const productSpec = ebr?.productSpec ?? '';
   const completedOps = GMP_OPERATIONS.filter(op => isOpDone(execMap, op.code));
   const allDone = completedOps.length === GMP_OPERATIONS.length;
 
@@ -1239,9 +1248,9 @@ const Section7Release: React.FC<{ ebr: EbrRecord | null; execMap: Record<string,
           </tr>
           <tr>
             <th>规格</th>
-            <td>　　片/粒/瓶，　　瓶/盒</td>
+            <td>{productSpec || '　　片/粒/瓶，　　瓶/盒'}</td>
             <th>申请放行数量</th>
-            <td>{getReport(execMap, 'OP-GMP-OUTERPACK')?.goodQty ?? '　　'} 盒</td>
+            <td>{getReport(execMap, 'OP-GMP-OUTERPACK')?.goodQty ?? '　　'} 片/粒</td>
           </tr>
           <tr>
             <th>生产完成日期</th>

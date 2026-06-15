@@ -114,6 +114,19 @@ const PadIndex: React.FC = () => {
   // EBR 持久化存储
   const [ebrRecords, setEbrRecords] = useLocalStorage<EbrRecord[]>(EBR_STORAGE_KEY, []);
 
+  // ── 当前工单变化时立即确保 EBR 记录存在 ─────────────────────────
+  // 保证批记录打印页在工单选择后立即能读到品名/批号/规格等基础信息
+  useEffect(() => {
+    if (!selectedWo) return;
+    setEbrRecords(prevEbrs => {
+      const exists = prevEbrs.some(e => e.woId === selectedWo.id);
+      if (exists) return prevEbrs;
+      const newEbr = buildEbrFromExecMap(selectedWo, execMap);
+      return [newEbr, ...prevEbrs];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWo?.id]);
+
   // 根据持久化的 opCode 还原 currentOp 对象（仅 GMP 工序）
   const currentOp: OperationDef | null =
     GMP_OPERATIONS.find(op => op.code === currentOpCode)
@@ -159,12 +172,27 @@ const PadIndex: React.FC = () => {
     }
   }, []);
 
+  // ── 工单切换时立即确保 EBR 存在（联动批记录打印页） ─────────────
+  const ensureEbrForWo = useCallback(
+    (wo: WorkOrder, currentExecMap: Record<string, OperationExecution>) => {
+      setEbrRecords(prevEbrs => {
+        const exists = prevEbrs.some(e => e.woId === wo.id);
+        if (exists) return prevEbrs;
+        // 首次选择该工单：立即建一条 IN_PROGRESS EBR（execMap 此时可能为空，但必填字段已从 wo 填入）
+        const newEbr = buildEbrFromExecMap(wo, currentExecMap);
+        return [newEbr, ...prevEbrs];
+      });
+    },
+    [],
+  );
+
   // ── 导航回调 ─────────────────────────────────────────────────
   const handleStartExecution = useCallback(
     async (op: OperationDef, wo: WorkOrder, map: Record<string, OperationExecution>) => {
       setCurrentOpCode(op.code);
       setSelectedWo(wo);
       setExecMap(map);   // 同步最新 execMap（含新初始化的工序）
+      ensureEbrForWo(wo, map);   // 确保 EBR 记录已创建，批记录打印页可立即读到品名/批号
       setView('execution');
       // 自动进入全屏 PAD 模式
       if (!document.fullscreenElement) {
