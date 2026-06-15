@@ -39,51 +39,32 @@ interface ReportStageProps {
 }
 
 const BAD_REASONS = [
-  '尺寸超差', '外观不良', '螺纹缺陷', '毛刺', '弯曲变形',
-  '表面划伤', '刻线异常', '组装不良', '清洗不净',
+  '装量偏差', '外观不合格', '密封异常', '重量超差',
+  '设备故障停机', '物料批号不符', '环境条件偏差', '操作失误', '微生物污染风险',
 ];
 
 const EQUIP_BY_OP: Record<string, Array<{ id: string; name: string }>> = {
-  'OP-10-GRIND':     [{ id: 'EQ-G01', name: '数控成型机-G01' }, { id: 'EQ-G02', name: '数控成型机-G02' }],
-  'OP-20-WASH1':     [{ id: 'EQ-W01', name: '超声波清洗机-W01' }, { id: 'EQ-W02', name: '超声波清洗机-W02' }],
-  'OP-30-TAIL':      [{ id: 'EQ-T01', name: '尾部修整机-T01' }],
-  'OP-40-TIP':       [{ id: 'EQ-P01', name: '尖部修整机-P01' }],
-  'OP-50-GRIND1':    [{ id: 'EQ-GR01', name: '研磨机-GR01' }, { id: 'EQ-GR02', name: '研磨机-GR02' }],
-  'OP-80-INSPECT1':  [{ id: 'EQ-QC01', name: '投影仪-QC01' }, { id: 'EQ-QC02', name: '三坐标-QC02' }],
-  'OP-90-LINE':      [{ id: 'EQ-L01', name: '刻线机-L01' }],
-  'OP-100-ASM':      [{ id: 'EQ-A01', name: '组装台-A01' }],
-  'OP-110-RING':     [{ id: 'EQ-R01', name: '环规-RG-04' }, { id: 'EQ-R02', name: '环规-RG-06' }],
-  'OP-120-MEAS':     [{ id: 'EQ-M01', name: '投影仪-PT01' }, { id: 'EQ-M02', name: '卡尺-VC01' }],
-  'OP-130-LIMIT':    [{ id: 'EQ-LI01', name: '限位装配台-LI01' }],
-  'OP-140-INSPECT2': [{ id: 'EQ-F01', name: '综合检测台-F01' }],
-  'OP-150-STORE':    [{ id: 'EQ-S01', name: '入库扫码枪-S01' }],
-  'OP-160-HANDLE':   [{ id: 'EQ-H01', name: '激光打码机-H01' }],
-  'OP-170-COLOR':    [{ id: 'EQ-C01', name: '上色台-C01' }],
   // ── GMP 保健品工序设备 ─────────────────────────────────────────
   'OP-GMP-WEIGH':      [{ id: 'EQ-BAL01', name: '电子天平-BAL01（量程60kg）' }, { id: 'EQ-BAL02', name: '电子天平-BAL02（量程6kg）' }],
   'OP-GMP-MIX':        [{ id: 'EQ-MIX01', name: '三维运动混合机-MIX01' }],
   'OP-GMP-GRANULATE':  [{ id: 'EQ-GRA01', name: '湿法制粒机-GRA01' }, { id: 'EQ-DRY01', name: '沸腾干燥机-DRY01' }],
+  'OP-GMP-COATING':    [{ id: 'EQ-BY01', name: '薄膜包衣机-BY01' }, { id: 'EQ-BY02', name: '薄膜包衣机-BY02' }],
   'OP-GMP-INNERPACK':  [{ id: 'EQ-BTP01', name: '全自动瓶包机-BTP01' }, { id: 'EQ-BTP02', name: '全自动瓶包机-BTP02' }],
   'OP-GMP-INNERCLEAN': [{ id: 'EQ-VAC01', name: '工业吸尘器-VAC01' }],
   'OP-GMP-OUTERPACK':  [{ id: 'EQ-CTN01', name: '装盒机-CTN01' }, { id: 'EQ-CSE01', name: '装箱机-CSE01' }],
+  'OP-PROBIO-FILL':    [{ id: 'EQ-CAP01', name: '全自动胶囊充填机-CAP01' }, { id: 'EQ-CAP02', name: '全自动胶囊充填机-CAP02' }],
 };
 
 const PROCESS_PARAMS: Record<string, Array<{ label: string; value: string; unit: string }>> = {
-  'OP-10-GRIND':   [{ label: '主轴转速', value: '4200', unit: 'rpm' }, { label: '进给速度', value: '0.15', unit: 'mm/min' }, { label: '砂轮规格', value: 'SA-001', unit: '' }, { label: '冷却液流量', value: '2.5', unit: 'L/min' }],
-  'OP-20-WASH1':   [{ label: '清洗温度', value: '45', unit: '℃' }, { label: '超声功率', value: '300', unit: 'W' }, { label: '清洗时间', value: '15', unit: 'min' }, { label: '清洗液浓度', value: '3', unit: '%' }],
-  'OP-30-TAIL':    [{ label: '主轴转速', value: '3500', unit: 'rpm' }, { label: '进给速度', value: '0.12', unit: 'mm/min' }],
-  'OP-40-TIP':     [{ label: '主轴转速', value: '3800', unit: 'rpm' }, { label: '进给速度', value: '0.10', unit: 'mm/min' }],
-  'OP-50-GRIND1':  [{ label: '主轴转速', value: '5000', unit: 'rpm' }, { label: '进给速度', value: '0.18', unit: 'mm/min' }, { label: '砂轮规格', value: 'SB-002', unit: '' }, { label: '冷却液流量', value: '3.0', unit: 'L/min' }],
-  'OP-90-LINE':    [{ label: '刻线转速', value: '800', unit: 'rpm' }, { label: '刻线深度', value: '0.05', unit: 'mm' }, { label: '刀具规格', value: 'KX-03', unit: '' }],
-  'OP-160-HANDLE': [{ label: '激光功率', value: '15', unit: 'W' }, { label: '扫描速度', value: '500', unit: 'mm/s' }, { label: '打码内容', value: 'UDI+批号', unit: '' }],
-  'OP-170-COLOR':  [{ label: '烘干温度', value: '60', unit: '℃' }, { label: '烘干时间', value: '10', unit: 'min' }, { label: '涂料批号', value: 'CL-2026-04', unit: '' }],
   // ── GMP 保健品工序工艺参数 ──────────────────────────────────────
   'OP-GMP-WEIGH':     [{ label: '称量精度', value: '±0.1%', unit: '' }, { label: '环境温度', value: '22±2', unit: '℃' }, { label: '相对湿度', value: '55±5', unit: '%' }],
   'OP-GMP-MIX':       [{ label: '混合转速', value: '12', unit: 'rpm' }, { label: '混合时间', value: '20', unit: 'min' }, { label: '混合均匀度(RSD)', value: '≤5', unit: '%' }],
   'OP-GMP-GRANULATE': [{ label: '进风温度', value: '55±5', unit: '℃' }, { label: '出风温度', value: '40±5', unit: '℃' }, { label: '干燥时间', value: '60', unit: 'min' }, { label: '颗粒水分', value: '≤3.0', unit: '%' }],
+  'OP-GMP-COATING':   [{ label: '进风温度', value: '45±5', unit: '℃' }, { label: '出风温度', value: '40±5', unit: '℃' }, { label: '包衣液喷速', value: '8~12', unit: 'g/min' }, { label: '锅转速', value: '4~6', unit: 'rpm' }, { label: '终止增重率', value: '2~4', unit: '%' }],
   'OP-GMP-INNERPACK': [{ label: '装量范围', value: '±5%', unit: '' }, { label: '生产速度', value: '60', unit: '瓶/min' }, { label: '封口温度', value: '180±10', unit: '℃' }],
   'OP-GMP-INNERCLEAN':[{ label: '清场方式', value: '湿法清洁', unit: '' }, { label: '清洁剂', value: '纯化水', unit: '' }],
   'OP-GMP-OUTERPACK': [{ label: '每盒装量', value: '60', unit: '粒/盒' }, { label: '每箱装量', value: '48', unit: '盒/箱' }, { label: '封箱方式', value: '热熔胶', unit: '' }],
+  'OP-PROBIO-FILL':   [{ label: '充填量', value: '400±10', unit: 'mg/粒' }, { label: '充填速度', value: '35000', unit: '粒/h' }, { label: '装量差异', value: '±5%', unit: '' }],
 };
 const DEFAULT_PARAMS = [{ label: '生产班次', value: '白班', unit: '' }, { label: '生产批次', value: '-', unit: '' }];
 

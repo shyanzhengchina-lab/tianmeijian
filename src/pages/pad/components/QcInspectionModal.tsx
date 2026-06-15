@@ -132,31 +132,119 @@ const TEMPLATES: Record<string, InspectTemplate> = {
   },
 
   // ══════════════════════════════════════════════════════════════════
-  // 半成品检验记录（通用，用于其他工序）
+  // 半成品检验记录（保健品GMP通用）
   // ══════════════════════════════════════════════════════════════════
   '半成品检验记录': {
     title: '半成品检验记录',
     docNo: 'TMJ/QR-PRD-002',
     recordPrefix: 'QC-BCP-',
-    deviceLabel: '检验设备',
-    deviceDefault: 'TMJ-QC-005-通用量具',
-    sampleRule: 'AQL 2.5（II级，正常检验）',
-    passStandard: '所有抽检项目均符合产品技术要求',
+    deviceLabel: '检验设备（精密天平）',
+    deviceDefault: 'TMJ-BAL-002-精密天平（校准有效期2026-12-31）',
+    sampleRule: 'AQL 2.5（II级，正常检验），每批抽检20片/粒',
+    passStandard: '重量差异≤±5%；外观无麻点、裂片、变色、异物',
     rows: [
       {
-        key: 'dimension',
+        key: 'weight_diff',
         opName: '半成品检验',
-        item: '尺寸',
-        std: '依据《产品技术要求》',
-        stdParam: '按图纸要求检验关键尺寸',
+        item: '重量差异',
+        std: '《中国药典》片剂/胶囊通则',
+        stdParam: '各片/粒重量均在平均重量 ±5% 范围内，超限粒1片不得进入流程',
         hasNgDesc: true,
       },
       {
         key: 'appearance',
         opName: '半成品检验',
         item: '外观',
-        std: '依据《产品技术要求》',
-        stdParam: '表面无划伤、毛刺、裂纹等缺陷',
+        std: '天美健产品标准TMJ/TP-001',
+        stdParam: '片面平整光滑，颜色均一，无麻点、卧片、裂片、异色、异物',
+        hasNgDesc: true,
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════
+  // 胶囊中检记录（益生菌胶囊）
+  // ══════════════════════════════════════════════════════════════════
+  '胶囊中检记录': {
+    title: '胶囊中检记录',
+    docNo: 'TMJ/QR-PRD-006',
+    recordPrefix: 'QC-CAP-',
+    deviceLabel: '检验设备（天平+卡尺）',
+    deviceDefault: 'TMJ-BAL-003-十万分之一天平',
+    inspectMethod: '抽检10粒/小时，检查装量差异+外观',
+    sampleRule: 'AQL 2.5（II级），每30min抽检10粒',
+    passStandard: '装量差异±7.5%，密封完好，无漏粉、裂壳',
+    rows: [
+      {
+        key: 'fill_diff',
+        opName: '胶囊充填',
+        item: '装量差异',
+        std: '《中国药典》胶囊剂通则',
+        stdParam: '每粒装量在标示装量 ±7.5% 范围内，超限粒2粒不得进入流程',
+        hasNgDesc: true,
+      },
+      {
+        key: 'seal_appearance',
+        opName: '胶囊充填',
+        item: '密封外观',
+        std: '天美健产品标准TMJ/TP-003',
+        stdParam: '胶囊密封完好、无漏粉、无裂壳、无变形、长度匹配',
+        hasNgDesc: true,
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════
+  // 内包装过程检验记录
+  // ══════════════════════════════════════════════════════════════════
+  '内包装过程检验记录': {
+    title: '内包装过程检验记录',
+    docNo: 'TMJ/QR-PRD-003',
+    recordPrefix: 'QC-IP-',
+    deviceLabel: '检验设备（天平）',
+    deviceDefault: 'TMJ-BAL-002-精密天平',
+    inspectMethod: '每小时抽检5瓶，检查装量+密封+标签',
+    sampleRule: 'AQL 2.5（II级），每小时一次',
+    passStandard: '装量差异±5%，密封完好，标签正确',
+    rows: [
+      {
+        key: 'fill_weight',
+        opName: '内包装',
+        item: '分装量（瓶/盒净重）',
+        std: '天美健产品标准TMJ/TP-001',
+        stdParam: '标示装量 ±5%，连续2瓶超限立即调整设备',
+        hasNgDesc: true,
+      },
+      {
+        key: 'seal_check',
+        opName: '内包装',
+        item: '密封完整性',
+        std: '天美健产品标准TMJ/TP-001',
+        stdParam: '分装密封完好，无开裂、无漏气，平均封口带宽度符合要求',
+        hasNgDesc: true,
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════
+  // 混合均匀性检验记录（RSD≤5%）
+  // ══════════════════════════════════════════════════════════════════
+  '混合均匀性检验记录（RSD≤5%）': {
+    title: '混合均匀性检验记录（RSD≤5%）',
+    docNo: 'TMJ/QR-PRD-007',
+    recordPrefix: 'QC-MIX-',
+    deviceLabel: '检验设备（天平）',
+    deviceDefault: 'TMJ-BAL-001-电子天平（量程60kg）',
+    inspectMethod: '三点取样（上/中/下）分别测定含量，计算RSD',
+    sampleRule: '混合完成后三点取样，每点取2g',
+    passStandard: 'RSD ≤5%，否则需重新混合',
+    rows: [
+      {
+        key: 'rsd',
+        opName: '混合工序',
+        item: '均匀度RSD',
+        std: '天美健混合SOP TMJ/SOP-MIX-001',
+        stdParam: 'RSD ≤5%，超出需重新混合并报告偏差原因',
         hasNgDesc: true,
       },
     ],
@@ -273,9 +361,9 @@ const SingleRecordForm: React.FC<SingleRecordFormProps> = ({
         <Descriptions column={2} size="small" bordered>
           <Descriptions.Item label="文件编号">{template.docNo}</Descriptions.Item>
           <Descriptions.Item label="半成品批号">{workOrder.batchNo}</Descriptions.Item>
-          <Descriptions.Item label="送检数量">{sendQty} {workOrder.unit || '粒'}</Descriptions.Item>
-          <Descriptions.Item label="合格数量"><Text style={{ color: '#52c41a', fontWeight: 700 }}>{totalPassQty} {workOrder.unit || '粒'}</Text></Descriptions.Item>
-          {totalNgQty > 0 && <Descriptions.Item label="不合格数量" span={2}><Text type="danger" strong>{totalNgQty} {workOrder.unit || '粒'}</Text></Descriptions.Item>}
+          <Descriptions.Item label="送检数量">{sendQty} {workOrder.productSpec?.includes('粒') ? '粒' : '片'}</Descriptions.Item>
+          <Descriptions.Item label="合格数量"><Text style={{ color: '#52c41a', fontWeight: 700 }}>{totalPassQty} {workOrder.productSpec?.includes('粒') ? '粒' : '片'}</Text></Descriptions.Item>
+          {totalNgQty > 0 && <Descriptions.Item label="不合格数量" span={2}><Text type="danger" strong>{totalNgQty} {workOrder.productSpec?.includes('粒') ? '粒' : '片'}</Text></Descriptions.Item>}
           <Descriptions.Item label="检验设备" span={2}>{state.device}</Descriptions.Item>
           <Descriptions.Item label="检验结论" span={2}>
             <Tag color={state.conclusion === '合格' ? 'success' : 'error'} style={{ fontSize: 13 }}>

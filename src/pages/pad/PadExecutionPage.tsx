@@ -265,6 +265,13 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
       if (stageCode === 'CHECK_OUT') {
         extra = { outTime: now, status: 'completed' };
       }
+      // 若工序未启用 CHECK_OUT（如内包清场），则 REPORT 完成后直接标记工序为 completed
+      if (stageCode === 'REPORT') {
+        const hasCheckOut = operation.stages.some(s => s.code === 'CHECK_OUT' && s.enabled);
+        if (!hasCheckOut) {
+          extra = { outTime: now, status: 'completed' };
+        }
+      }
       if (stageCode === 'PRE_CLEAN') {
         extra = { preCleanDone: true };
       }
@@ -338,6 +345,23 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
           endTime: now,
           data: { ...stages['REPORT']?.data, lastRecord: newRecord },
         };
+        // 若工序未启用 CHECK_OUT（如内包清场），则末次报工后直接标记工序为 completed
+        const hasCheckOut = operation.stages.some(s => s.code === 'CHECK_OUT' && s.enabled);
+        if (!hasCheckOut) {
+          stageEnterRef.current = new Date();
+          setIsTimeout(false);
+          return {
+            ...prev,
+            reportRecords: [...(prev.reportRecords || []), newRecord],
+            finishQty:  data.totalFinishQty as number,
+            goodQty:    data.totalGoodQty   as number,
+            badQty:     data.totalBadQty    as number,
+            scrapQty:   data.totalScrapQty  as number,
+            outTime:    now,
+            status:     'completed' as const,
+            stages,
+          };
+        }
       } else {
         // 非末次报工：REPORT 阶段状态重置为 pending（允许再次执行）
         // DATA_COLLECT 同样重置（允许下次抽检数据采集）
@@ -611,7 +635,7 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
         {/* 工单摘要 + 计时 */}
         <Row gutter={20} style={{ marginTop: 6 }}>
           <Col><Text type="secondary" style={{ fontSize: 11 }}>批次：</Text><Text style={{ fontSize: 11, fontFamily: 'monospace' }}>{workOrder.batchNo}</Text></Col>
-          <Col><Text type="secondary" style={{ fontSize: 11 }}>计划：</Text><Text strong style={{ fontSize: 11 }}>{workOrder.planQty}支</Text></Col>
+          <Col><Text type="secondary" style={{ fontSize: 11 }}>计划：</Text><Text strong style={{ fontSize: 11 }}>{workOrder.planQty}{workOrder.productSpec?.includes('粒') ? '粒' : '片'}</Text></Col>
           <Col><Text type="secondary" style={{ fontSize: 11 }}>车间：</Text><Text style={{ fontSize: 11 }}>{operation.workshop}</Text></Col>
           {currentStageCode && (
             <Col>
@@ -745,16 +769,16 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
               <Divider />
               <Row gutter={32} justify="center">
                 <Col>
-                  <Statistic title="完工数量" value={execution.finishQty ?? 0} suffix="件" valueStyle={{ color: '#1890ff' }} />
+                  <Statistic title="完工数量" value={execution.finishQty ?? 0} suffix={workOrder.productSpec?.includes('粒') ? '粒' : '片'} valueStyle={{ color: '#1890ff' }} />
                 </Col>
                 <Col>
-                  <Statistic title="合格数量" value={execution.goodQty ?? 0} suffix="件" valueStyle={{ color: '#52c41a' }} />
+                  <Statistic title="合格数量" value={execution.goodQty ?? 0} suffix={workOrder.productSpec?.includes('粒') ? '粒' : '片'} valueStyle={{ color: '#52c41a' }} />
                 </Col>
                 <Col>
-                  <Statistic title="不良数量" value={execution.badQty ?? 0} suffix="件" valueStyle={{ color: '#ff4d4f' }} />
+                  <Statistic title="不良数量" value={execution.badQty ?? 0} suffix={workOrder.productSpec?.includes('粒') ? '粒' : '片'} valueStyle={{ color: '#ff4d4f' }} />
                 </Col>
                 <Col>
-                  <Statistic title="报废数量" value={execution.scrapQty ?? 0} suffix="件" valueStyle={{ color: '#8c8c8c' }} />
+                  <Statistic title="报废数量" value={execution.scrapQty ?? 0} suffix={workOrder.productSpec?.includes('粒') ? '粒' : '片'} valueStyle={{ color: '#8c8c8c' }} />
                 </Col>
                 {(execution.reportRecords?.length ?? 0) > 0 && (
                   <Col>
@@ -875,7 +899,7 @@ const PadExecutionPage: React.FC<PadExecutionPageProps> = ({
               badQty: ngQty,
             }));
             message.success({
-              content: `✅ QC检验完成！合格数量 ${passQty} 支已回写至报工阶段`,
+              content: `✅ QC检验完成！合格数量 ${passQty} ${workOrder.productSpec?.includes('粒') ? '粒' : '片'}已回写至报工阶段`,
               duration: 5,
             });
           }}

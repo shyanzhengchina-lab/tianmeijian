@@ -34,46 +34,51 @@ interface InspectionRow {
 const INSPECT_ITEMS_BY_OP: Record<string, Array<{
   key: string; label: string; spec?: string; type: 'measurement' | 'visual' | 'enum';
 }>> = {
-  // OP-10 机床成型：外径/尖端直径/锥度/螺纹/表面粗糙度
-  'OP-10-GRIND': [
-    { key: 'd1', label: '外径 D1（16mm处）', spec: '0.250±0.005mm', type: 'measurement' },
-    { key: 'd2', label: '外径 D2（尖端）', spec: '0.150±0.005mm', type: 'measurement' },
-    { key: 'taper', label: '锥度', spec: '标准锥度±0.002', type: 'measurement' },
-    { key: 'thread', label: '螺纹完整性', type: 'visual' },
-    { key: 'surface', label: '表面粗糙度 Ra', spec: 'Ra≤0.8', type: 'enum' },
-    { key: 'appearance', label: '外观（无毛刺/划伤/弯曲）', type: 'visual' },
+  // ══════════ 天美健保健品GMP自检项目 ══════════
+
+  // 包衣：增重率 + 外观（每小时10片抽查）
+  'OP-GMP-COATING': [
+    { key: 'weight_gain', label: '片重增重率（与片芯对比）', spec: '2.0~4.0%', type: 'measurement' },
+    { key: 'appearance', label: '外观检查（颜色均匀/无粘连/无裂片，10片目视）', type: 'visual' },
+    { key: 'coating_uniform', label: '包衣液雾化均匀性', type: 'enum' },
   ],
-  // OP-30 尾部修整：长度 + 尾部外观
-  'OP-30-TAIL': [
-    { key: 'length', label: '产品总长', spec: '25.0±0.5mm', type: 'measurement' },
-    { key: 'tail_shape', label: '尾部修整外观（无毛刺/崩边）', type: 'visual' },
-    { key: 'appearance', label: '整体外观（无弯曲/划伤）', type: 'visual' },
-    { key: 'qty', label: '数量核对', type: 'enum' },
+  // 内包装：装量 + 密封 + 标签
+  'OP-GMP-INNERPACK': [
+    { key: 'fill_weight', label: '分装量（净重复核）', spec: '标示装量±5%', type: 'measurement' },
+    { key: 'seal_check', label: '密封完整性（无开裂/无漏气）', type: 'visual' },
+    { key: 'label_check', label: '标签信息（批号/有效期/条码）', type: 'visual' },
+    { key: 'qty_check', label: '数量核对（实物与工单一致）', type: 'enum' },
   ],
-  // OP-50 研磨一：外径/锥度/外观/表面粗糙度（有QC检验）
-  'OP-50-GRIND1': [
-    { key: 'size', label: '尺寸（外径）', spec: '0.250±0.005mm', type: 'measurement' },
-    { key: 'taper', label: '锥度', spec: '标准锥度±0.002', type: 'measurement' },
-    { key: 'appearance', label: '外观（毛刺/划伤/弯曲）', type: 'visual' },
-    { key: 'surface', label: '表面粗糙度', spec: 'Ra≤0.8', type: 'enum' },
+  // 外包装：标签/批号/数量
+  'OP-GMP-OUTERPACK': [
+    { key: 'box_label', label: '彩盒批号打印正确（与批包装指令一致）', type: 'visual' },
+    { key: 'insert_check', label: '说明书版本（与注册版本一致）', type: 'visual' },
+    { key: 'seal_tape', label: '封口完整（热熔胶/封箱胶带）', type: 'visual' },
+    { key: 'qty_check', label: '装盒数量/装箱数量核对', type: 'enum' },
   ],
-  // OP-70 清洗二：洁净度/外观/数量
-  'OP-70-WASH2': [
-    { key: 'cleanness', label: '清洗洁净度（无油渍/残留）', type: 'visual' },
-    { key: 'appearance', label: '外观（无腐蚀/变色）', type: 'visual' },
-    { key: 'qty', label: '数量核对', type: 'enum' },
+  // 益生菌胶囊充填：装量 + 密封
+  'OP-PROBIO-FILL': [
+    { key: 'fill_weight', label: '胶囊装量（抽检10粒平均值）', spec: '400mg±7.5%', type: 'measurement' },
+    { key: 'cap_seal', label: '胶囊密封（无漏粉/无裂壳）', type: 'visual' },
+    { key: 'cap_appearance', label: '胶囊外观（无变形/颜色均一）', type: 'visual' },
   ],
-  // OP-150 半成品入库：综合检验（AQL抽检前确认）
-  'OP-150-STORE': [
-    { key: 'packaging', label: '包装完整性', type: 'visual' },
-    { key: 'label', label: '标签信息正确（批号/规格/数量）', type: 'visual' },
-    { key: 'qty', label: '实物数量与工单一致', type: 'enum' },
-    { key: 'appearance', label: '产品外观合格', type: 'visual' },
-    { key: 'udi', label: 'UDI条码可扫读', type: 'enum' },
+  // 称量配料：物料平衡
+  'OP-GMP-WEIGH': [
+    { key: 'balance_check', label: '物料平衡（实称量/处方量，误差≤0.1%）', spec: '±0.1%', type: 'measurement' },
+    { key: 'label_verify', label: '物料标签核对（名称/批号/有效期）', type: 'visual' },
+    { key: 'env_check', label: '环境条件（温度18~26℃，湿度45~65%）', type: 'enum' },
   ],
+  // 混合：均匀性
+  'OP-GMP-MIX': [
+    { key: 'mix_time', label: '混合时间记录（≥20min）', spec: '≥20min', type: 'measurement' },
+    { key: 'mix_uniform', label: '混合均匀性目视（无分层/色差）', type: 'visual' },
+    { key: 'rsd_check', label: 'RSD检验结果（≤5%）', type: 'enum' },
+  ],
+  // 通用 GMP 默认自检项
   default: [
-    { key: 'size', label: '尺寸', type: 'measurement' },
-    { key: 'appearance', label: '外观', type: 'visual' },
+    { key: 'weight_check', label: '重量/装量复核（与处方指令一致）', spec: '±5%', type: 'measurement' },
+    { key: 'appearance', label: '外观（颜色/形态/密封/标签，目视合格）', type: 'visual' },
+    { key: 'qty_check', label: '数量核对（实物与工单一致）', type: 'enum' },
   ],
 };
 
@@ -83,8 +88,8 @@ const SelfCheckStage: React.FC<SelfCheckStageProps> = ({
   opCode, opName, content, inspectionRecordName, hasQcInspection, execution, onComplete
 }) => {
   const inspectItems = INSPECT_ITEMS_BY_OP[opCode] || INSPECT_ITEMS_BY_OP.default;
-  // 需要显示抽检明细表的工序（有连续测量数据采集需求）
-  const isGrindOrWash = ['OP-10-GRIND', 'OP-30-TAIL', 'OP-50-GRIND1', 'OP-70-WASH2'].includes(opCode);
+  // 需要显示抽检明细表的工序（有连续测量数据采集需求）— GMP工序用重量复核
+  const isGrindOrWash = ['OP-GMP-COATING', 'OP-GMP-INNERPACK', 'OP-PROBIO-FILL'].includes(opCode);
 
   const [itemResults, setItemResults] = useState<Record<string, string>>(
     Object.fromEntries(inspectItems.map(i => [i.key, '']))
@@ -149,12 +154,15 @@ const SelfCheckStage: React.FC<SelfCheckStageProps> = ({
 
   const handleDeviceScan = () => {
     const deviceMap: Record<string, string> = {
-      'OP-10-GRIND': '千分尺-DC001 + 投影仪-PT001 (校准有效至2026-12-31)',
-      'OP-30-TAIL': '卡尺-VC001 (校准有效至2026-10-31)',
-      'OP-50-GRIND1': '投影仪-PT001 (校准有效至2026-12-31)',
-      'OP-70-WASH2': '目视检验（无需设备）',
-      'OP-150-STORE': '扫码枪-SG001 + 综合检测台-F01',
-      default: '综合检测仪-001',
+      // GMP 保健品工序检验设备
+      'OP-GMP-WEIGH':      'TMJ-BAL-001 电子天平（量程60kg，校准有效至2026-12-31）',
+      'OP-GMP-MIX':        'TMJ-BAL-001 电子天平 + 均匀性取样管',
+      'OP-GMP-GRANULATE':  'TMJ-SFB-001 沸腾干燥机 + TMJ-MS-001 水分测定仪',
+      'OP-GMP-COATING':    'TMJ-BAL-002 精密天平（校准有效至2026-12-31）',
+      'OP-GMP-INNERPACK':  'TMJ-BAL-002 精密天平 + 气密性检测仪',
+      'OP-GMP-OUTERPACK':  'TMJ-SG-001 条码扫码枪 + 目视',
+      'OP-PROBIO-FILL':    'TMJ-BAL-003 十万分之一天平（校准有效至2026-09-30）',
+      default: 'TMJ-QC-001 综合检验台（校准有效至2026-12-31）',
     };
     const devName = deviceMap[opCode] || deviceMap.default;
     setDevice(devName);
@@ -163,7 +171,7 @@ const SelfCheckStage: React.FC<SelfCheckStageProps> = ({
   };
 
   const handleAddRow = () => {
-    if (editD1 === null) { message.warning(`请输入${opCode === 'OP-30-TAIL' ? '总长' : '外径D1'}数据`); return; }
+    if (editD1 === null) { message.warning('请输入检测值数据'); return; }
     // 根据工序设置合格范围
     const specMap: Record<string, { min: number; max: number }> = {
       'OP-10-GRIND': { min: 0.245, max: 0.255 },
@@ -218,25 +226,19 @@ const SelfCheckStage: React.FC<SelfCheckStageProps> = ({
     );
   }
 
-  // 根据工序动态配置抽检明细列
+  // 根据工序动态配置抽检明细列（GMP保健品）
   const rowColsConfig: Record<string, Array<{ title: string; dataIndex: string; spec?: { min: number; max: number }; render?: (v: number) => React.ReactNode }>> = {
-    'OP-10-GRIND': [
-      { title: '外径D1(mm)', dataIndex: 'd1', spec: { min: 0.245, max: 0.255 } },
-      { title: '外径D2(mm)', dataIndex: 'd2' },
+    'OP-GMP-COATING': [
+      { title: '片重增重率(%)', dataIndex: 'd1', spec: { min: 2.0, max: 4.0 } },
     ],
-    'OP-30-TAIL': [
-      { title: '总长(mm)', dataIndex: 'd1', spec: { min: 24.5, max: 25.5 } },
+    'OP-GMP-INNERPACK': [
+      { title: '净重(g)', dataIndex: 'd1', spec: { min: 28.5, max: 31.5 } },
     ],
-    'OP-50-GRIND1': [
-      { title: '外径D1(mm)', dataIndex: 'd1', spec: { min: 0.245, max: 0.255 } },
-      { title: '外径D2(mm)', dataIndex: 'd2' },
-    ],
-    'OP-70-WASH2': [
-      { title: '外径D1(mm)', dataIndex: 'd1', spec: { min: 0.245, max: 0.255 } },
-      { title: '外径D2(mm)', dataIndex: 'd2' },
+    'OP-PROBIO-FILL': [
+      { title: '胶囊装量(mg)', dataIndex: 'd1', spec: { min: 370, max: 430 } },
     ],
   };
-  const dynCols = rowColsConfig[opCode] || rowColsConfig['OP-50-GRIND1'];
+  const dynCols = rowColsConfig[opCode] || [{ title: '检测值', dataIndex: 'd1' }];
 
   const rowColumns = [
     { title: '序号', dataIndex: 'seq', width: 55 },
@@ -481,7 +483,7 @@ const SelfCheckStage: React.FC<SelfCheckStageProps> = ({
               <Space>
                 <Input size="large" style={{ width: 220 }} placeholder="QC检验员工号/工牌扫码"
                   value={qcInspector} onChange={e => setQcInspector(e.target.value)} prefix={<ScanOutlined />} />
-                <Button size="large" onClick={() => { setQcInspector('李四QC(2001)'); message.success('QC检验员工牌识别成功'); }}>
+                <Button size="large" onClick={() => { setQcInspector('陈小燕 QC(1005)'); message.success('QC检验员工牌识别成功'); }}>
                   扫码
                 </Button>
                 {qcInspector && <Tag color="success">✓ {qcInspector}</Tag>}
