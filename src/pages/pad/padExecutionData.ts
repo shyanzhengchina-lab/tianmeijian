@@ -645,9 +645,52 @@ export const getOperationByCode = (code: string): OperationDef | undefined =>
 export const getEnabledStages = (op: OperationDef): StageConfig[] =>
   op.stages.filter(s => s.enabled);
 
-// ==================== Mock 工单数据 ====================
+// ==================== Mock 工单数据（天美健保健品GMP演示工单）====================
 
-export const MOCK_WORK_ORDERS: WorkOrder[] = [];
+export const MOCK_WORK_ORDERS: WorkOrder[] = [
+  {
+    id:              'WO-TMJ-20260615-001',
+    woNo:            'WO-20260615-001',
+    productName:     '维生素C咀嚼片',
+    productSpec:     '500mg/片 × 60片/瓶',
+    batchNo:         'TMJ-VITC-20260615-001',
+    planQty:         600000,
+    customer:        '天美健营养品（南京）有限公司',
+    priority:        'A',
+    planStartDate:   '2026-06-15',
+    floatBarcode:    'TMJ-FT-20260615-001',
+    materialLotNo:   'VC-RAW-2026-01',
+    currentOpSeq:    10,
+  },
+  {
+    id:              'WO-TMJ-20260615-002',
+    woNo:            'WO-20260615-002',
+    productName:     '益生菌胶囊',
+    productSpec:     '400mg/粒 × 60粒/瓶',
+    batchNo:         'TMJ-PROBIO-20260615-002',
+    planQty:         120000,
+    customer:        '天美健营养品（廊坊）有限公司',
+    priority:        'B',
+    planStartDate:   '2026-06-15',
+    floatBarcode:    'TMJ-FT-20260615-002',
+    materialLotNo:   'PROBIO-MIX-2026-10',
+    currentOpSeq:    10,
+  },
+  {
+    id:              'WO-TMJ-20260615-003',
+    woNo:            'WO-20260615-003',
+    productName:     '维生素C咀嚼片（直压工艺）',
+    productSpec:     '500mg/片 × 60片/瓶',
+    batchNo:         'TMJ-VITC-DC-20260615-003',
+    planQty:         480000,
+    customer:        '天美健营养品（南京）有限公司',
+    priority:        'B',
+    planStartDate:   '2026-06-15',
+    floatBarcode:    'TMJ-FT-20260615-003',
+    materialLotNo:   'VC-RAW-2026-01',
+    currentOpSeq:    10,
+  },
+];
 
 // ==================== 初始化工序执行状态 ====================
 
@@ -856,7 +899,8 @@ export function loadPadWorkOrders(): WorkOrder[] {
       return active.map(w => l2WoToPadWo(w, fts));
     }
   } catch { /* ignore */ }
-  return [];
+  // API 和 localStorage 均无数据时，回退到天美健 Demo 工单
+  return MOCK_WORK_ORDERS;
 }
 
 /**

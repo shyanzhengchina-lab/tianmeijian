@@ -31,62 +31,59 @@ interface FpConfig {
 
 // 按工序定义首件检验量测项
 const FP_CONFIG_BY_OP: Record<string, FpConfig> = {
-  // OP-10 机床成型首件
-  'OP-10-GRIND': {
-    title: '机床成型首件检验',
-    deviceName: '千分尺-DC001',
-    deviceId: 'DC-001',
-    deviceCalibration: '2026-08-01',
+  // ══════════ 天美健保健品GMP工序（SOR-MF-PE-02-05）══════════
+
+  // 包衣首件：增重率 + 外观
+  'OP-GMP-COATING': {
+    title: '包衣首件检验',
+    deviceName: '精密分析天平-PHD-0001',
+    deviceId: 'PHD-0001',
+    deviceCalibration: '2026-12-31',
     measures: [
-      { key: 'd1', label: '外径 D1（16mm处）', spec: '0.250 ± 0.005 mm', unit: 'mm', precision: 3, min: 0.2, max: 0.3, specMin: 0.245, specMax: 0.255, required: true },
-      { key: 'd2', label: '外径 D2（尖端）', spec: '0.150 ± 0.005 mm', unit: 'mm', precision: 3, min: 0.1, max: 0.2, specMin: 0.145, specMax: 0.155, required: true },
-      { key: 'taper', label: '锥度', spec: '0.038 ~ 0.042', unit: '', precision: 3, min: 0.03, max: 0.05, specMin: 0.038, specMax: 0.042, required: true },
+      { key: 'weight_gain', label: '片重增重率（首次包衣15min后）', spec: '0.5 ~ 1.0 %', unit: '%', precision: 2, min: 0, max: 5, specMin: 0.5, specMax: 1.0, required: true },
+      { key: 'core_weight', label: '片芯平均重量', spec: '按批包装指令 ±5%', unit: 'mg', precision: 1, min: 400, max: 600, specMin: 475, specMax: 525, required: true },
+      { key: 'coating_weight', label: '包衣片平均重量', spec: '片芯+包衣≤片芯×1.04', unit: 'mg', precision: 1, min: 400, max: 620, specMin: 477.5, specMax: 546, required: true },
+      { key: 'appearance', label: '外观检查（颜色/粘连/裂片，10片抽查）', spec: '无粘连、无裂片、色泽均匀', unit: '', precision: 0, required: true },
     ],
   },
-  // OP-30 尾部修整首件：总长
-  'OP-30-TAIL': {
-    title: '尾部修整首件检验',
-    deviceName: '数显卡尺-DC002',
-    deviceId: 'DC-002',
-    deviceCalibration: '2026-10-01',
+
+  // 内包装首件：装量 + 密封
+  'OP-GMP-INNERPACK': {
+    title: '内包装首件检验（首瓶装量复核）',
+    deviceName: '精密分析天平-PHD-0002',
+    deviceId: 'PHD-0002',
+    deviceCalibration: '2026-12-31',
     measures: [
-      { key: 'total_length', label: '产品总长', spec: '25.0 ± 0.5 mm', unit: 'mm', precision: 2, min: 23.0, max: 27.0, specMin: 24.5, specMax: 25.5, required: true },
-      { key: 'tail_shape', label: '尾部外观（无毛刺/崩边）', spec: '目视合格', unit: '', precision: 0, required: true },
+      { key: 'fill_weight', label: '首瓶净重（60片）', spec: '按标准装量 ±5%', unit: 'g', precision: 2, min: 25, max: 35, specMin: 28.5, specMax: 31.5, required: true },
+      { key: 'seal_check', label: '密封完整性检查（目视/气密性）', spec: '无开裂、无漏气', unit: '', precision: 0, required: true },
+      { key: 'label_position', label: '标签位置（对中偏差）', spec: '≤2mm', unit: 'mm', precision: 1, min: 0, max: 5, specMin: 0, specMax: 2, required: true },
     ],
   },
-  // OP-50 研磨一首件：外径/锥度
-  'OP-50-GRIND1': {
-    title: '研磨一首件检验',
-    deviceName: '千分尺-DC001',
-    deviceId: 'DC-001',
-    deviceCalibration: '2026-08-01',
+
+  // 益生菌充填首件：装量 + 外观
+  'OP-PROBIO-FILL': {
+    title: '胶囊充填首件检验',
+    deviceName: '十万分之一天平-PHD-0003',
+    deviceId: 'PHD-0003',
+    deviceCalibration: '2026-09-30',
     measures: [
-      { key: 'd1', label: '外径 D1', spec: '0.250 ± 0.005 mm', unit: 'mm', precision: 3, min: 0.2, max: 0.3, specMin: 0.245, specMax: 0.255, required: true },
-      { key: 'taper', label: '锥度', spec: '0.038 ~ 0.042', unit: '', precision: 3, min: 0.03, max: 0.05, specMin: 0.038, specMax: 0.042, required: true },
-    ],
-  },
-  // OP-100 组装首件
-  'OP-100-ASM': {
-    title: '组装首件检验',
-    deviceName: '扭矩扳手-TQ001',
-    deviceId: 'TQ-001',
-    deviceCalibration: '2026-09-01',
-    measures: [
-      { key: 'torque', label: '组装扭矩', spec: '0.15 ~ 0.20 N·m', unit: 'N·m', precision: 2, min: 0.05, max: 0.3, specMin: 0.15, specMax: 0.20, required: true },
-      { key: 'pullout', label: '插拔力（手柄不脱落）', spec: '≥5N', unit: 'N', precision: 1, min: 0, max: 20, specMin: 5, required: true },
+      { key: 'cap_fill_wt', label: '胶囊平均装量', spec: '400mg ±7.5%（370~430mg）', unit: 'mg', precision: 1, min: 300, max: 500, specMin: 370, specMax: 430, required: true },
+      { key: 'cap_length', label: '胶囊总长（锁紧后）', spec: '21.0 ± 0.5mm（0#）', unit: 'mm', precision: 1, min: 19, max: 23, specMin: 20.5, specMax: 21.5, required: true },
+      { key: 'cap_appearance', label: '胶囊外观（目视10粒）', spec: '无裂壳/无变形/密封完好', unit: '', precision: 0, required: true },
     ],
   },
 };
 
+// 通用首件检验默认配置（GMP保健品）
 const FP_CONFIG_DEFAULT: FpConfig = {
-  title: '首件检验',
-  deviceName: '千分尺-DC001',
-  deviceId: 'DC-001',
-  deviceCalibration: '2026-08-01',
+  title: '首件检验（GMP）',
+  deviceName: '精密分析天平-PHD-0001',
+  deviceId: 'PHD-0001',
+  deviceCalibration: '2026-12-31',
   measures: [
-    { key: 'd1', label: '外径 D1', spec: '0.250 ± 0.005 mm', unit: 'mm', precision: 3, min: 0.2, max: 0.3, specMin: 0.245, specMax: 0.255, required: true },
-    { key: 'd2', label: '外径 D2', spec: '按规格书', unit: 'mm', precision: 3, min: 0.1, max: 0.3, required: false },
-    { key: 'd3', label: '尖端直径', spec: '0.150 ± 0.005 mm', unit: 'mm', precision: 3, min: 0.1, max: 0.2, specMin: 0.145, specMax: 0.155, required: true },
+    { key: 'weight', label: '产品重量/装量', spec: '按批包装指令 ±5%', unit: 'mg', precision: 1, min: 100, max: 1000, required: true },
+    { key: 'appearance', label: '外观检查（颜色/形态/密封）', spec: '符合产品标准', unit: '', precision: 0, required: true },
+    { key: 'label_check', label: '标签/批号核对', spec: '与批包装指令一致', unit: '', precision: 0, required: true },
   ],
 };
 

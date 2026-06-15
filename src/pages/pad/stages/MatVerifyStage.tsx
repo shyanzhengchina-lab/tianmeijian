@@ -23,27 +23,59 @@ interface MatRecord {
 }
 
 const MOCK_MATERIALS: Record<string, MatRecord> = {
-  'NT-20260420-A': { code: 'NT-20260420-A', name: '镍钛丝 Φ0.3mm', lot: 'NT-20260420-A', supplier: 'XXX金属', validDate: '2026-12-31', bomMatch: true },
-  'HD-20260425-B': { code: 'HD-20260425-B', name: '成品手柄 ABS', lot: 'HD-20260425-B', supplier: 'YYY塑胶', validDate: '2027-06-30', bomMatch: true },
-  'LT-20260425-C': { code: 'LT-20260425-C', name: '限位块', lot: 'LT-20260425-C', supplier: 'ZZZ五金', validDate: '2027-12-31', bomMatch: true },
-  'PK-20260426-A': { code: 'PK-20260426-A', name: '手柄（打码用）', lot: 'PK-20260426-A', supplier: 'YYY塑胶', validDate: '2027-06-30', bomMatch: true },
-  'PK-20260426-B': { code: 'PK-20260426-B', name: '包装材料', lot: 'PK-20260426-B', supplier: 'AAA包装', validDate: '2028-12-31', bomMatch: true },
+  // ── 维生素C咀嚼片（湿法制粒 / 直压）原料 ──────────────────────────
+  'VC-RAW-2026-01': { code: 'VC-RAW-2026-01', name: '维生素C（L-抗坏血酸）', lot: 'VC-RAW-2026-01', supplier: '华北制药集团', validDate: '2027-06-30', bomMatch: true },
+  'MANNITOL-2026-02': { code: 'MANNITOL-2026-02', name: '甘露醇（咀嚼基质）', lot: 'MANNITOL-2026-02', supplier: '山东菱花糖醇', validDate: '2027-12-31', bomMatch: true },
+  'STARCH-2026-03': { code: 'STARCH-2026-03', name: '淀粉（粘合剂）', lot: 'STARCH-2026-03', supplier: '成都天悦淀粉', validDate: '2027-09-30', bomMatch: true },
+  'MGSTN-2026-04': { code: 'MGSTN-2026-04', name: '硬脂酸镁（润滑剂）', lot: 'MGSTN-2026-04', supplier: '上海联丰精细化工', validDate: '2028-06-30', bomMatch: true },
+  'ORANGE-FLV-2026-05': { code: 'ORANGE-FLV-2026-05', name: '橙味香精（矫味剂）', lot: 'ORANGE-FLV-2026-05', supplier: '国际香料公司', validDate: '2027-03-31', bomMatch: true },
+  'OPADRY-2026-06': { code: 'OPADRY-2026-06', name: 'OPADRY薄膜包衣预混料', lot: 'OPADRY-2026-06', supplier: 'Colorcon亚太', validDate: '2027-06-30', bomMatch: true },
+  'PET-BTL-2026-07': { code: 'PET-BTL-2026-07', name: 'PET瓶 60片装', lot: 'PET-BTL-2026-07', supplier: '广东星星包装', validDate: '2028-12-31', bomMatch: true },
+  'INNER-PKG-2026-08': { code: 'INNER-PKG-2026-08', name: '铝箔盖（内包材）', lot: 'INNER-PKG-2026-08', supplier: '上海紫江包装', validDate: '2028-12-31', bomMatch: true },
+  'OUTER-BOX-2026-09': { code: 'OUTER-BOX-2026-09', name: '彩盒（外包材）', lot: 'OUTER-BOX-2026-09', supplier: '深圳裕同包装', validDate: '2028-12-31', bomMatch: true },
+  // ── 益生菌胶囊（冷链）原料 ────────────────────────────────────────
+  'PROBIO-MIX-2026-10': { code: 'PROBIO-MIX-2026-10', name: '益生菌复合菌粉（≥100亿CFU/g）', lot: 'PROBIO-MIX-2026-10', supplier: 'Chr.Hansen（科汉森）', validDate: '2026-12-31', bomMatch: true },
+  'FOS-2026-11': { code: 'FOS-2026-11', name: '低聚果糖（益生元载体）', lot: 'FOS-2026-11', supplier: '保龄宝生物', validDate: '2027-06-30', bomMatch: true },
+  'HPMC-CAP-2026-12': { code: 'HPMC-CAP-2026-12', name: 'HPMC空心胶囊（0#）', lot: 'HPMC-CAP-2026-12', supplier: '安徽沪正胶囊', validDate: '2028-06-30', bomMatch: true },
+  'COLD-PKG-2026-13': { code: 'COLD-PKG-2026-13', name: '铝塑泡罩包材（冷链级）', lot: 'COLD-PKG-2026-13', supplier: '南京亿丰包装', validDate: '2028-12-31', bomMatch: true },
 };
 
 // 按工序预配置需要扫描的物料（快速扫码按钮）
 const MAT_BY_OP: Record<string, Array<{ code: string; hint: string }>> = {
-  'OP-10-GRIND': [
-    { code: 'NT-20260420-A', hint: '模拟扫码：镍钛丝' },
+  // 称量配料：所有主辅料
+  'OP-GMP-WEIGH': [
+    { code: 'VC-RAW-2026-01',   hint: '扫码：维生素C原料' },
+    { code: 'MANNITOL-2026-02', hint: '扫码：甘露醇' },
+    { code: 'STARCH-2026-03',   hint: '扫码：淀粉' },
+    { code: 'MGSTN-2026-04',    hint: '扫码：硬脂酸镁' },
   ],
-  'OP-100-ASM': [
-    { code: 'HD-20260425-B', hint: '模拟扫码：手柄' },
+  // 包衣：包衣料 + 片芯
+  'OP-GMP-COATING': [
+    { code: 'OPADRY-2026-06',   hint: '扫码：OPADRY包衣料' },
+    { code: 'VC-RAW-2026-01',   hint: '扫码：片芯批号确认' },
   ],
-  'OP-130-LIMIT': [
-    { code: 'LT-20260425-C', hint: '模拟扫码：限位块' },
+  // 内包装：瓶 + 铝箔盖
+  'OP-GMP-INNERPACK': [
+    { code: 'PET-BTL-2026-07',  hint: '扫码：PET瓶' },
+    { code: 'INNER-PKG-2026-08', hint: '扫码：铝箔盖' },
   ],
-  'OP-160-HANDLE': [
-    { code: 'PK-20260426-A', hint: '模拟扫码：手柄' },
-    { code: 'PK-20260426-B', hint: '模拟扫码：包装材料' },
+  // 外包装：彩盒 + 说明书
+  'OP-GMP-OUTERPACK': [
+    { code: 'OUTER-BOX-2026-09', hint: '扫码：彩盒' },
+  ],
+  // 益生菌称量配料
+  'OP-PROBIO-WEIGH': [
+    { code: 'PROBIO-MIX-2026-10', hint: '扫码：益生菌菌粉（❄️冷链）' },
+    { code: 'FOS-2026-11',        hint: '扫码：低聚果糖' },
+  ],
+  // 益生菌胶囊充填：空心胶囊
+  'OP-PROBIO-FILL': [
+    { code: 'HPMC-CAP-2026-12', hint: '扫码：HPMC空心胶囊' },
+    { code: 'PROBIO-MIX-2026-10', hint: '扫码：益生菌颗粒物料' },
+  ],
+  // 益生菌铝塑包装
+  'OP-PROBIO-PACK': [
+    { code: 'COLD-PKG-2026-13', hint: '扫码：铝塑泡罩包材' },
   ],
 };
 
@@ -57,7 +89,7 @@ const MatVerifyStage: React.FC<MatVerifyStageProps> = ({ opCode = '', content, e
   const canSubmit = scannedMats.length > 0 && scannedMats.every(m => m.bomMatch) && signed;
 
   const handleScan = () => {
-    const code = inputCode.trim() || 'NT-20260420-A';
+    const code = inputCode.trim() || 'VC-RAW-2026-01';
     const mat = MOCK_MATERIALS[code];
     if (!mat) { message.error('未找到该物料，请检查条码'); return; }
     if (scannedMats.find(m => m.code === code)) { message.warning('该物料已扫描'); return; }
@@ -118,8 +150,8 @@ const MatVerifyStage: React.FC<MatVerifyStageProps> = ({ opCode = '', content, e
                 </Button>
               ))}
               {matHints.length === 0 && (
-                <Button size="large" style={{ height: 46 }} onClick={() => { setInputCode('NT-20260420-A'); setTimeout(handleScan, 100); }}>
-                  模拟扫描镍钛丝
+                <Button size="large" style={{ height: 46 }} onClick={() => { setInputCode('VC-RAW-2026-01'); setTimeout(handleScan, 100); }}>
+                  模拟扫描：维生素C原料
                 </Button>
               )}
             </Space>

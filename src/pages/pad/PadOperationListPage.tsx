@@ -39,13 +39,14 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   abnormal:    { label: '异常',     color: '#ff4d4f' },
 };
 
-// Mock 操作员列表（工牌扫码用）
+// Mock 操作员列表（工牌扫码用）— 天美健固体制剂车间
 const MOCK_OPERATORS = [
-  { id: '1001', name: '张三', role: '操作员', dept: '精密加工车间' },
-  { id: '1002', name: '李四', role: '检验员', dept: '质检车间' },
-  { id: '1003', name: '王五', role: '操作员', dept: '组装车间' },
-  { id: '1004', name: '赵六', role: '班长',   dept: '生产部' },
-  { id: '9999', name: 'QA王', role: 'QA',    dept: '质量部' },
+  { id: '1001', name: '张三',   role: '操作员',   dept: '南京-固体制剂车间' },
+  { id: '1002', name: '李四',   role: '操作员',   dept: '南京-固体制剂车间' },
+  { id: '1003', name: '王五',   role: '操作员',   dept: '廊坊-益生菌冷链车间' },
+  { id: '1004', name: '赵六',   role: '班长',     dept: '生产部' },
+  { id: '1005', name: '陈小燕', role: '检验员',   dept: '南京-质检中心' },
+  { id: '9999', name: 'QA李',  role: 'QA工程师', dept: '质量保证部' },
 ];
 
 /** 将后端 WorkOrderRecord 映射为 PAD WorkOrder 形状 */
@@ -288,7 +289,7 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
                     <Text>{wo.woNo}</Text>
                     <Text type="secondary">—</Text>
                     <Text>{wo.productSpec}</Text>
-                    <Text type="secondary">× {wo.planQty}支</Text>
+                    <Text type="secondary">× {wo.planQty.toLocaleString()}{wo.productSpec?.includes('粒') ? '粒' : '片'}</Text>
                   </Space>
                 </Option>
               ))}
@@ -304,14 +305,14 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
               </Col>
               <Col xs={12} sm={8}>
                 <Space direction="vertical" size={0}>
-                  <Text type="secondary" style={{ fontSize: 11 }}>计划数量</Text>
-                  <Text strong style={{ color: '#1890ff', fontSize: 13 }}>{selectedWo?.planQty ?? 0} 支</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>计划批量</Text>
+                  <Text strong style={{ color: '#1890ff', fontSize: 13 }}>{selectedWo?.planQty ?? 0} {selectedWo?.productSpec?.includes('粒') ? '粒' : '片'}</Text>
                 </Space>
               </Col>
               <Col xs={12} sm={8}>
                 <Space direction="vertical" size={0}>
-                  <Text type="secondary" style={{ fontSize: 11 }}>客户</Text>
-                  <Text strong style={{ fontSize: 12 }}>{selectedWo?.customer || '—'}</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>产品规格</Text>
+                  <Text strong style={{ fontSize: 12 }}>{selectedWo?.productSpec || '—'}</Text>
                 </Space>
               </Col>
               <Col xs={12} sm={8}>
