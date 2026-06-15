@@ -1229,16 +1229,120 @@ export const ALL_MATERIAL_BALANCES: MaterialBalanceSheet[] = [
 // 导出
 // ────────────────────────────────────────────────────────────────────
 /**
- * MOCK_EBR_LIST 故意设为空数组。
- * EBR 批记录完全由 PAD 工序执行（PadIndex）实时生成并写入 localStorage，
- * 与 MOCK_WORK_ORDERS（padExecutionData.ts）的批号/工单号一一对应。
- * 不再预填与 PAD 工单无关的历史 Mock 数据，避免批次列表混乱。
+ * MOCK_EBR_LIST — 与 workOrderData.ts mockWorkOrders WO001~WO005 严格对齐的预生成EBR骨架。
+ * id/woId/woNo/batchNo/productName/productSpec/planQtyTotal 与生产订单页完全一致。
+ * 已完成批次（WO001/WO004）给 APPROVED 状态；生产中批次（WO002/WO005）给 IN_PROGRESS；
+ * 已下发待开始（WO003）给 IN_PROGRESS。
+ * PAD工序执行完成某工序后，PadIndex 会通过 updateEbr() 将真实数据覆盖写入对应条目。
  */
-export const MOCK_EBR_LIST: EbrRecord[] = [];
+
+function mkEbrNo(date: string, seq: string): string { return `EBR-${date}-${seq}`; }
+
+const _now = '2026-06-15 09:00';
+
+// 预生成EBR骨架的公共数量字段（真实数量由PAD工序执行后覆盖写入）
+const _emptyQty = { reportQtyTotal: 0, goodQtyTotal: 0, scrapQtyTotal: 0, yieldRate: 0 };
+const _emptyArrays = { tasks: [] as EbrRecord['tasks'], floatTickets: [] as EbrFloatTicket[], routingSteps: [] as EbrRoutingStep[], inspectionRecords: [] as EbrInspectionRecord[], deviations: [] as EbrDeviation[], signatures: [] as EbrSignature[] };
+
+// WO001 — VitC 500mg×60粒 已放行批次
+const EBR_PRESET_WO001: EbrRecord = {
+  id: 'EBR_PRESET_WO001', ebrNo: mkEbrNo('20260603', '001'),
+  status: 'APPROVED',
+  poId: 'PO001', poNo: 'MO-20260601-001',
+  routingCode: 'TMJ-VITC-WG-V20', routingName: 'VitC咀嚼片湿法制粒工艺路径 V2.0', bomVersion: 'V2.0',
+  woId: 'WO001', woNo: 'WO-20260601-001',
+  batchNo: 'TMJ-VITC-20260601-001',
+  productCode: 'FG-VITC-500MG-AP', productName: '维生素C咀嚼片',
+  productSpec: '500mg/粒 × 60粒/瓶',
+  planQtyTotal: 100000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-15', priority: 'HIGH',
+  materialLotNo: 'RM-VITC-20260601-001', iqcResult: 'PASS',
+  ..._emptyArrays,
+  startTime: '2026-06-01 08:30', endTime: '2026-06-03 18:45',
+  createdAt: '2026-06-01 08:30', updatedAt: '2026-06-03 18:45',
+  approvedBy: '赵雪梅', approvedAt: '2026-06-03 20:00',
+};
+
+// WO002 — VitC 500mg×60粒 生产中批次
+const EBR_PRESET_WO002: EbrRecord = {
+  id: 'EBR_PRESET_WO002', ebrNo: mkEbrNo('20260605', '002'),
+  status: 'IN_PROGRESS',
+  poId: 'PO002', poNo: 'MO-20260605-001',
+  routingCode: 'TMJ-VITC-WG-V20', routingName: 'VitC咀嚼片湿法制粒工艺路径 V2.0', bomVersion: 'V2.0',
+  woId: 'WO002', woNo: 'WO-20260605-001',
+  batchNo: 'TMJ-VITC-20260605-002',
+  productCode: 'FG-VITC-500MG-AP', productName: '维生素C咀嚼片',
+  productSpec: '500mg/粒 × 60粒/瓶',
+  planQtyTotal: 200000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-25', priority: 'HIGH',
+  materialLotNo: 'RM-VITC-20260605-002', iqcResult: 'PASS',
+  ..._emptyArrays,
+  startTime: '2026-06-05 08:00',
+  createdAt: '2026-06-05 08:00', updatedAt: _now,
+};
+
+// WO003 — VitC 250mg×100粒 已下发批次
+const EBR_PRESET_WO003: EbrRecord = {
+  id: 'EBR_PRESET_WO003', ebrNo: mkEbrNo('20260610', '003'),
+  status: 'IN_PROGRESS',
+  poId: 'PO003', poNo: 'MO-20260610-001',
+  routingCode: 'TMJ-VITC-DC-V10', routingName: 'VitC咀嚼片直压工艺路径 V1.0', bomVersion: 'V1.0',
+  woId: 'WO003', woNo: 'WO-20260610-001',
+  batchNo: 'TMJ-VITC-20260610-003',
+  productCode: 'FG-VITC-250MG-BTL', productName: '维生素C咀嚼片',
+  productSpec: '250mg/粒 × 100粒/瓶',
+  planQtyTotal: 50000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-30', priority: 'NORMAL',
+  materialLotNo: 'RM-VITC-20260610-003', iqcResult: 'PASS',
+  ..._emptyArrays,
+  startTime: '2026-06-13 08:00',
+  createdAt: '2026-06-10 10:00', updatedAt: _now,
+};
+
+// WO004 — 复合益生菌胶囊 250mg×30粒 已放行批次
+const EBR_PRESET_WO004: EbrRecord = {
+  id: 'EBR_PRESET_WO004', ebrNo: mkEbrNo('20260605', '004'),
+  status: 'APPROVED',
+  poId: 'PO004', poNo: 'MO-20260601-002',
+  routingCode: 'TMJ-PROBIO-CAP-V15', routingName: '益生菌胶囊冷链工艺路径 V1.5', bomVersion: 'V1.5',
+  woId: 'WO004', woNo: 'WO-20260601-002',
+  batchNo: 'TMJ-PROBIO-20260601-001',
+  productCode: 'FG-PROBIO-CAP-250', productName: '复合益生菌胶囊',
+  productSpec: '250mg/粒（活菌数≥1×10⁹CFU/粒）× 30粒/盒',
+  planQtyTotal: 30000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-10', priority: 'URGENT',
+  materialLotNo: 'RM-PROBIO-20260601-001', iqcResult: 'PASS',
+  ..._emptyArrays,
+  startTime: '2026-06-01 08:00', endTime: '2026-06-05 16:30',
+  createdAt: '2026-06-01 08:00', updatedAt: '2026-06-05 17:00',
+  approvedBy: '赵雪梅', approvedAt: '2026-06-05 18:00',
+};
+
+// WO005 — 复合益生菌胶囊 250mg×30粒 生产中批次
+const EBR_PRESET_WO005: EbrRecord = {
+  id: 'EBR_PRESET_WO005', ebrNo: mkEbrNo('20260612', '005'),
+  status: 'IN_PROGRESS',
+  poId: 'PO005', poNo: 'MO-20260612-001',
+  routingCode: 'TMJ-PROBIO-CAP-V15', routingName: '益生菌胶囊冷链工艺路径 V1.5', bomVersion: 'V1.5',
+  woId: 'WO005', woNo: 'WO-20260612-001',
+  batchNo: 'TMJ-PROBIO-20260612-002',
+  productCode: 'FG-PROBIO-CAP-250', productName: '复合益生菌胶囊',
+  productSpec: '250mg/粒 × 30粒/盒',
+  planQtyTotal: 60000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-28', priority: 'HIGH',
+  materialLotNo: 'RM-PROBIO-20260612-002', iqcResult: 'PASS',
+  ..._emptyArrays,
+  startTime: '2026-06-12 08:00',
+  createdAt: '2026-06-12 08:00', updatedAt: _now,
+};
+
+export const MOCK_EBR_LIST: EbrRecord[] = [
+  EBR_PRESET_WO001,
+  EBR_PRESET_WO002,
+  EBR_PRESET_WO003,
+  EBR_PRESET_WO004,
+  EBR_PRESET_WO005,
+];
+
 export const EBR_STORAGE_KEY = 'bip_ebr_records';
 
 /** 数据版本号 — 每次更新 Mock 数据时递增，强制刷新旧缓存 */
-export const EBR_DATA_VERSION = 'v20260615_pad_linked';
+export const EBR_DATA_VERSION = 'v20260615_wo_aligned';
 export const EBR_VERSION_KEY  = 'bip_ebr_version';
 
 /**
