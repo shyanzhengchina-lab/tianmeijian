@@ -89,6 +89,7 @@ interface WorkOrder {
   remark: string;
   workshop_code: string;
   create_time: string;
+  raw_id?: string;   // 原始字符串ID（mock数据用，如 WO002）
 }
 
 interface WorkOrderListPageNewProps {
@@ -136,6 +137,7 @@ const WorkOrderListPageNew: React.FC<WorkOrderListPageNewProps> = ({ onNavigate 
       };
       return raw.map((item: any): WorkOrder => ({
         id: Number(item.id) || 1,
+        raw_id: String(item.id ?? ''),
         wo_code: item.woNo ?? item.wo_code ?? '',
         product_code: item.productCode ?? item.product_code ?? '',
         product_name: item.productName ?? item.product_name ?? '',
@@ -417,7 +419,7 @@ const WorkOrderListPageNew: React.FC<WorkOrderListPageNewProps> = ({ onNavigate 
     },
     { title: '工艺路线', dataIndex: 'route_code', width: 130, render: v => v ? <Tag color="blue" style={{ fontSize: 10 }}>{v}</Tag> : '—' },
     {
-      title: '操作', width: 260, fixed: 'right',
+      title: '操作', width: 320, fixed: 'right',
       render: (_, r) => (
         <Space size={3} wrap>
           <Button size="small" icon={<EyeOutlined />} onClick={() => setDetailRecord(r)}>详情</Button>
@@ -426,6 +428,25 @@ const WorkOrderListPageNew: React.FC<WorkOrderListPageNewProps> = ({ onNavigate 
           )}
           {r.wo_status === 1 && (
             <Button size="small" icon={<NodeIndexOutlined />} onClick={() => handlePushTasks(r)}>下推任务</Button>
+          )}
+          {r.wo_status === 2 && (
+            <Button size="small" icon={<RocketOutlined />}
+              type="primary"
+              style={{ background: '#1a237e', borderColor: '#1a237e' }}
+              onClick={() => {
+                // 将目标工单写入 localStorage，供 PadIndex 初始化时自动切换
+                try {
+                  const padTarget = {
+                    woNo: r.wo_code,
+                    rawId: r.raw_id ?? '',
+                    batchNo: r.batch_no,
+                  };
+                  localStorage.setItem('bip_pad_target_wo', JSON.stringify(padTarget));
+                } catch { /* ignore */ }
+                if (onNavigate) {
+                  onNavigate('pad-execution', { woNo: r.wo_code, woId: r.raw_id ?? String(r.id), batchNo: r.batch_no });
+                }
+              }}>PAD工序执行</Button>
           )}
           {r.wo_status === 2 && (
             <Button size="small" icon={<ExperimentOutlined />}

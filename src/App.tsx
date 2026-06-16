@@ -308,6 +308,12 @@ const App: React.FC = () => {
     // 处理携带参数
     if (params?.batchNo && page === 'ebr-list') setEbrInitBatchNo(params.batchNo as string);
     if (params?.batchNo && page === 'material-balance') setBalanceInitBatchNo(params.batchNo as string);
+    // PAD工序执行：将目标工单写入 localStorage，供 PadIndex 初始化时读取
+    if (page === 'pad-execution' && params?.woId) {
+      try {
+        localStorage.setItem('bip_pad_target_wo', JSON.stringify({ woId: params.woId, woNo: params.woNo ?? '', batchNo: params.batchNo ?? '' }));
+      } catch { /* ignore */ }
+    }
     setCurrentPage(page);
   };
 
@@ -394,9 +400,9 @@ const App: React.FC = () => {
       case 'workshop':          return <PageWrapper><WorkshopPageNew /></PageWrapper>;
       case 'floatticket':       return <PageWrapper><FloatTicketPage /></PageWrapper>;
       case 'production-order':  return <PageWrapper><ProductionOrderPage onNavigateToWO={handleNavigateToWO} /></PageWrapper>;
-      case 'work-order':        return <PageWrapper><WorkOrderListPageNew /></PageWrapper>;
+      case 'work-order':        return <PageWrapper><WorkOrderListPageNew onNavigate={handlePageChange} /></PageWrapper>;
       case 'task-order':        return <PageWrapper><TaskOrderPage onNavigateToPad={() => handlePageChange('pad-execution')} onNavigateToTaskPool={() => handlePageChange('pad-taskpool')} /></PageWrapper>;
-      case 'workorder':         return <PageWrapper><WorkOrderListPageNew /></PageWrapper>;
+      case 'workorder':         return <PageWrapper><WorkOrderListPageNew onNavigate={handlePageChange} /></PageWrapper>;
       case 'inspection':        return <PageWrapper><InspectionPage /></PageWrapper>;
       case 'mrb':               return <PageWrapper><MrbPage /></PageWrapper>;
       case 'release':           return <PageWrapper><ReleasePage /></PageWrapper>;

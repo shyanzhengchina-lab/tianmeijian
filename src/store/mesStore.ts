@@ -69,7 +69,7 @@ export const STORE_KEYS = {
 } as const;
 
 // ── 数据版本（用于强制刷新 mock 数据） ─────────────────────────────
-const DATA_VERSION = 'v20260616_d';
+const DATA_VERSION = 'v20260616_e';
 const VERSION_KEY  = 'bip_data_version';
 
 // ── 读/写工具 ─────────────────────────────────────────────────────
@@ -120,7 +120,8 @@ function clearAllBipKeys(): void {
   const keys: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith('bip_') && !KEEP_KEYS.has(k)) keys.push(k);
+    // bip_pad_exec_snap_* 保留真实PAD执行快照，不随版本清除
+    if (k && k.startsWith('bip_') && !KEEP_KEYS.has(k) && !k.startsWith('bip_pad_exec_snap_')) keys.push(k);
   }
   keys.forEach(k => localStorage.removeItem(k));
   // Also clear production-related non-bip keys
@@ -363,6 +364,155 @@ function seedPocData(): void {
     try {
       localStorage.setItem('bip_ebr_records', JSON.stringify(MOCK_EBR_LIST));
       localStorage.setItem('bip_ebr_version', EBR_DATA_VERSION);
+    } catch { /* ignore */ }
+  }
+
+  // ── 14. PAD execMap 快照预种 ──────────────────────────────────────
+  // 为 WO002/WO005 的批记录打印页预置 execMap 快照（含称量配料工序 BOM 数据），
+  // 使"BOM物料清单"在未实际执行PAD时也能显示演示数据。
+  // key: bip_pad_exec_snap_{woId}，版本键: bip_pad_exec_snap_version
+  const PAD_SNAP_VERSION = 'v20260616_snap1';
+  const existingSnapVersion = localStorage.getItem('bip_pad_exec_snap_version');
+  if (existingSnapVersion !== PAD_SNAP_VERSION) {
+    const makeWeighStages = () => ({
+      PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-05 08:00', endTime: '2026-06-05 08:20', operator: '张伟', data: { env_temp: '22', env_humid: '48', clean_cert: 'QC-CLN-20260605-001' } },
+      CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-05 08:20', endTime: '2026-06-05 08:25', operator: '张伟', data: {} },
+      MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'completed', startTime: '2026-06-05 08:25', endTime: '2026-06-05 08:40', operator: '张伟', data: {} },
+      FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: '2026-06-05 08:40', endTime: '2026-06-05 09:30', operator: '张伟',
+        data: {
+          dc_table: [
+            { material_name: '维生素C（原料药）', batch_no: 'RM-VITC-20260601', plan_qty: '88.000', actual_qty: '88.012', balance_check: '复核一致', dc_operator: '张伟' },
+            { material_name: '甘露醇', batch_no: 'RM-MAN-20260601', plan_qty: '50.000', actual_qty: '49.998', balance_check: '复核一致', dc_operator: '张伟' },
+            { material_name: '柠檬酸', batch_no: 'RM-CA-20260601', plan_qty: '5.000', actual_qty: '5.001', balance_check: '复核一致', dc_operator: '张伟' },
+            { material_name: '硬脂酸镁', batch_no: 'RM-MG-20260601', plan_qty: '2.000', actual_qty: '2.000', balance_check: '复核一致', dc_operator: '张伟' },
+            { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260601', plan_qty: '15.000', actual_qty: '15.003', balance_check: '复核一致', dc_operator: '张伟' },
+          ],
+        },
+      },
+      SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      REPORT:       { code: 'REPORT',       status: 'completed', startTime: '2026-06-05 09:30', endTime: '2026-06-05 09:45', operator: '张伟',
+        data: { rpt_finish: 160014, rpt_good: 160014, rpt_bad: 0, rpt_scrap: 0, rpt_operator: '张伟' },
+      },
+      CHECK_OUT:    { code: 'CHECK_OUT',    status: 'completed', startTime: '2026-06-05 09:45', endTime: '2026-06-05 09:50', operator: '张伟', data: { out_operator: '张伟' } },
+    });
+    const makeWeighStages5 = () => ({
+      PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-12 08:00', endTime: '2026-06-12 08:20', operator: '陈明', data: { env_temp: '8', env_humid: '42', clean_cert: 'QC-CLN-20260612-001' } },
+      CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-12 08:20', endTime: '2026-06-12 08:25', operator: '陈明', data: {} },
+      MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'completed', startTime: '2026-06-12 08:25', endTime: '2026-06-12 08:40', operator: '陈明', data: {} },
+      FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: '2026-06-12 08:40', endTime: '2026-06-12 09:20', operator: '陈明',
+        data: {
+          dc_table: [
+            { material_name: '长双歧杆菌BB536（冻干粉）', batch_no: 'RM-BB536-20260610', plan_qty: '12.000', actual_qty: '12.008', balance_check: '复核一致', dc_operator: '陈明' },
+            { material_name: '嗜酸乳杆菌NCFM（冻干粉）', batch_no: 'RM-NCFM-20260610', plan_qty: '8.000', actual_qty: '8.002', balance_check: '复核一致', dc_operator: '陈明' },
+            { material_name: '低聚果糖（益生元）', batch_no: 'RM-FOS-20260610', plan_qty: '6.000', actual_qty: '5.999', balance_check: '复核一致', dc_operator: '陈明' },
+            { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260610', plan_qty: '4.000', actual_qty: '4.001', balance_check: '复核一致', dc_operator: '陈明' },
+          ],
+        },
+      },
+      SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      REPORT:       { code: 'REPORT',       status: 'completed', startTime: '2026-06-12 09:20', endTime: '2026-06-12 09:35', operator: '陈明',
+        data: { rpt_finish: 21000, rpt_good: 21000, rpt_bad: 0, rpt_scrap: 0, rpt_operator: '陈明' },
+      },
+      CHECK_OUT:    { code: 'CHECK_OUT',    status: 'completed', startTime: '2026-06-12 09:35', endTime: '2026-06-12 09:40', operator: '陈明', data: { out_operator: '陈明' } },
+    });
+
+    const makeMixStages = (startDate: string, operator: string) => ({
+      PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: `${startDate} 10:00`, endTime: `${startDate} 10:15`, operator, data: {} },
+      CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: `${startDate} 10:15`, endTime: `${startDate} 10:20`, operator, data: {} },
+      MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: `${startDate} 10:20`, endTime: `${startDate} 11:50`, operator,
+        data: { dc_table: [{ mix_speed: '15', mix_time: '30', rsd: '3.2', env_temp: '22', env_humid: '48', dc_operator: operator }] },
+      },
+      SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+      REPORT:       { code: 'REPORT',       status: 'completed', startTime: `${startDate} 11:50`, endTime: `${startDate} 12:00`, operator,
+        data: { rpt_finish: 160014, rpt_good: 160014, rpt_bad: 0, rpt_scrap: 0, rpt_operator: operator },
+      },
+      CHECK_OUT:    { code: 'CHECK_OUT',    status: 'completed', startTime: `${startDate} 12:00`, endTime: `${startDate} 12:05`, operator, data: { out_operator: operator } },
+    });
+
+    // WO002 execMap 快照：称量配料(完成)+混合(完成)+其他工序(待完成)
+    const wo2ExecMap: Record<string, any> = {
+      'OP-GMP-WEIGH': {
+        opCode: 'OP-GMP-WEIGH', status: 'completed',
+        inTime: '2026-06-05 08:00', outTime: '2026-06-05 09:50',
+        finishQty: 160014, goodQty: 160014, badQty: 0, scrapQty: 0,
+        reportRecords: [],
+        firstPiecePassed: false, preCleanDone: true,
+        stages: makeWeighStages(),
+      },
+      'OP-GMP-MIX': {
+        opCode: 'OP-GMP-MIX', status: 'completed',
+        inTime: '2026-06-05 10:00', outTime: '2026-06-05 12:05',
+        finishQty: 160014, goodQty: 160014, badQty: 0, scrapQty: 0,
+        reportRecords: [],
+        firstPiecePassed: false, preCleanDone: true,
+        stages: makeMixStages('2026-06-05', '张伟'),
+      },
+      'OP-GMP-GRANULATE': {
+        opCode: 'OP-GMP-GRANULATE', status: 'in_progress',
+        inTime: '2026-06-05 14:00', outTime: undefined,
+        finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0,
+        reportRecords: [],
+        firstPiecePassed: false, preCleanDone: true,
+        stages: {
+          PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-05 14:00', endTime: '2026-06-05 14:15', operator: '张伟', data: {} },
+          CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-05 14:15', endTime: '2026-06-05 14:20', operator: '张伟', data: {} },
+          MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          DATA_COLLECT: { code: 'DATA_COLLECT', status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          POST_CLEAN:   { code: 'POST_CLEAN',   status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          REPORT:       { code: 'REPORT',       status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          CHECK_OUT:    { code: 'CHECK_OUT',    status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+        },
+      },
+    };
+
+    // WO005 execMap 快照：称量配料(完成)+制粒干燥(进行中，冷链益生菌工序对应)
+    const wo5ExecMap: Record<string, any> = {
+      'OP-GMP-WEIGH': {
+        opCode: 'OP-GMP-WEIGH', status: 'completed',
+        inTime: '2026-06-12 08:00', outTime: '2026-06-12 09:40',
+        finishQty: 21000, goodQty: 21000, badQty: 0, scrapQty: 0,
+        reportRecords: [],
+        firstPiecePassed: false, preCleanDone: true,
+        stages: makeWeighStages5(),
+      },
+      'OP-GMP-MIX': {
+        opCode: 'OP-GMP-MIX', status: 'in_progress',
+        inTime: '2026-06-12 10:00', outTime: undefined,
+        finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0,
+        reportRecords: [],
+        firstPiecePassed: false, preCleanDone: true,
+        stages: {
+          PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-12 10:00', endTime: '2026-06-12 10:20', operator: '陈明', data: {} },
+          CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-12 10:20', endTime: '2026-06-12 10:25', operator: '陈明', data: {} },
+          MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          DATA_COLLECT: { code: 'DATA_COLLECT', status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          REPORT:       { code: 'REPORT',       status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          CHECK_OUT:    { code: 'CHECK_OUT',    status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+        },
+      },
+    };
+
+    try {
+      // 仅在快照不存在时写入，避免覆盖真实PAD执行数据
+      if (!localStorage.getItem('bip_pad_exec_snap_WO002')) {
+        localStorage.setItem('bip_pad_exec_snap_WO002', JSON.stringify(wo2ExecMap));
+      }
+      if (!localStorage.getItem('bip_pad_exec_snap_WO005')) {
+        localStorage.setItem('bip_pad_exec_snap_WO005', JSON.stringify(wo5ExecMap));
+      }
+      localStorage.setItem('bip_pad_exec_snap_version', PAD_SNAP_VERSION);
     } catch { /* ignore */ }
   }
 }

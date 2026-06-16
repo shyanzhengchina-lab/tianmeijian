@@ -57,15 +57,36 @@ function clearStalePadCache(): void {
 // 模块加载时立即执行，确保在 useLocalStorage 初始化之前清理
 clearStalePadCache();
 
+/**
+ * 从 bip_pad_target_wo 读取生产工单列表页传递过来的目标工单（woNo / rawId / batchNo）。
+ * 在可用工单列表中匹配并返回对应的 PAD WorkOrder；读取后立即清除该 key。
+ */
+function consumePadTargetWo(padWos: WorkOrder[]): WorkOrder | null {
+  try {
+    const raw = localStorage.getItem('bip_pad_target_wo');
+    if (!raw) return null;
+    localStorage.removeItem('bip_pad_target_wo');
+    const { woNo, rawId, batchNo } = JSON.parse(raw) as { woNo?: string; rawId?: string; batchNo?: string };
+    // 按 id（rawId）、woNo、batchNo 优先级依次匹配
+    return (
+      padWos.find(w => rawId && w.id === rawId) ??
+      padWos.find(w => woNo  && w.woNo === woNo) ??
+      padWos.find(w => batchNo && w.batchNo === batchNo) ??
+      null
+    );
+  } catch { return null; }
+}
+
 const PadIndex: React.FC = () => {
   // 提升到顶层并持久化，使列表页与执行页共享同一份 execMap
   const [execMap, setExecMap]       = useLocalStorage<Record<string, OperationExecution>>('bip_pad_exec_map', {});
-  // 初始工单：优先从实际下发/生产中的工单中取第一张，无则 undefined（空状态）
+  // 初始工单：优先从生产工单列表页传入的 bip_pad_target_wo，其次第一张可用工单
   const [selectedWo, setSelectedWo] = useLocalStorage<WorkOrder | null>(
     'bip_pad_selected_wo',
     (() => {
       const real = loadPadWorkOrders();
-      return real.length > 0 ? real[0] : null;
+      const target = consumePadTargetWo(real);
+      return target ?? (real.length > 0 ? real[0] : null);
     })(),
   );
   // PAD 可选工单列表（API 更新后刷新）
