@@ -135,10 +135,246 @@ export interface WipInventory {
 
 const today = '2026-06-14';
 
+// ── WO001 完成批次（WO-20260601-001，TMJ-VITC-20260601-001）专属领料单 ──
+// 该批次已于 2026-06-03 全线完成放行，领料单状态为 RECEIVED（已签收/已关闭）
+
 export const MOCK_ISSUE_ORDERS: IssueOrder[] = [
 
   // ═══════════════════════════════════════════════════════════════
-  // ISU-001：南京工厂 WO002 — VitC咀嚼片 称量配料（OP-10-WEIGH）
+  // ISU-WO001-001：南京工厂 WO001 — VitC咀嚼片500mg 称量配料（OP-10）
+  // 工单：WO-20260601-001 / 批次：TMJ-VITC-20260601-001 / 计划10万粒
+  // 状态：RECEIVED（已签收）—— 2026-06-01 已完成发料，批次已放行
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO001-001',
+    issueNo: 'ISU-20260601-001',
+    woNo: 'WO-20260601-001',
+    moNo: 'MO-20260601-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 10,
+    operationName: '称量配料',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-RM-原料仓',
+    wipWarehouse: 'WIP-NJ-称量',
+    planDate: '2026-06-01',
+    status: 'RECEIVED',
+    createdBy: '陈国华',
+    createdAt: '2026-06-01 07:00',
+    pickedBy: '孙建国',
+    pickedAt: '2026-06-01 07:45',
+    receivedBy: '陈国华',
+    receivedAt: '2026-06-01 08:10',
+    remark: 'VitC咀嚼片湿法制粒首批次，称量间D级洁净，双人复核完成，全部物料已入线边仓',
+    lines: [
+      {
+        id: 'LWO001-01', lineNo: 1,
+        itemCode: 'RM-VITC-POWDER', itemName: '维生素C原料粉（L-抗坏血酸）',
+        spec: 'USP级 / 含量≥99.5% / GB14754-2010 / 25kg/袋',
+        unit: 'KG',
+        planQty: 52.5, actualQty: 52.5,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'RM-VITC-20260601-001', qty: 52.5, inboundDate: '2026-05-28', expiryDate: '2028-05-27', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-02', lineNo: 2,
+        itemCode: 'EXC-STARCH-CORN', itemName: '玉米淀粉（赋形剂）',
+        spec: '药用级 / GB/T8885 / 25kg/袋',
+        unit: 'KG',
+        planQty: 18.0, actualQty: 18.0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'EXC-ST-20260530-A', qty: 18.0, inboundDate: '2026-05-30', expiryDate: '2028-05-29', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-03', lineNo: 3,
+        itemCode: 'EXC-MCC-101', itemName: '微晶纤维素（MCC-101）',
+        spec: '药用级 / 粒径50μm / Ph.Eur.标准 / 25kg/袋',
+        unit: 'KG',
+        planQty: 15.0, actualQty: 15.0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'EXC-MCC-20260530-B', qty: 15.0, inboundDate: '2026-05-30', expiryDate: '2028-05-29', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-04', lineNo: 4,
+        itemCode: 'EX-PVPK30', itemName: 'PVP K30（粘合剂）',
+        spec: '药用级 / K值28~32 / 5kg/袋',
+        unit: 'KG',
+        planQty: 4.0, actualQty: 4.0,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'EX-PVP-20260528-A', qty: 4.0, inboundDate: '2026-05-28', expiryDate: '2028-05-27', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-05', lineNo: 5,
+        itemCode: 'EX-MGST', itemName: '硬脂酸镁（润滑剂）',
+        spec: '药用级 / 粒径≤75μm / 25kg/袋',
+        unit: 'KG',
+        planQty: 0.5, actualQty: 0.5,
+        issueMethod: 'PUSH', operationSeq: 10, operationCode: 'OP-10',
+        wipWarehouse: 'WIP-NJ-称量', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'EX-MGST-20260528-A', qty: 0.5, inboundDate: '2026-05-28', expiryDate: '2028-05-27', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-WO001-002：南京工厂 WO001 — VitC咀嚼片500mg 铝塑内包工序（OP-50）
+  // 工单：WO-20260601-001 / 状态：RECEIVED（已签收）
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO001-002',
+    issueNo: 'ISU-20260602-001',
+    woNo: 'WO-20260601-001',
+    moNo: 'MO-20260601-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 50,
+    operationName: '铝塑内包',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-PM-包材仓',
+    wipWarehouse: 'WIP-NJ-铝塑',
+    planDate: '2026-06-02',
+    status: 'RECEIVED',
+    createdBy: '赵丽',
+    createdAt: '2026-06-02 07:30',
+    pickedBy: '赵丽',
+    pickedAt: '2026-06-02 08:00',
+    receivedBy: '赵丽',
+    receivedAt: '2026-06-02 08:20',
+    remark: '铝塑膜批次PK-ALUPLA-20260601-A，已IQC检验合格（封号SH-20260601），100粒/板',
+    lines: [
+      {
+        id: 'LWO001-06', lineNo: 1,
+        itemCode: 'PK-ALUPLA-001', itemName: '铝塑复合膜（PVC/PVDC/Al）',
+        spec: 'PVC/PVDC/Al复合 / 厚度0.15mm / 宽200mm / 100粒/板规格',
+        unit: 'M',
+        planQty: 2100, actualQty: 2110,
+        issueMethod: 'PUSH', operationSeq: 50, operationCode: 'OP-50',
+        wipWarehouse: 'WIP-NJ-铝塑', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-ALUPLA-20260601-A', qty: 2110, inboundDate: '2026-05-30', expiryDate: '2028-05-29', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-07', lineNo: 2,
+        itemCode: 'PK-DESICCANT-1G', itemName: '干燥剂（1g/包）',
+        spec: '硅胶干燥剂 / 1g/包 / 符合食品安全标准',
+        unit: 'PCS',
+        planQty: 1000, actualQty: 1000,
+        issueMethod: 'PUSH', operationSeq: 50, operationCode: 'OP-50',
+        wipWarehouse: 'WIP-NJ-铝塑', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-DSC-20260530-A', qty: 1000, inboundDate: '2026-05-30', expiryDate: '2028-05-29', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-WO001-003：南京工厂 WO001 — VitC咀嚼片500mg 外包装工序（OP-60/65）
+  // 工单：WO-20260601-001 / 状态：RECEIVED（已签收）
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO001-003',
+    issueNo: 'ISU-20260602-002',
+    woNo: 'WO-20260601-001',
+    moNo: 'MO-20260601-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 60,
+    operationName: '装瓶外包/装盒打码',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-PM-包材仓',
+    wipWarehouse: 'WIP-NJ-外包',
+    planDate: '2026-06-02',
+    status: 'RECEIVED',
+    createdBy: '赵丽',
+    createdAt: '2026-06-02 14:30',
+    pickedBy: '赵丽',
+    pickedAt: '2026-06-02 15:00',
+    receivedBy: '赵丽',
+    receivedAt: '2026-06-02 15:20',
+    remark: 'HDPE白瓶100mL + 铝箔感应盖 + 说明书 + 彩盒，批号打印：TMJ-VITC-20260601-001',
+    lines: [
+      {
+        id: 'LWO001-08', lineNo: 1,
+        itemCode: 'PK-HDPE-100ML', itemName: 'HDPE白色包装瓶（100mL）',
+        spec: 'HDPE材质 / 100mL / 口径28mm / 附铝箔感应盖',
+        unit: 'PCS',
+        planQty: 1000, actualQty: 1000,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-BTL-20260530-A', qty: 1000, inboundDate: '2026-05-30', expiryDate: '2029-05-29', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-09', lineNo: 2,
+        itemCode: 'PK-LABEL-VITC-500', itemName: '产品标签（VitC 500mg）',
+        spec: '不干胶铜版纸标签 / V20版 / 100mm×60mm',
+        unit: 'PCS',
+        planQty: 1000, actualQty: 1000,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-LBL-20260530-A', qty: 1000, inboundDate: '2026-05-30', expiryDate: '2029-05-29', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-10', lineNo: 3,
+        itemCode: 'PK-INSERT-VITC-500', itemName: '产品说明书（VitC 500mg）',
+        spec: 'A4折页 / V20版 / 标准GMP格式',
+        unit: 'PCS',
+        planQty: 1000, actualQty: 1000,
+        issueMethod: 'PUSH', operationSeq: 65, operationCode: 'OP-65',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-INS-20260530-A', qty: 1000, inboundDate: '2026-05-30', expiryDate: '2029-05-29', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO001-11', lineNo: 4,
+        itemCode: 'PK-CARTON-VITC-500', itemName: '包装彩盒（VitC 500mg）',
+        spec: '白卡纸彩盒 / V20版 / 单瓶装',
+        unit: 'PCS',
+        planQty: 1000, actualQty: 1000,
+        issueMethod: 'PUSH', operationSeq: 65, operationCode: 'OP-65',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-CTN-20260530-A', qty: 1000, inboundDate: '2026-05-30', expiryDate: '2029-05-29', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'DONE',
+      },
+    ],
+  },
+
+
   // 工单：WO-20260605-001 / 批次：TMJ-VITC-20260605-002 / 计划20万粒
   // 状态：拣货中（主动领料，高优先级）
   // ═══════════════════════════════════════════════════════════════
@@ -560,7 +796,7 @@ export const MOCK_BACKFLUSH_LOGS: BackflushLog[] = [
 // ════════════════════════════════════════════════════════════════
 
 // ⚠️ 数据版本：每次更换产品线/重构Mock时递增，强制清除旧缓存
-const DATA_VERSION = 'TMJ-HEALTH-V2';
+const DATA_VERSION = 'TMJ-HEALTH-V3';
 const STORE_KEY_VERSION = 'bip_data_version';
 const STORE_KEY_ORDERS  = 'bip_issue_orders';
 const STORE_KEY_WIP     = 'bip_wip_inventory';
