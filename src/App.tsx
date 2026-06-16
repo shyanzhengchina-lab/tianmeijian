@@ -395,7 +395,7 @@ const App: React.FC = () => {
       case 'floatticket':       return <PageWrapper><FloatTicketPage /></PageWrapper>;
       case 'production-order':  return <PageWrapper><ProductionOrderPage onNavigateToWO={handleNavigateToWO} /></PageWrapper>;
       case 'work-order':        return <PageWrapper><WorkOrderListPageNew /></PageWrapper>;
-      case 'task-order':        return <PageWrapper><TaskOrderPageNew /></PageWrapper>;
+      case 'task-order':        return <PageWrapper><TaskOrderPage onNavigateToPad={() => handlePageChange('pad-execution')} onNavigateToTaskPool={() => handlePageChange('pad-taskpool')} /></PageWrapper>;
       case 'workorder':         return <PageWrapper><WorkOrderListPageNew /></PageWrapper>;
       case 'inspection':        return <PageWrapper><InspectionPage /></PageWrapper>;
       case 'mrb':               return <PageWrapper><MrbPage /></PageWrapper>;
