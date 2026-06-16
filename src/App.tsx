@@ -384,7 +384,7 @@ const App: React.FC = () => {
       case 'bom':               return <PageWrapper><BomIndex /></PageWrapper>;
       case 'pro':               return <PageWrapper><ProIndex onNavigateToSeries={() => setCurrentPage('product-series')} initialHighlightCode={highlightRoutingCode} /></PageWrapper>;
       case 'equipment':         return <PageWrapper><EquipmentPage /></PageWrapper>;
-      case 'equipment-mgmt':    return <PageWrapper><EquipmentManagementPageNew /></PageWrapper>;
+      case 'equipment-mgmt':    return <PageWrapper><EquipmentManagementPage /></PageWrapper>;
       case 'workcenter':        return <PageWrapper><WorkCenterPage /></PageWrapper>;
       case 'workshop-archive':  return <PageWrapper><WorkshopArchivePage /></PageWrapper>;
       case 'team':              return <PageWrapper><TeamPage /></PageWrapper>;

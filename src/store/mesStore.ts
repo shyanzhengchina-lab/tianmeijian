@@ -42,6 +42,7 @@ import { mockCategories, mockMaterials, mockUnitGroups } from './mockData';
 import { mockBomList } from './bomData';
 import { mockProductSeries, mockRoutingMasters } from '../pages/pro/seriesData';
 import { mockInspectionTasks, mockQualityReleases } from '../pages/inspection/qmsData';
+import { MOCK_EBR_LIST, EBR_DATA_VERSION } from '../pages/ebr/ebrData';
 
 // ── 键名常量 ──────────────────────────────────────────────────────
 export const STORE_KEYS = {
@@ -68,7 +69,7 @@ export const STORE_KEYS = {
 } as const;
 
 // ── 数据版本（用于强制刷新 mock 数据） ─────────────────────────────
-const DATA_VERSION = 'v20260616_b';
+const DATA_VERSION = 'v20260616_c';
 const VERSION_KEY  = 'bip_data_version';
 
 // ── 读/写工具 ─────────────────────────────────────────────────────
@@ -346,6 +347,23 @@ function seedPocData(): void {
   // ── 12. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
   if (!localStorage.getItem('bip_demo_injected')) {
     localStorage.setItem('bip_demo_injected', '1');
+  }
+
+  // ── 13. EBR批记录：版本不一致或为空时补种MOCK_EBR_LIST ─────────────
+  const existingEbrVersion = localStorage.getItem('bip_ebr_version');
+  const existingEbr = localStorage.getItem('bip_ebr_records');
+  let needsEbrSeed = !existingEbr || existingEbrVersion !== EBR_DATA_VERSION;
+  if (!needsEbrSeed && existingEbr) {
+    try {
+      const parsed = JSON.parse(existingEbr);
+      if (!Array.isArray(parsed) || parsed.length === 0) needsEbrSeed = true;
+    } catch { needsEbrSeed = true; }
+  }
+  if (needsEbrSeed) {
+    try {
+      localStorage.setItem('bip_ebr_records', JSON.stringify(MOCK_EBR_LIST));
+      localStorage.setItem('bip_ebr_version', EBR_DATA_VERSION);
+    } catch { /* ignore */ }
   }
 }
 

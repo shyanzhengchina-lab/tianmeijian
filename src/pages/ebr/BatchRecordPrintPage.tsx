@@ -14,16 +14,19 @@ import React, { useState, useMemo, useRef } from 'react';
 import {
   Button, Card, Tabs, Tag, Space, Typography, Row, Col,
   Select, Empty, Alert, Divider, Badge, Tooltip, Modal, Input,
+  message,
 } from 'antd';
 import {
   PrinterOutlined, FileTextOutlined, SafetyCertificateOutlined,
   CheckCircleOutlined, ClockCircleOutlined, FileDoneOutlined,
   ArrowLeftOutlined, ExperimentOutlined, ToolOutlined,
+  AuditOutlined, CheckSquareOutlined, CloseCircleOutlined,
+  ProfileOutlined, WarningOutlined, TeamOutlined, BarChartOutlined,
 } from '@ant-design/icons';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import type { OperationExecution } from '../pad/padExecutionData';
 import { GMP_OPERATIONS } from '../pad/padExecutionData';
-import type { EbrRecord } from './ebrData';
+import type { EbrRecord, EbrStatus } from './ebrData';
 import { EBR_STORAGE_KEY, loadEbrRecords } from './ebrData';
 
 const { Title, Text, Paragraph } = Typography;
@@ -137,6 +140,322 @@ const PRINT_STYLE = `
   .record-table th { background: #fafafa; font-weight: 600; }
 }
 `;
+
+// ────────────────────────────────────────────────────────────────────────────
+//  EBR 状态辅助
+// ────────────────────────────────────────────────────────────────────────────
+
+const EBR_STATUS_MAP: Record<EbrStatus, { label: string; color: string; tagColor: string }> = {
+  IN_PROGRESS: { label: '生产进行中', color: '#1677ff', tagColor: 'processing' },
+  COMPLETED:   { label: '完成待审核', color: '#fa8c16', tagColor: 'warning' },
+  REVIEWED:    { label: 'QA已审核',   color: '#13c2c2', tagColor: 'cyan' },
+  APPROVED:    { label: '已批准放行', color: '#52c41a', tagColor: 'success' },
+  REJECTED:    { label: '已驳回',     color: '#f5222d', tagColor: 'error' },
+};
+
+function getEbrStatusTag(status: EbrStatus) {
+  const cfg = EBR_STATUS_MAP[status] ?? { label: status, tagColor: 'default' };
+  return <Tag color={cfg.tagColor}>{cfg.label}</Tag>;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+//  批次统计面板
+// ────────────────────────────────────────────────────────────────────────────
+const EbrStatPanel: React.FC<{ records: EbrRecord[] }> = ({ records }) => {
+  const approved   = records.filter(r => r.status === 'APPROVED').length;
+  const inProgress = records.filter(r => r.status === 'IN_PROGRESS').length;
+  const completed  = records.filter(r => r.status === 'COMPLETED').length;
+  const reviewed   = records.filter(r => r.status === 'REVIEWED').length;
+  const rejected   = records.filter(r => r.status === 'REJECTED').length;
+  return (
+    <Row gutter={12} style={{ marginBottom: 12 }} className="no-print">
+      <Col span={4}>
+        <Card size="small" style={{ background: '#f0f5ff', border: '1px solid #d6e4ff', textAlign: 'center' }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#2f54eb' }}>{records.length}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>批次总数</div>
+        </Card>
+      </Col>
+      <Col span={5}>
+        <Card size="small" style={{ background: '#f6ffed', border: '1px solid #b7eb8f', textAlign: 'center' }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#52c41a' }}>{approved}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>已批准放行</div>
+        </Card>
+      </Col>
+      <Col span={5}>
+        <Card size="small" style={{ background: '#e6f7ff', border: '1px solid #91d5ff', textAlign: 'center' }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#1677ff' }}>{inProgress}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>生产进行中</div>
+        </Card>
+      </Col>
+      <Col span={5}>
+        <Card size="small" style={{ background: '#fff7e6', border: '1px solid #ffd591', textAlign: 'center' }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#fa8c16' }}>{completed}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>完成待审核</div>
+        </Card>
+      </Col>
+      <Col span={5}>
+        <Card size="small" style={{ background: '#fff1f0', border: '1px solid #ffa39e', textAlign: 'center' }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#f5222d' }}>{rejected}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>驳回</div>
+        </Card>
+      </Col>
+    </Row>
+  );
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+//  EBR 审批操作按钮组
+// ────────────────────────────────────────────────────────────────────────────
+interface EbrApprovalProps {
+  ebr: EbrRecord;
+  onUpdate: (updated: EbrRecord) => void;
+}
+
+const EbrApprovalPanel: React.FC<EbrApprovalProps> = ({ ebr, onUpdate }) => {
+  const [remarkModal, setRemarkModal] = useState<'review' | 'approve' | 'reject' | null>(null);
+  const [remarkText, setRemarkText] = useState('');
+
+  const doUpdate = (patch: Partial<EbrRecord>) => {
+    const now = new Date().toLocaleString('zh-CN');
+    onUpdate({ ...ebr, ...patch, updatedAt: now });
+    setRemarkModal(null);
+    setRemarkText('');
+    message.success('操作成功');
+  };
+
+  const buttons: React.ReactNode[] = [];
+
+  if (ebr.status === 'IN_PROGRESS' || ebr.status === 'COMPLETED') {
+    buttons.push(
+      <Button
+        key="review"
+        icon={<AuditOutlined />}
+        type="default"
+        onClick={() => setRemarkModal('review')}
+        style={{ borderColor: '#13c2c2', color: '#13c2c2' }}
+      >
+        QA审核
+      </Button>
+    );
+  }
+  if (ebr.status === 'REVIEWED' || ebr.status === 'COMPLETED') {
+    buttons.push(
+      <Button
+        key="approve"
+        icon={<CheckSquareOutlined />}
+        type="primary"
+        style={{ background: '#52c41a', borderColor: '#52c41a' }}
+        onClick={() => setRemarkModal('approve')}
+      >
+        批准放行
+      </Button>
+    );
+    buttons.push(
+      <Button
+        key="reject"
+        icon={<CloseCircleOutlined />}
+        danger
+        onClick={() => setRemarkModal('reject')}
+      >
+        驳回
+      </Button>
+    );
+  }
+  if (ebr.status === 'APPROVED') {
+    buttons.push(
+      <Tag key="done" color="success" style={{ fontSize: 14, padding: '4px 12px' }}>
+        <CheckCircleOutlined /> 已批准放行 — {ebr.approvedBy ?? '质量负责人'} @ {ebr.approvedAt}
+      </Tag>
+    );
+  }
+  if (ebr.status === 'REJECTED') {
+    buttons.push(
+      <Tag key="rej" color="error" style={{ fontSize: 14, padding: '4px 12px' }}>
+        <CloseCircleOutlined /> 已驳回 — {ebr.rejectedBy ?? ''} @ {ebr.rejectedAt}
+      </Tag>
+    );
+    buttons.push(
+      <Button
+        key="reopen"
+        icon={<AuditOutlined />}
+        onClick={() => doUpdate({ status: 'IN_PROGRESS', rejectedBy: undefined, rejectedAt: undefined, rejectReason: undefined })}
+      >
+        重新开启
+      </Button>
+    );
+  }
+
+  if (buttons.length === 0) return null;
+
+  const modalTitles: Record<string, string> = {
+    review:  'QA审核意见',
+    approve: '批准放行意见',
+    reject:  '驳回原因',
+  };
+
+  return (
+    <>
+      <Space wrap style={{ marginTop: 8 }} className="no-print">
+        <Text strong style={{ fontSize: 13 }}>审批操作：</Text>
+        {buttons}
+      </Space>
+
+      <Modal
+        title={remarkModal ? modalTitles[remarkModal] : ''}
+        open={remarkModal !== null}
+        onCancel={() => { setRemarkModal(null); setRemarkText(''); }}
+        onOk={() => {
+          const now = new Date().toLocaleString('zh-CN');
+          if (remarkModal === 'review') {
+            doUpdate({ status: 'REVIEWED', reviewedBy: '质量管理员', reviewedAt: now, reviewRemark: remarkText || '审核通过，批次记录完整' });
+          } else if (remarkModal === 'approve') {
+            doUpdate({ status: 'APPROVED', approvedBy: '质量负责人', approvedAt: now, approveRemark: remarkText || '全项检验合格，批准放行' });
+          } else if (remarkModal === 'reject') {
+            doUpdate({ status: 'REJECTED', rejectedBy: '质量负责人', rejectedAt: now, rejectReason: remarkText || '记录不完整，请补充后重新提交' });
+          }
+        }}
+        okText={remarkModal === 'reject' ? '确认驳回' : '确认'}
+        okButtonProps={{ danger: remarkModal === 'reject' }}
+      >
+        <Input.TextArea
+          rows={4}
+          placeholder="请输入意见（可选）"
+          value={remarkText}
+          onChange={e => setRemarkText(e.target.value)}
+        />
+      </Modal>
+    </>
+  );
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+//  EBR 批次详情侧边栏（工序进度 + 物料平衡 + 签名链）
+// ────────────────────────────────────────────────────────────────────────────
+const EbrDetailPanel: React.FC<{ ebr: EbrRecord; execMap: Record<string, OperationExecution> }> = ({ ebr, execMap }) => {
+  const completedSteps = ebr.routingSteps.filter(s => s.status === 'COMPLETED').length;
+  const totalSteps     = ebr.routingSteps.length;
+  const gmpCompleted   = GMP_OPERATIONS.filter(op => execMap[op.code]?.status === 'completed').length;
+
+  return (
+    <div style={{ marginTop: 12 }} className="no-print">
+      <Row gutter={12}>
+        {/* 左：工序执行进度 */}
+        <Col span={12}>
+          <Card
+            size="small"
+            title={<span><ProfileOutlined style={{ marginRight: 6, color: '#1677ff' }} />工序执行进度（MES路径）</span>}
+            style={{ marginBottom: 8 }}
+          >
+            <div style={{ marginBottom: 8 }}>
+              <Text style={{ fontSize: 12, color: '#666' }}>
+                MES工序：{completedSteps}/{totalSteps} 完成　PAD工序：{gmpCompleted}/{GMP_OPERATIONS.length} 完成
+              </Text>
+            </div>
+            <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+              {ebr.routingSteps.map(step => (
+                <div key={step.opNo} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '3px 8px', borderBottom: '1px solid #f0f0f0', fontSize: 12
+                }}>
+                  <span>
+                    {step.status === 'COMPLETED' ? '✅' : step.status === 'IN_PROGRESS' ? '🔄' : '⏳'}
+                    {' '}{step.seq}. {step.opName}
+                  </span>
+                  <span style={{ color: '#999', fontSize: 11 }}>{step.operatorName?.split('（')[0] ?? ''}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </Col>
+
+        {/* 右：关键指标 + 签名链 */}
+        <Col span={12}>
+          <Card
+            size="small"
+            title={<span><BarChartOutlined style={{ marginRight: 6, color: '#52c41a' }} />批次关键指标</span>}
+            style={{ marginBottom: 8 }}
+          >
+            <Row gutter={8}>
+              <Col span={8} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#1677ff' }}>{ebr.planQtyTotal.toLocaleString()}</div>
+                <div style={{ fontSize: 11, color: '#999' }}>计划产量</div>
+              </Col>
+              <Col span={8} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#52c41a' }}>{ebr.goodQtyTotal.toLocaleString()}</div>
+                <div style={{ fontSize: 11, color: '#999' }}>合格数量</div>
+              </Col>
+              <Col span={8} style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: 22, fontWeight: 700,
+                  color: ebr.yieldRate >= 98 ? '#52c41a' : ebr.yieldRate >= 95 ? '#fa8c16' : '#f5222d'
+                }}>
+                  {ebr.yieldRate > 0 ? ebr.yieldRate.toFixed(2) + '%' : '—'}
+                </div>
+                <div style={{ fontSize: 11, color: '#999' }}>综合良率</div>
+              </Col>
+            </Row>
+            {ebr.scrapQtyTotal > 0 && (
+              <div style={{ marginTop: 8, padding: '4px 8px', background: '#fff1f0', borderRadius: 4, fontSize: 12 }}>
+                <WarningOutlined style={{ color: '#f5222d', marginRight: 4 }} />
+                报废量：{ebr.scrapQtyTotal.toLocaleString()} 粒/片
+              </div>
+            )}
+            {ebr.deviations && ebr.deviations.length > 0 && (
+              <div style={{ marginTop: 6, padding: '4px 8px', background: '#fff7e6', borderRadius: 4, fontSize: 12 }}>
+                <WarningOutlined style={{ color: '#fa8c16', marginRight: 4 }} />
+                偏差记录：{ebr.deviations.length} 条（
+                {ebr.deviations.filter(d => d.closedAt).length} 条已关闭）
+              </div>
+            )}
+          </Card>
+
+          {ebr.signatures && ebr.signatures.length > 0 && (
+            <Card
+              size="small"
+              title={<span><TeamOutlined style={{ marginRight: 6, color: '#722ed1' }} />签名链（{ebr.signatures.length}人）</span>}
+            >
+              <div style={{ maxHeight: 140, overflowY: 'auto' }}>
+                {ebr.signatures.map((sig, i) => (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    padding: '2px 0', borderBottom: '1px solid #f5f5f5', fontSize: 12
+                  }}>
+                    <span style={{ color: '#666' }}>{sig.role}</span>
+                    <span style={{ fontWeight: 600 }}>{sig.name}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </Col>
+      </Row>
+
+      {/* 质量审核备注（已审核/批准/驳回时显示） */}
+      {(ebr.reviewRemark || ebr.approveRemark || ebr.rejectReason) && (
+        <Card size="small" style={{ marginTop: 8 }} title="审批意见记录">
+          {ebr.reviewRemark && (
+            <div style={{ marginBottom: 8 }}>
+              <Text strong style={{ fontSize: 12, color: '#13c2c2' }}>QA审核：</Text>
+              <Text style={{ fontSize: 12 }}>{ebr.reviewRemark}</Text>
+            </div>
+          )}
+          {ebr.approveRemark && (
+            <div style={{ marginBottom: 8 }}>
+              <Text strong style={{ fontSize: 12, color: '#52c41a' }}>批准放行：</Text>
+              <Text style={{ fontSize: 12 }}>{ebr.approveRemark}</Text>
+            </div>
+          )}
+          {ebr.rejectReason && (
+            <div>
+              <Text strong style={{ fontSize: 12, color: '#f5222d' }}>驳回原因：</Text>
+              <Text style={{ fontSize: 12 }}>{ebr.rejectReason}</Text>
+            </div>
+          )}
+        </Card>
+      )}
+    </div>
+  );
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 //  批包装记录封面
@@ -1475,11 +1794,12 @@ const ProductionRecordSection: React.FC<{ ebr: EbrRecord | null; execMap: Record
 //  主页面组件
 // ────────────────────────────────────────────────────────────────────────────
 const BatchRecordPrintPage: React.FC = () => {
-  const [ebrRecords] = useLocalStorage<EbrRecord[]>(EBR_STORAGE_KEY, loadEbrRecords());
+  const [ebrRecords, setEbrRecords] = useLocalStorage<EbrRecord[]>(EBR_STORAGE_KEY, loadEbrRecords());
   // 全局 execMap（当前 PAD 会话，作为兜底）
   const [globalExecMap] = useLocalStorage<Record<string, OperationExecution>>('bip_pad_exec_map', {});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab,  setActiveTab]  = useState('cover');
+  const [showDetail, setShowDetail] = useState(true);
   const printRef = useRef<HTMLDivElement>(null);
 
   // 注入打印样式
@@ -1524,6 +1844,11 @@ const BatchRecordPrintPage: React.FC = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // 审批操作回调：更新 ebrRecords
+  const handleEbrUpdate = (updated: EbrRecord) => {
+    setEbrRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
   };
 
   // 无数据时显示引导
@@ -1572,6 +1897,9 @@ const BatchRecordPrintPage: React.FC = () => {
 
   return (
     <div style={{ padding: '0 0 24px' }}>
+      {/* 批次统计面板 */}
+      <EbrStatPanel records={packEbrs} />
+
       {/* 批次状态概览 + 批次筛选选择器 */}
       <Card
         style={{ marginBottom: 12 }}
@@ -1585,7 +1913,7 @@ const BatchRecordPrintPage: React.FC = () => {
               showSearch
               placeholder="选择批次…"
               value={selectedEbr?.id ?? undefined}
-              style={{ minWidth: 300 }}
+              style={{ minWidth: 320 }}
               size="middle"
               optionFilterProp="label"
               filterOption={(input, option) =>
@@ -1619,13 +1947,21 @@ const BatchRecordPrintPage: React.FC = () => {
                 </div>
               )}
             />
+            {selectedEbr && getEbrStatusTag(selectedEbr.status)}
             <Tag color={allDone ? 'success' : 'processing'}>
-              {allDone ? '全部工序完成，可打印' : `进行中（${completedOps}/${GMP_OPERATIONS.length}工序）`}
+              {allDone ? '全部GMP工序完成' : `PAD进度（${completedOps}/${GMP_OPERATIONS.length}工序）`}
             </Tag>
           </Space>
         }
         extra={
           <Space>
+            <Button
+              onClick={() => setShowDetail(v => !v)}
+              className="no-print"
+              size="small"
+            >
+              {showDetail ? '收起详情' : '展开详情'}
+            </Button>
             <Button
               type="primary"
               icon={<PrinterOutlined />}
@@ -1637,23 +1973,34 @@ const BatchRecordPrintPage: React.FC = () => {
           </Space>
         }
       >
-        <Row gutter={16}>
+        {/* GMP工序状态格 */}
+        <Row gutter={8}>
           {GMP_OPERATIONS.map(op => (
             <Col key={op.code} xs={12} sm={8} md={4}>
               <div style={{
                 textAlign: 'center',
-                padding: '8px 4px',
+                padding: '6px 4px',
                 background: isOpDone(execMap, op.code) ? '#f6ffed' : '#fafafa',
                 border: `1px solid ${isOpDone(execMap, op.code) ? '#b7eb8f' : '#e0e0e0'}`,
                 borderRadius: 6,
               }}>
-                <div style={{ fontSize: 18 }}>{isOpDone(execMap, op.code) ? '✅' : '⏳'}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2 }}>{op.name}</div>
+                <div style={{ fontSize: 16 }}>{isOpDone(execMap, op.code) ? '✅' : '⏳'}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 1 }}>{op.name}</div>
                 <div style={{ fontSize: 10, color: '#999' }}>{op.code}</div>
               </div>
             </Col>
           ))}
         </Row>
+
+        {/* EBR 审批操作按钮 */}
+        {selectedEbr && (
+          <EbrApprovalPanel ebr={selectedEbr} onUpdate={handleEbrUpdate} />
+        )}
+
+        {/* EBR 批次详情（工序进度 + 指标 + 签名链） */}
+        {showDetail && selectedEbr && (
+          <EbrDetailPanel ebr={selectedEbr} execMap={execMap} />
+        )}
       </Card>
 
       {/* 批记录内容 */}
