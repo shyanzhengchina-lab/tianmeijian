@@ -17,7 +17,7 @@ const BomIndex: React.FC = () => {
     try {
       const resp = await getBomList() as any;
       const apiList: any[] = resp?.data ?? [];
-      if (apiList.length === 0) return;
+      if (apiList.length === 0) throw new Error('empty bom list');
 
       // 先建基础 BOM 对象（children 暂为空）
       const baseBoms: BomHeader[] = apiList.map((item: any) => ({
@@ -76,16 +76,22 @@ const BomIndex: React.FC = () => {
       // 同步保存到 localStorage，方便离线使用
       localStorage.setItem('bip_demo_bom', JSON.stringify(newBoms));
     } catch {
-      // 后端离线 → 从 localStorage 读取演示数据
+      // 后端离线或返回空 → localStorage fallback → mockBomList
+      const ls = localStorage.getItem('bip_demo_bom');
       try {
-        const ls = localStorage.getItem('bip_demo_bom');
-        if (ls) {
-          const parsed = JSON.parse(ls);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setBomList(parsed as BomHeader[]);
-          }
+        const parsed = ls ? JSON.parse(ls) as BomHeader[] : null;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setBomList(parsed);
+        } else {
+          // localStorage 也无数据 → 直接使用 mockBomList 兜底
+          setBomList(mockBomList);
+          try { localStorage.setItem('bip_demo_bom', JSON.stringify(mockBomList)); } catch { /* ignore */ }
         }
-      } catch { /* ignore */ }
+      } catch {
+        // JSON 解析失败 → 直接使用 mockBomList
+        setBomList(mockBomList);
+        try { localStorage.setItem('bip_demo_bom', JSON.stringify(mockBomList)); } catch { /* ignore */ }
+      }
     }
   }, []);
 

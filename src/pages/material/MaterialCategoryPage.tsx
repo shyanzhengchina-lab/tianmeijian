@@ -218,17 +218,32 @@ const MaterialCategoryPage: React.FC = () => {
         throw new Error('empty records');
       }
     } catch {
-      // 后端离线或返回空 → 读取 localStorage 演示数据
+      // 后端离线或返回空 → 读取 localStorage 演示数据，再 fallback 到 mockCategories
+      let loaded = false;
       try {
         const ls = localStorage.getItem('bip_material_categories');
         if (ls) {
           const parsed: MaterialCategory[] = JSON.parse(ls);
           if (Array.isArray(parsed) && parsed.length > 0) {
             const tree = buildCategoryTree(parsed);
-            if (tree.length > 0) setCats(tree);
+            if (tree.length > 0) { setCats(tree); loaded = true; }
           }
         }
       } catch { /* ignore */ }
+      // localStorage 也无数据 → 直接使用 mockCategories（含完整树结构）
+      if (!loaded) {
+        setCats(mockCategories);
+        // 同时写入 localStorage 供下次使用
+        const flatCats: MaterialCategory[] = [];
+        const walkFlat = (items: MaterialCategory[]) => {
+          items.forEach(c => {
+            flatCats.push({ id: c.id, code: c.code, name: c.name, parentId: c.parentId });
+            if (c.children) walkFlat(c.children);
+          });
+        };
+        walkFlat(mockCategories);
+        try { localStorage.setItem('bip_material_categories', JSON.stringify(flatCats)); } catch {/* ignore */}
+      }
     } finally { setApiLoading(false); }
   }, [setCats]);
 

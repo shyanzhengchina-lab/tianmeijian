@@ -128,24 +128,26 @@ const MaterialPage: React.FC = () => {
           // 同步到 localStorage 供离线使用
           localStorage.setItem('bip_materials', JSON.stringify(mapped));
         } else {
-          // API 返回空数据 → 尝试 localStorage fallback
-          try {
-            const lsMat = localStorage.getItem('bip_materials');
-            if (lsMat) {
-              const parsed = JSON.parse(lsMat);
-              if (Array.isArray(parsed) && parsed.length > 0) setMaterials(parsed);
-            }
-          } catch { /* ignore */ }
+          // API 返回空数据 → localStorage fallback → mockMaterials
+          const lsMat = localStorage.getItem('bip_materials');
+          const parsed = lsMat ? JSON.parse(lsMat) : null;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMaterials(parsed);
+          } else {
+            setMaterials(mockMaterials as any[]);
+            try { localStorage.setItem('bip_materials', JSON.stringify(mockMaterials)); } catch {/* ignore */}
+          }
         }
       } else {
-        // API 请求失败 → 尝试 localStorage fallback
-        try {
-          const lsMat = localStorage.getItem('bip_materials');
-          if (lsMat) {
-            const parsed = JSON.parse(lsMat);
-            if (Array.isArray(parsed) && parsed.length > 0) setMaterials(parsed);
-          }
-        } catch { /* ignore */ }
+        // API 请求失败 → localStorage fallback → mockMaterials
+        const lsMat = localStorage.getItem('bip_materials');
+        const parsed = lsMat ? JSON.parse(lsMat) : null;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMaterials(parsed);
+        } else {
+          setMaterials(mockMaterials as any[]);
+          try { localStorage.setItem('bip_materials', JSON.stringify(mockMaterials)); } catch {/* ignore */}
+        }
       }
       // 分类树
       if (catResp.status === 'fulfilled') {
@@ -174,6 +176,7 @@ const MaterialPage: React.FC = () => {
             }
           });
           if (roots.length > 0) setApiCategories(roots);
+          else setApiCategories(mockCategories);
         }
       }
       // 计量单位
@@ -187,7 +190,7 @@ const MaterialPage: React.FC = () => {
         }
       }
     } catch {
-      // 后端离线 → 读取 localStorage 演示数据
+      // 后端离线 → 读取 localStorage 演示数据，再 fallback 到 mockMaterials
       try {
         const lsMat = localStorage.getItem('bip_materials');
         if (lsMat) {
@@ -197,6 +200,14 @@ const MaterialPage: React.FC = () => {
       } catch { /* ignore */ }
     } finally {
       setApiLoading(false);
+      // 最终兜底：若 materials 仍为空，直接使用 mockMaterials
+      setMaterials(prev => {
+        if (prev.length === 0) {
+          try { localStorage.setItem('bip_materials', JSON.stringify(mockMaterials)); } catch {/* ignore */}
+          return mockMaterials as any[];
+        }
+        return prev;
+      });
     }
   }, []);
 
