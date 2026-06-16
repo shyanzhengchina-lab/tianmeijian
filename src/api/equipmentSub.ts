@@ -32,7 +32,7 @@ export interface MaintPlanRecord {
 }
 
 export const getMaintPlanList = (params?: { equipCode?: string; status?: string }): Promise<any> =>
-  http.get('/equipment-sub/maint-plans', { params });
+  http.get('/equipment-sub/maint-plans', { params, silent: true });
 export const createMaintPlan = (data: MaintPlanRecord): Promise<any> =>
   http.post('/equipment-sub/maint-plans', data);
 export const updateMaintPlan = (id: number, data: MaintPlanRecord): Promise<any> =>
@@ -72,7 +72,7 @@ export interface FaultRecord {
 }
 
 export const getFaultList = (params?: { equipCode?: string; status?: string; faultLevel?: string }): Promise<any> =>
-  http.get('/equipment-sub/faults', { params });
+  http.get('/equipment-sub/faults', { params, silent: true });
 export const createFault = (data: FaultRecord): Promise<any> =>
   http.post('/equipment-sub/faults', data);
 export const updateFault = (id: number, data: FaultRecord): Promise<any> =>
@@ -106,7 +106,7 @@ export interface CalibrationRecord {
 }
 
 export const getCalibrationList = (params?: { equipCode?: string; status?: string }): Promise<any> =>
-  http.get('/equipment-sub/calibrations', { params });
+  http.get('/equipment-sub/calibrations', { params, silent: true });
 export const createCalibration = (data: CalibrationRecord): Promise<any> =>
   http.post('/equipment-sub/calibrations', data);
 export const updateCalibration = (id: number, data: CalibrationRecord): Promise<any> =>
@@ -136,7 +136,7 @@ export interface SparePartRecord {
 }
 
 export const getSparePartList = (params?: { partCode?: string; status?: string }): Promise<any> =>
-  http.get('/equipment-sub/spare-parts', { params });
+  http.get('/equipment-sub/spare-parts', { params, silent: true });
 export const createSparePart = (data: SparePartRecord): Promise<any> =>
   http.post('/equipment-sub/spare-parts', data);
 export const updateSparePart = (id: number, data: SparePartRecord): Promise<any> =>
@@ -174,7 +174,7 @@ export interface EquipUsageApiRecord {
 }
 
 export const getEquipUsageList = (params?: { equipCode?: string; batchNo?: string; woNo?: string }): Promise<any> =>
-  http.get('/equipment-sub/usages', { params });
+  http.get('/equipment-sub/usages', { params, silent: true });
 export const createEquipUsage = (data: EquipUsageApiRecord): Promise<any> =>
   http.post('/equipment-sub/usages', data);
 export const updateEquipUsage = (id: number, data: EquipUsageApiRecord): Promise<any> =>
