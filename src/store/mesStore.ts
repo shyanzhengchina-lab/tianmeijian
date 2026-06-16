@@ -67,7 +67,7 @@ export const STORE_KEYS = {
 } as const;
 
 // ── 数据版本（用于强制刷新 mock 数据） ─────────────────────────────
-const DATA_VERSION = 'v20260606_e';
+const DATA_VERSION = 'v20260616_a';
 const VERSION_KEY  = 'bip_data_version';
 
 // ── 读/写工具 ─────────────────────────────────────────────────────
@@ -94,6 +94,8 @@ function clearAllBipKeys(): void {
     // ── 演示数据保护：以下 key 由 DemoDataInjectorPage 写入，不能被版本清除覆盖 ──
     'bip_production_orders',
     'bip_work_orders',
+    'bip_task_orders',
+    'bip_float_tickets',
     'bip_ebr_records',
     'bip_pad_exec_map',
     'bip_demo_bom',
@@ -273,7 +275,46 @@ function seedPocData(): void {
     try { localStorage.setItem('bip_demo_bom', JSON.stringify(mockBomList)); } catch { /* ignore */ }
   }
 
-  // ── 7. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
+  // ── 7. 生产订单：为空时补种天美健Demo数据 ────────────────────────
+  const existingPOs = localStorage.getItem('bip_production_orders');
+  let needsPOSeed = !existingPOs;
+  if (!needsPOSeed && existingPOs) {
+    try {
+      const parsed = JSON.parse(existingPOs);
+      if (!Array.isArray(parsed) || parsed.length === 0) needsPOSeed = true;
+    } catch { needsPOSeed = true; }
+  }
+  if (needsPOSeed) {
+    try { localStorage.setItem('bip_production_orders', JSON.stringify(mockProductionOrders)); } catch { /* ignore */ }
+  }
+
+  // ── 8. 生产工单：为空时补种天美健Demo数据 ────────────────────────
+  const existingWOs = localStorage.getItem('bip_work_orders');
+  let needsWOSeed = !existingWOs;
+  if (!needsWOSeed && existingWOs) {
+    try {
+      const parsed = JSON.parse(existingWOs);
+      if (!Array.isArray(parsed) || parsed.length === 0) needsWOSeed = true;
+    } catch { needsWOSeed = true; }
+  }
+  if (needsWOSeed) {
+    try { localStorage.setItem('bip_work_orders', JSON.stringify(mockWorkOrders)); } catch { /* ignore */ }
+  }
+
+  // ── 9. 生产任务单：为空时补种天美健Demo数据 ────────────────────────
+  const existingTasks = localStorage.getItem('bip_task_orders');
+  let needsTaskSeed = !existingTasks;
+  if (!needsTaskSeed && existingTasks) {
+    try {
+      const parsed = JSON.parse(existingTasks);
+      if (!Array.isArray(parsed) || parsed.length === 0) needsTaskSeed = true;
+    } catch { needsTaskSeed = true; }
+  }
+  if (needsTaskSeed) {
+    try { localStorage.setItem('bip_task_orders', JSON.stringify(mockTaskOrders)); } catch { /* ignore */ }
+  }
+
+  // ── 10. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
   if (!localStorage.getItem('bip_demo_injected')) {
     localStorage.setItem('bip_demo_injected', '1');
   }
