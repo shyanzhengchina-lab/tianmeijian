@@ -199,7 +199,9 @@ function seedPocData(): void {
     try {
       const parsed = JSON.parse(existingMats);
       const flat = JSON.stringify(parsed);
-      if (flat.includes('根管') || flat.includes('镍钛') || !Array.isArray(parsed) || parsed.length === 0) {
+      if (flat.includes('根管') || flat.includes('镍钛') ||
+          flat.includes('FG-VitC-1000-120') || flat.includes('FG-VitC-500-60') ||
+          !Array.isArray(parsed) || parsed.length === 0) {
         needsMatSeed = true;
       }
     } catch { needsMatSeed = true; }
