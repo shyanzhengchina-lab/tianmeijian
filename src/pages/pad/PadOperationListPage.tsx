@@ -332,6 +332,26 @@ const PadOperationListPage: React.FC<PadOperationListPageProps> = ({
                   </Tag>
                 </Space>
               </Col>
+              <Col xs={12} sm={8}>
+                <Space direction="vertical" size={0}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>物料编码</Text>
+                  <Text
+                    strong
+                    style={{ fontFamily: 'monospace', fontSize: 12, color: '#1677ff' }}
+                    title={selectedWo?.materialCode ?? '—'}
+                  >
+                    {selectedWo?.materialCode ?? '—'}
+                  </Text>
+                </Space>
+              </Col>
+              <Col xs={24} sm={16}>
+                <Space direction="vertical" size={0}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>物料名称</Text>
+                  <Text strong style={{ fontSize: 12 }}>
+                    {selectedWo?.materialName ?? selectedWo?.productName ?? '—'}
+                  </Text>
+                </Space>
+              </Col>
             </Row>
           </Col>
         </Row>

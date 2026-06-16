@@ -64,6 +64,8 @@ export interface WorkOrder {
   planStartDate: string;
   floatBarcode: string;
   materialLotNo: string;
+  materialCode?: string;   // 物料编码（BOM母件编码，如 FG-VitC-500-60）
+  materialName?: string;   // 物料名称（产品全称，如 天美健维生素C咀嚼片）
   handleLotNo?: string;
   limitLotNo?: string;
   currentOpSeq: number;
@@ -663,6 +665,8 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     planStartDate: '2026-06-01',
     floatBarcode:  'FT-TMJ-VITC-20260601-001',
     materialLotNo: 'RM-VITC-20260601-001',
+    materialCode:  'FG-VitC-500-60',
+    materialName:  '天美健维生素C咀嚼片（小规格）',
     currentOpSeq:  10,
   },
   // WO002 — 维生素C咀嚼片 500mg×60粒/瓶（生产中，MO-20260605-001）
@@ -678,6 +682,8 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     planStartDate: '2026-06-05',
     floatBarcode:  'FT-TMJ-VITC-20260605-002',
     materialLotNo: 'RM-VITC-20260605-002',
+    materialCode:  'FG-VitC-500-60',
+    materialName:  '天美健维生素C咀嚼片（小规格）',
     currentOpSeq:  10,
   },
   // WO003 — 维生素C咀嚼片 250mg×100粒/瓶（已下发，MO-20260610-001）
@@ -693,6 +699,8 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     planStartDate: '2026-06-10',
     floatBarcode:  'FT-TMJ-VITC-20260610-003',
     materialLotNo: 'RM-VITC-20260610-003',
+    materialCode:  'FG-VitC-1000-120',
+    materialName:  '天美健维生素C咀嚼片',
     currentOpSeq:  10,
   },
   // WO004 — 复合益生菌胶囊 250mg×30粒/盒（已完成，MO-20260601-002）
@@ -708,6 +716,8 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     planStartDate: '2026-06-01',
     floatBarcode:  'FT-TMJ-PROBIO-20260601-001',
     materialLotNo: 'RM-PROBIO-20260601-001',
+    materialCode:  'FG-PROBIO-250-30',
+    materialName:  '天美健复合益生菌胶囊',
     currentOpSeq:  10,
   },
   // WO005 — 复合益生菌胶囊 250mg×30粒/盒（生产中，MO-20260612-001）
@@ -723,6 +733,8 @@ export const MOCK_WORK_ORDERS: WorkOrder[] = [
     planStartDate: '2026-06-12',
     floatBarcode:  'FT-TMJ-PROBIO-20260612-002',
     materialLotNo: 'RM-PROBIO-20260612-002',
+    materialCode:  'FG-PROBIO-250-60',
+    materialName:  '天美健复合益生菌胶囊（大规格）',
     currentOpSeq:  10,
   },
 ];
