@@ -1262,7 +1262,7 @@ const EBR_PRESET_WO001: EbrRecord = {
   approvedBy: '赵雪梅', approvedAt: '2026-06-03 20:00',
 };
 
-// WO002 — VitC 500mg×60粒 生产中批次
+// WO002 — VitC 500mg×60粒 生产中批次（进度62%，当前OP-50铝塑内包）
 const EBR_PRESET_WO002: EbrRecord = {
   id: 'EBR_PRESET_WO002', ebrNo: mkEbrNo('20260605', '002'),
   status: 'IN_PROGRESS',
@@ -1272,9 +1272,77 @@ const EBR_PRESET_WO002: EbrRecord = {
   batchNo: 'TMJ-VITC-20260605-002',
   productCode: 'FG-VITC-500MG-AP', productName: '维生素C咀嚼片',
   productSpec: '500mg/粒 × 60粒/瓶',
-  planQtyTotal: 200000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-25', priority: 'HIGH',
+  planQty: 200000,
+  planQtyTotal: 200000,
+  reportQtyTotal: 125000, goodQtyTotal: 124500, scrapQtyTotal: 500, yieldRate: 99.6,
+  customer: undefined, deliveryDate: '2026-06-25', priority: 'HIGH',
   materialLotNo: 'RM-VITC-20260605-002', iqcResult: 'PASS',
-  ..._emptyArrays,
+  tasks: [
+    { taskNo: 'TASK-WO002-01', workCenter: 'WS-NJ-WEIGH',  shiftName: '白班', team: '南京甲班', operator: '陈国华', stationScope: '称量间A区', padStation: 'PAD-NJ-WEIGH-01', status: 'COMPLETED', planStart: '2026-06-05 08:00', planEnd: '2026-06-05 10:00', actualStart: '2026-06-05 08:00', actualEnd: '2026-06-05 09:45', reportQty: 200000, scrapQty: 0 },
+    { taskNo: 'TASK-WO002-02', workCenter: 'WS-NJ-SOLID',  shiftName: '白班', team: '南京甲班', operator: '王建平', stationScope: '固体制剂车间A区', padStation: 'PAD-NJ-SOLID-01', status: 'COMPLETED', planStart: '2026-06-05 10:00', planEnd: '2026-06-06 18:00', actualStart: '2026-06-05 10:00', actualEnd: '2026-06-06 17:30', reportQty: 200000, scrapQty: 200 },
+    { taskNo: 'TASK-WO002-03', workCenter: 'WS-NJ-SOLID',  shiftName: '夜班', team: '南京乙班', operator: '王建平', stationScope: '固体制剂车间B区', padStation: 'PAD-NJ-SOLID-02', status: 'COMPLETED', planStart: '2026-06-07 08:00', planEnd: '2026-06-07 20:00', actualStart: '2026-06-07 08:00', actualEnd: '2026-06-07 19:30', reportQty: 199800, scrapQty: 300 },
+    { taskNo: 'TASK-WO002-04', workCenter: 'WS-NJ-PACK',   shiftName: '白班', team: '南京丙班', operator: '刘晓梅', stationScope: '内包装车间', padStation: 'PAD-NJ-PACK-01',  status: 'IN_PROGRESS', planStart: '2026-06-09 08:00', planEnd: '2026-06-11 18:00', actualStart: '2026-06-09 08:00', reportQty: 75000, scrapQty: 0 },
+  ],
+  floatTickets: [
+    { ticketNo: 'FT-20260605-002-01', qty: 42000, status: 'IN_USE',  currentOp: 'OP-50 铝塑内包', currentStageName: 'S5-包衣', operatorName: '刘晓梅', lastUpdateTime: '2026-06-09 10:30' },
+    { ticketNo: 'FT-20260605-002-02', qty: 42000, status: 'IN_USE',  currentOp: 'OP-50 铝塑内包', currentStageName: 'S5-包衣', operatorName: '刘晓梅', lastUpdateTime: '2026-06-09 11:15' },
+    { ticketNo: 'FT-20260605-002-03', qty: 41000, status: 'WAITING', currentOp: 'OP-45 薄膜包衣', currentStageName: 'S5-包衣', lastUpdateTime: '2026-06-08 20:00' },
+    { ticketNo: 'FT-20260605-002-04', qty: 40500, status: 'WAITING', currentOp: 'OP-45 薄膜包衣', currentStageName: 'S5-包衣', lastUpdateTime: '2026-06-08 21:30' },
+  ],
+  routingSteps: [
+    { seq:1,  opNo:'OP-10', opName:'称量配料',     stage:'S1-称量',  workCenter:'WS-NJ-WEIGH',  isKeyOp:true,  mandatoryInspection:true,  status:'COMPLETED', startedAt:'2026-06-05 08:05', completedAt:'2026-06-05 09:45', operatorName:'陈国华（OP001）', teamName:'南京甲班', equipId:'EQ-BAL-NJ-01', equipName:'电子天平1号', reportQty:200000, goodQty:200000, scrapQty:0,   keyData:{'VitC投料量':'105.0kg','甘露醇':'60.0kg','山梨醇':'24.0kg','PVP K30':'8.0kg','硬脂酸镁':'1.0kg','天平编号':'EQ-BAL-NJ-01','复核人':'孙建国'} },
+    { seq:2,  opNo:'OP-20', opName:'制粒（湿法）', stage:'S2-制粒',  workCenter:'WS-NJ-SOLID',  isKeyOp:true,  mandatoryInspection:true,  status:'COMPLETED', startedAt:'2026-06-05 10:00', completedAt:'2026-06-05 12:30', operatorName:'王建平（OP002）', teamName:'南京甲班', equipId:'EQ-GRN-NJ-01', equipName:'湿法制粒机1号', reportQty:200000, goodQty:200000, scrapQty:0,   keyData:{'制粒机转速':'200rpm','制粒时间':'90min','粘合剂':'10%PVP-K30溶液约5L','加液速度':'600ml/min','颗粒外观':'均匀，无结块'} },
+    { seq:3,  opNo:'OP-25', opName:'流化床干燥',   stage:'S2-制粒',  workCenter:'WS-NJ-SOLID',  isKeyOp:true,  mandatoryInspection:true,  status:'COMPLETED', startedAt:'2026-06-05 12:45', completedAt:'2026-06-05 15:00', operatorName:'王建平（OP002）', teamName:'南京甲班', equipId:'EQ-FBD-NJ-01', equipName:'流化床干燥机1号', reportQty:200000, goodQty:199600, scrapQty:400, keyData:{'进风温度':'65℃','出风温度':'43℃','干燥时间':'120min','颗粒水分':'2.0%（标准≤3.0%）','干燥均匀性':'RSD=1.2%'} },
+    { seq:4,  opNo:'OP-30', opName:'整粒总混',     stage:'S3-总混',  workCenter:'WS-NJ-SOLID',  isKeyOp:false, mandatoryInspection:false, status:'COMPLETED', startedAt:'2026-06-05 15:10', completedAt:'2026-06-05 17:00', operatorName:'孙建国（OP002）', teamName:'南京甲班', equipId:'EQ-MIX-NJ-01', equipName:'三维混合机1号', reportQty:199600, goodQty:199600, scrapQty:0,   keyData:{'整粒网目':'20目','混合时间':'25min','混合均匀RSD':'1.5%（标准≤5%）'} },
+    { seq:5,  opNo:'OP-40', opName:'压片',         stage:'S4-压片',  workCenter:'WS-NJ-SOLID',  isKeyOp:true,  mandatoryInspection:true,  status:'COMPLETED', startedAt:'2026-06-06 08:00', completedAt:'2026-06-07 18:00', operatorName:'王建平（OP002）', teamName:'南京乙班', equipId:'EQ-TAB-NJ-01', equipName:'旋转压片机1号', reportQty:199600, goodQty:199100, scrapQty:500, keyData:{'压片速度':'80000粒/h','主压力':'12kN','预压力':'3.5kN','片重':'525mg±3%','硬度':'6.5kP（标准≥5kP）','脆碎度':'0.18%（标准≤0.5%）','已压片数':'199100粒'} },
+    { seq:6,  opNo:'OP-45', opName:'薄膜包衣',     stage:'S5-包衣',  workCenter:'WS-NJ-SOLID',  isKeyOp:false, mandatoryInspection:false, status:'COMPLETED', startedAt:'2026-06-08 08:00', completedAt:'2026-06-08 16:30', operatorName:'王建平（OP002）', teamName:'南京乙班', equipId:'EQ-COT-NJ-01', equipName:'高效包衣机1号', reportQty:199100, goodQty:199100, scrapQty:0,   keyData:{'包衣液':'欧巴代 OY-LS-28920','包衣增重':'3.0%','进风温度':'55℃','进风风量':'1200m³/h','包衣时间':'200min','外观':'白色均匀，无龟裂'} },
+    { seq:7,  opNo:'OP-50', opName:'铝塑内包',     stage:'S6-内包',  workCenter:'WS-NJ-PACK',   isKeyOp:true,  mandatoryInspection:true,  status:'IN_PROGRESS', startedAt:'2026-06-09 08:00', operatorName:'刘晓梅（OP003）', teamName:'南京丙班', equipId:'EQ-BLS-NJ-01', equipName:'铝塑包装机1号', reportQty:75000, goodQty:75000, scrapQty:0, keyData:{'铝塑批号':'PK-ALUPLA-20260607-B','热封温度':'185℃','热封压力':'0.4MPa','已完成':'75000粒（进行中）','装量检查':'100粒/板，每小时5板抽检'} },
+    { seq:8,  opNo:'OP-55', opName:'中间体暂存',   stage:'S6-内包',  workCenter:'WS-NJ-WH',     isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+    { seq:9,  opNo:'OP-60', opName:'装瓶外包',     stage:'S7-外包',  workCenter:'WS-NJ-PACK',   isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+    { seq:10, opNo:'OP-65', opName:'装盒打码',     stage:'S7-外包',  workCenter:'WS-NJ-PACK',   isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+    { seq:11, opNo:'OP-70', opName:'待检暂存',     stage:'S8-检验',  workCenter:'WS-NJ-QC',     isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+    { seq:12, opNo:'OP-80', opName:'成品检验',     stage:'S8-检验',  workCenter:'WS-NJ-QC',     isKeyOp:true,  mandatoryInspection:true,  status:'PENDING' },
+    { seq:13, opNo:'OP-90', opName:'质量放行',     stage:'S9-放行',  workCenter:'WS-NJ-QA',     isKeyOp:true,  mandatoryInspection:true,  status:'PENDING' },
+    { seq:14, opNo:'OP-95', opName:'成品入库',     stage:'S9-放行',  workCenter:'WS-NJ-WH',     isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+  ],
+  inspectionRecords: [
+    {
+      taskId: 'INS-WO002-IQC-001', taskNo: 'IQC-20260603-001',
+      schemeCode: 'IQC-VITC-STD', schemeName: 'VitC原料粉进货检验', schemeType: 'IQC',
+      batchNo: 'RM-VITC-20260605-002', totalQty: 105000, sampleQty: 400,
+      inspectorName: '冯小丽', checkerName: '张丽华',
+      startTime: '2026-06-03 09:00', completeTime: '2026-06-03 16:30',
+      conclusion: 'PASS', releaseStatus: 'RELEASED',
+      items: [
+        { itemCode: 'IQC-01', itemName: 'VitC含量（HPLC）',  category: '含量', standardValue: '≥99.5%',     unit: '%',   actualValue: '99.8%', result: 'PASS', isCritical: true  },
+        { itemCode: 'IQC-02', itemName: '水分',              category: '理化', standardValue: '≤0.5%',      unit: '%',   actualValue: '0.3%',  result: 'PASS', isCritical: false },
+        { itemCode: 'IQC-03', itemName: '粒径D90',           category: '理化', standardValue: '≤200μm',     unit: 'μm',  actualValue: '185μm', result: 'PASS', isCritical: false },
+        { itemCode: 'IQC-04', itemName: '重金属（铅）',      category: '安全', standardValue: '≤5μg/g',     unit: 'μg/g', actualValue: '1.2μg/g', result: 'PASS', isCritical: true },
+        { itemCode: 'IQC-05', itemName: '微生物总数',        category: '微生物', standardValue: '≤100CFU/g', unit: 'CFU/g', actualValue: '35CFU/g', result: 'PASS', isCritical: true },
+      ],
+    },
+    {
+      taskId: 'INS-WO002-IPQC-001', taskNo: 'IPQC-20260607-001',
+      schemeCode: 'IPQC-PRESS-STD', schemeName: '压片中间控制检验', schemeType: 'IPQC_SELF',
+      opNo: 'OP-40', batchNo: 'TMJ-VITC-20260605-002', totalQty: 199600, sampleQty: 40,
+      inspectorName: '冯小丽', checkerName: '张丽华',
+      startTime: '2026-06-06 10:00', completeTime: '2026-06-07 17:30',
+      conclusion: 'PASS', releaseStatus: 'RELEASED',
+      items: [
+        { itemCode: 'IPQC-01', itemName: '片重差异', category: '物理', standardValue: '525mg±3%（509~541mg）', unit: 'mg', actualValue: '524.5mg±1.8%', result: 'PASS', isCritical: true  },
+        { itemCode: 'IPQC-02', itemName: '硬度',     category: '物理', standardValue: '≥5kP',                 unit: 'kP',  actualValue: '6.5kP',          result: 'PASS', isCritical: true  },
+        { itemCode: 'IPQC-03', itemName: '脆碎度',   category: '物理', standardValue: '≤0.5%',                unit: '%',   actualValue: '0.18%',           result: 'PASS', isCritical: false },
+        { itemCode: 'IPQC-04', itemName: '崩解时限', category: '物理', standardValue: '≤15min',               unit: 'min', actualValue: '11min',           result: 'PASS', isCritical: false },
+        { itemCode: 'IPQC-05', itemName: '含量均匀度',category: '含量', standardValue: 'AV≤15',               unit: '',    actualValue: 'AV=6.8',          result: 'PASS', isCritical: true  },
+      ],
+    },
+  ],
+  deviations: [],
+  signatures: [
+    { role: '生产操作员', name: '陈国华', signedAt: '2026-06-05 09:45', remark: '称量配料完成，双人复核' },
+    { role: '班组长',     name: '王建平', signedAt: '2026-06-07 18:00', remark: '制粒/干燥/压片阶段确认' },
+    { role: 'QC检验员',   name: '冯小丽', signedAt: '2026-06-07 17:30', remark: '压片IPQC检验合格' },
+  ],
   startTime: '2026-06-05 08:00',
   createdAt: '2026-06-05 08:00', updatedAt: _now,
 };
@@ -1314,7 +1382,7 @@ const EBR_PRESET_WO004: EbrRecord = {
   approvedBy: '赵雪梅', approvedAt: '2026-06-05 18:00',
 };
 
-// WO005 — 复合益生菌胶囊 250mg×30粒 生产中批次
+// WO005 — 复合益生菌胶囊 250mg×30粒 生产中批次（进度35%，当前OP-40胶囊充填）
 const EBR_PRESET_WO005: EbrRecord = {
   id: 'EBR_PRESET_WO005', ebrNo: mkEbrNo('20260612', '005'),
   status: 'IN_PROGRESS',
@@ -1324,9 +1392,69 @@ const EBR_PRESET_WO005: EbrRecord = {
   batchNo: 'TMJ-PROBIO-20260612-002',
   productCode: 'FG-PROBIO-CAP-250', productName: '复合益生菌胶囊',
   productSpec: '250mg/粒 × 30粒/盒',
-  planQtyTotal: 60000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-28', priority: 'HIGH',
+  planQty: 60000,
+  planQtyTotal: 60000,
+  reportQtyTotal: 21000, goodQtyTotal: 20940, scrapQtyTotal: 60, yieldRate: 99.71,
+  customer: undefined, deliveryDate: '2026-06-28', priority: 'HIGH',
   materialLotNo: 'RM-PROBIO-20260612-002', iqcResult: 'PASS',
-  ..._emptyArrays,
+  tasks: [
+    { taskNo: 'TASK-WO005-01', workCenter: 'WS-LS-WH',     shiftName: '白班', team: '溧水甲班', operator: '李志远', stationScope: '冷库验收区', padStation: 'PAD-LS-PROBIO-01', status: 'COMPLETED',   planStart: '2026-06-12 07:30', planEnd: '2026-06-12 09:00', actualStart: '2026-06-12 07:30', actualEnd: '2026-06-12 08:45', reportQty: 60000, scrapQty: 0 },
+    { taskNo: 'TASK-WO005-02', workCenter: 'WS-LS-PROBIO',  shiftName: '白班', team: '溧水甲班', operator: '李志远', stationScope: '益生菌充填车间', padStation: 'PAD-LS-PROBIO-01', status: 'COMPLETED',   planStart: '2026-06-12 09:00', planEnd: '2026-06-12 20:00', actualStart: '2026-06-12 09:00', actualEnd: '2026-06-12 19:00', reportQty: 60000, scrapQty: 0   },
+    { taskNo: 'TASK-WO005-03', workCenter: 'WS-LS-PROBIO',  shiftName: '白班', team: '溧水甲班', operator: '钱文华', stationScope: '益生菌充填车间', padStation: 'PAD-LS-PROBIO-01', status: 'IN_PROGRESS', planStart: '2026-06-13 08:00', planEnd: '2026-06-14 18:00', actualStart: '2026-06-13 08:00', reportQty: 21000, scrapQty: 60 },
+  ],
+  floatTickets: [
+    { ticketNo: 'FT-20260612-002-01', qty: 21000, status: 'IN_USE',  currentOp: 'OP-40 胶囊充填', currentStageName: 'S3-充填', operatorName: '钱文华', lastUpdateTime: '2026-06-13 10:30' },
+    { ticketNo: 'FT-20260612-002-02', qty: 20000, status: 'WAITING', currentOp: 'OP-30 混合', currentStageName: 'S2-混合', lastUpdateTime: '2026-06-12 19:00' },
+    { ticketNo: 'FT-20260612-002-03', qty: 19000, status: 'WAITING', currentOp: 'OP-20 低温称量', currentStageName: 'S1-备料', lastUpdateTime: '2026-06-12 15:00' },
+  ],
+  routingSteps: [
+    { seq:1,  opNo:'OP-10', opName:'原料接收验收',     stage:'S1-备料',   workCenter:'WS-LS-WH',     isKeyOp:true,  mandatoryInspection:true,  status:'COMPLETED',   startedAt:'2026-06-12 07:30', completedAt:'2026-06-12 08:45', operatorName:'李志远（OP005）', teamName:'溧水甲班', reportQty:60000, goodQty:60000, scrapQty:0, keyData:{'到货批号':'RM-PROBIO-20260612-002','存储温度':'≤-18℃','运输保温箱温度':'−15℃（合格）','收货重量':'复核完成','IQC状态':'已触发IQC检验'} },
+    { seq:2,  opNo:'OP-20', opName:'低温称量配料',     stage:'S1-备料',   workCenter:'WS-LS-PROBIO', isKeyOp:true,  mandatoryInspection:true,  status:'COMPLETED',   startedAt:'2026-06-12 09:00', completedAt:'2026-06-12 10:30', operatorName:'李志远（OP005）', teamName:'溧水甲班', equipId:'EQ-BAL-LS-01', equipName:'冷链电子天平', reportQty:60000, goodQty:60000, scrapQty:0, keyData:{'乳酸菌冻干粉':'1.5kg（RM-LB-20260608-LS）','双歧杆菌冻干粉':'1.2kg（RM-BF-20260608-LS）','低聚果糖':'4.2kg','胶原蛋白肽':'2.0kg','称量温度':'≤8℃','复核人':'钱文华'} },
+    { seq:3,  opNo:'OP-30', opName:'混合（冷链≤8℃）', stage:'S2-混合',   workCenter:'WS-LS-PROBIO', isKeyOp:true,  mandatoryInspection:true,  status:'COMPLETED',   startedAt:'2026-06-12 10:45', completedAt:'2026-06-12 13:00', operatorName:'李志远（OP005）', teamName:'溧水甲班', equipId:'EQ-MIX-LS-01', equipName:'低温混合机（冷链）', reportQty:60000, goodQty:60000, scrapQty:0, keyData:{'混合速度':'60rpm','混合时间':'90min','混合温度':'≤8℃全程保持','均匀度取样RSD':'2.3%（标准≤5%）','活菌数验证':'完成'} },
+    { seq:4,  opNo:'OP-40', opName:'胶囊充填',         stage:'S3-充填',   workCenter:'WS-LS-PROBIO', isKeyOp:true,  mandatoryInspection:true,  status:'IN_PROGRESS', startedAt:'2026-06-12 14:00', operatorName:'钱文华（OP017）', teamName:'溧水甲班', equipId:'EQ-CAP-LS-01', equipName:'胶囊充填机1号', reportQty:21000, goodQty:20940, scrapQty:60, deviationFlag:false, keyData:{'充填量':'250mg±5%','充填速度':'6000粒/h','装量差异':'±3.5%（标准±5%）','当前进度':'21000/60000粒（35%）','环境温度':'6℃'} },
+    { seq:5,  opNo:'OP-45', opName:'充填中检',         stage:'S3-充填',   workCenter:'WS-LS-QC',     isKeyOp:true,  mandatoryInspection:true,  status:'IN_PROGRESS', startedAt:'2026-06-12 16:00', operatorName:'杨芸（OP020）', teamName:'溧水QC班', reportQty:21000, goodQty:20940, scrapQty:60, keyData:{'装量差异抽查':'每30min一次','已完成抽查':'4次，均合格','活菌数预检':'1批次，合格'} },
+    { seq:6,  opNo:'OP-50', opName:'铝塑泡罩包装',     stage:'S4-内包',   workCenter:'WS-LS-PACK',   isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+    { seq:7,  opNo:'OP-60', opName:'外包装装盒',       stage:'S5-外包',   workCenter:'WS-LS-OUTERPACK', isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+    { seq:8,  opNo:'OP-70', opName:'FQC成品检验',     stage:'S6-检验',   workCenter:'WS-LS-QC',     isKeyOp:true,  mandatoryInspection:true,  status:'PENDING' },
+    { seq:9,  opNo:'OP-80', opName:'质量放行',         stage:'S7-放行',   workCenter:'WS-LS-QC',     isKeyOp:true,  mandatoryInspection:true,  status:'PENDING' },
+    { seq:10, opNo:'OP-90', opName:'冷链入库（≤8℃）', stage:'S7-放行',   workCenter:'WS-LS-WH',     isKeyOp:false, mandatoryInspection:false, status:'PENDING' },
+  ],
+  inspectionRecords: [
+    {
+      taskId: 'INS-WO005-IQC-001', taskNo: 'IQC-20260612-001',
+      schemeCode: 'IQC-PROBIO-STD', schemeName: '益生菌原料进货检验（冷链）', schemeType: 'IQC',
+      batchNo: 'RM-PROBIO-20260612-002', totalQty: 60000, sampleQty: 200,
+      inspectorName: '杨芸', checkerName: '赵雪梅',
+      startTime: '2026-06-12 07:30', completeTime: '2026-06-12 09:00',
+      conclusion: 'PASS', releaseStatus: 'RELEASED',
+      items: [
+        { itemCode: 'IQC-P01', itemName: '乳酸菌活菌数',   category: '微生物', standardValue: '≥200亿CFU/g', unit: 'CFU/g', actualValue: '218亿CFU/g',  result: 'PASS', isCritical: true  },
+        { itemCode: 'IQC-P02', itemName: '双歧杆菌活菌数', category: '微生物', standardValue: '≥150亿CFU/g', unit: 'CFU/g', actualValue: '162亿CFU/g',  result: 'PASS', isCritical: true  },
+        { itemCode: 'IQC-P03', itemName: '水分（Karl Fischer）', category: '理化', standardValue: '≤5%', unit: '%', actualValue: '3.2%', result: 'PASS', isCritical: false },
+        { itemCode: 'IQC-P04', itemName: '冷链运输温度记录', category: '冷链', standardValue: '≤−18℃', unit: '℃', actualValue: '−20℃（最低）', result: 'PASS', isCritical: true  },
+        { itemCode: 'IQC-P05', itemName: '外包装完整性',  category: '外观', standardValue: '无破损/泄漏',  unit: '', actualValue: '合格', result: 'PASS', isCritical: false },
+      ],
+    },
+    {
+      taskId: 'INS-WO005-IPQC-001', taskNo: 'IPQC-20260613-001',
+      schemeCode: 'IPQC-FILL-PROBIO', schemeName: '胶囊充填中间控制检验', schemeType: 'IPQC_SELF',
+      opNo: 'OP-40', batchNo: 'TMJ-PROBIO-20260612-002', totalQty: 21000, sampleQty: 60,
+      inspectorName: '杨芸', checkerName: '赵雪梅',
+      startTime: '2026-06-12 16:00', completeTime: undefined,
+      conclusion: 'PASS', releaseStatus: 'RELEASED',
+      items: [
+        { itemCode: 'IPQC-P01', itemName: '装量差异',      category: '物理',  standardValue: '250mg±5%（237.5~262.5mg）', unit: 'mg', actualValue: '249.8mg±3.5%', result: 'PASS', isCritical: true  },
+        { itemCode: 'IPQC-P02', itemName: '胶囊外观',      category: '外观',  standardValue: '透明，无变形/泄漏',          unit: '',   actualValue: '合格',           result: 'PASS', isCritical: false },
+        { itemCode: 'IPQC-P03', itemName: '充填环境温度',  category: '冷链',  standardValue: '≤8℃',                       unit: '℃',  actualValue: '6℃',             result: 'PASS', isCritical: true  },
+        { itemCode: 'IPQC-P04', itemName: '活菌计数（抽检）', category: '微生物', standardValue: '≥1×10⁹CFU/粒',          unit: 'CFU/粒', actualValue: '1.32×10⁹CFU/粒', result: 'PASS', isCritical: true },
+      ],
+    },
+  ],
+  deviations: [],
+  signatures: [
+    { role: '生产操作员', name: '李志远', signedAt: '2026-06-12 13:00', remark: '称量配料+冷链混合完成，全程≤8℃' },
+    { role: 'QC检验员',   name: '杨芸',   signedAt: '2026-06-12 09:00', remark: 'IQC进货检验合格，活菌数达标' },
+  ],
   startTime: '2026-06-12 08:00',
   createdAt: '2026-06-12 08:00', updatedAt: _now,
 };
@@ -1342,7 +1470,7 @@ export const MOCK_EBR_LIST: EbrRecord[] = [
 export const EBR_STORAGE_KEY = 'bip_ebr_records';
 
 /** 数据版本号 — 每次更新 Mock 数据时递增，强制刷新旧缓存 */
-export const EBR_DATA_VERSION = 'v20260615_wo_aligned';
+export const EBR_DATA_VERSION = 'v20260616_full_ops';
 export const EBR_VERSION_KEY  = 'bip_ebr_version';
 
 /**

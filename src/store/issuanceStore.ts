@@ -734,6 +734,289 @@ export const MOCK_ISSUE_ORDERS: IssueOrder[] = [
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-WO002-004：南京工厂 WO002 — VitC咀嚼片500mg 包衣工序（OP-45）
+  // 工单：WO-20260605-001 / 批次：TMJ-VITC-20260605-002 / 计划20万粒
+  // 状态：RECEIVED（已签收）— 包衣液已领用，包衣进行中
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO002-004',
+    issueNo: 'ISU-20260608-001',
+    woNo: 'WO-20260605-001',
+    moNo: 'MO-20260605-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 45,
+    operationName: '薄膜包衣',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-RM-原料仓',
+    wipWarehouse: 'WIP-NJ-包衣',
+    planDate: '2026-06-08',
+    status: 'RECEIVED',
+    createdBy: '王建平',
+    createdAt: '2026-06-08 07:00',
+    pickedBy: '孙建国',
+    pickedAt: '2026-06-08 07:40',
+    receivedBy: '王建平',
+    receivedAt: '2026-06-08 08:05',
+    remark: '高效包衣机1号(EQ007)，欧巴代薄膜包衣液，包衣增重3.0%，进风温度55℃',
+    lines: [
+      {
+        id: 'LWO002-01', lineNo: 1,
+        itemCode: 'EX-OPADRY-WHITE', itemName: '欧巴代薄膜包衣粉（白色）',
+        spec: 'OY-LS-28920 / 聚乙烯醇基 / 白色 / 5kg/袋',
+        unit: 'KG',
+        planQty: 6.0, actualQty: 6.0,
+        issueMethod: 'PUSH', operationSeq: 45, operationCode: 'OP-45',
+        wipWarehouse: 'WIP-NJ-包衣', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'EX-OPD-20260605-A', qty: 6.0, inboundDate: '2026-06-05', expiryDate: '2027-06-04', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
+      },
+      {
+        id: 'LWO002-02', lineNo: 2,
+        itemCode: 'EX-TALC-PHARMA', itemName: '药用滑石粉（包衣助剂）',
+        spec: '药用级 / 纯度≥99% / 粒径D50≤20μm / 25kg/袋',
+        unit: 'KG',
+        planQty: 0.4, actualQty: 0.4,
+        issueMethod: 'PUSH', operationSeq: 45, operationCode: 'OP-45',
+        wipWarehouse: 'WIP-NJ-包衣', sourceWarehouse: 'NJ-RM-原料仓',
+        batchPicks: [
+          { batchNo: 'EX-TLC-20260605-A', qty: 0.4, inboundDate: '2026-06-05', expiryDate: '2028-06-04', warehouseCode: 'NJ-RM-原料仓' },
+        ],
+        status: 'DONE',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-WO002-005：南京工厂 WO002 — VitC咀嚼片500mg 铝塑内包（OP-50）
+  // 工单：WO-20260605-001 / 批次：TMJ-VITC-20260605-002
+  // 状态：PICKING（拣货中）— 铝塑机正在运行，包材已部分发放
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO002-005',
+    issueNo: 'ISU-20260609-001',
+    woNo: 'WO-20260605-001',
+    moNo: 'MO-20260605-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 50,
+    operationName: '铝塑内包',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-PM-包材仓',
+    wipWarehouse: 'WIP-NJ-铝塑',
+    planDate: '2026-06-09',
+    status: 'PICKING',
+    createdBy: '刘晓梅',
+    createdAt: '2026-06-09 06:30',
+    pickedBy: '仓管-赵磊',
+    pickedAt: '2026-06-09 07:00',
+    remark: '铝塑包装机EQ008，热封温度185℃，100粒/板规格，分3批次投料',
+    lines: [
+      {
+        id: 'LWO002-03', lineNo: 1,
+        itemCode: 'PK-ALUPLA-001', itemName: '铝塑复合膜（PVC/PVDC/Al）',
+        spec: 'PVC/PVDC/Al复合 / 厚度0.15mm / 宽200mm / 100粒/板规格',
+        unit: 'M',
+        planQty: 4200, actualQty: 2600,
+        issueMethod: 'PUSH', operationSeq: 50, operationCode: 'OP-50',
+        wipWarehouse: 'WIP-NJ-铝塑', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-ALUPLA-20260607-B', qty: 2600, inboundDate: '2026-06-07', expiryDate: '2028-06-06', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'PICKING',
+      },
+      {
+        id: 'LWO002-04', lineNo: 2,
+        itemCode: 'PK-DESICCANT-1G', itemName: '干燥剂（1g/包）',
+        spec: '硅胶干燥剂 / 1g/包 / 符合食品安全标准',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 1250,
+        issueMethod: 'PUSH', operationSeq: 50, operationCode: 'OP-50',
+        wipWarehouse: 'WIP-NJ-铝塑', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [
+          { batchNo: 'PK-DSC-20260607-B', qty: 1250, inboundDate: '2026-06-07', expiryDate: '2028-06-06', warehouseCode: 'NJ-PM-包材仓' },
+        ],
+        status: 'PICKING',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-WO002-006：南京工厂 WO002 — VitC咀嚼片500mg 外包装（OP-60/65）
+  // 工单：WO-20260605-001 / 批次：TMJ-VITC-20260605-002
+  // 状态：PENDING（待拣货）— 等待铝塑完成后发料
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO002-006',
+    issueNo: 'ISU-20260609-002',
+    woNo: 'WO-20260605-001',
+    moNo: 'MO-20260605-001',
+    productCode: 'FG-VITC-500MG-AP',
+    productName: '维生素C咀嚼片',
+    operationSeq: 60,
+    operationName: '装瓶外包/装盒打码',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'NJ-PM-包材仓',
+    wipWarehouse: 'WIP-NJ-外包',
+    planDate: '2026-06-10',
+    status: 'PENDING',
+    createdBy: '刘晓梅',
+    createdAt: '2026-06-09 09:00',
+    remark: 'HDPE白瓶100mL+铝箔感应盖+说明书+彩盒，批号：TMJ-VITC-20260605-002，计划2000瓶/箱',
+    lines: [
+      {
+        id: 'LWO002-05', lineNo: 1,
+        itemCode: 'PK-HDPE-100ML', itemName: 'HDPE白色包装瓶（100mL）',
+        spec: 'HDPE材质 / 100mL / 口径28mm / 附铝箔感应盖',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'LWO002-06', lineNo: 2,
+        itemCode: 'PK-LABEL-VITC-500', itemName: '产品标签（VitC 500mg）',
+        spec: '不干胶铜版纸标签 / V20版 / 100mm×60mm',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 65, operationCode: 'OP-65',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'LWO002-07', lineNo: 3,
+        itemCode: 'PK-INSERT-VITC-500', itemName: '产品说明书（VitC 500mg）',
+        spec: 'A4折页 / V20版 / 标准GMP格式',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 65, operationCode: 'OP-65',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'LWO002-08', lineNo: 4,
+        itemCode: 'PK-CARTON-VITC-500', itemName: '包装彩盒（VitC 500mg）',
+        spec: '白卡纸彩盒 / V20版 / 单瓶装',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 65, operationCode: 'OP-65',
+        wipWarehouse: 'WIP-NJ-外包', sourceWarehouse: 'NJ-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-WO005-007：溧水工厂 WO005 — 益生菌胶囊 铝塑泡罩包装（OP-50）
+  // 工单：WO-20260612-001 / 批次：TMJ-PROBIO-20260612-002 / 计划6万粒
+  // 状态：PENDING（待拣货）— 等待胶囊充填(OP-40)完成
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO005-007',
+    issueNo: 'ISU-20260614-007',
+    woNo: 'WO-20260612-001',
+    moNo: 'MO-20260612-001',
+    productCode: 'FG-PROBIO-CAP-250',
+    productName: '复合益生菌胶囊',
+    operationSeq: 50,
+    operationName: '铝塑泡罩包装',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'LS-PM-包材仓',
+    wipWarehouse: 'WIP-LS-泡罩',
+    planDate: today,
+    status: 'PENDING',
+    createdBy: '李志远',
+    createdAt: `${today} 09:00`,
+    remark: 'PTP铝塑泡罩机EQ014，冷链操作区C级，30粒/板×1板/盒，OPA/Al/PVC冷成型铝箔',
+    lines: [
+      {
+        id: 'LWO005-01', lineNo: 1,
+        itemCode: 'PKG-ALU-FOIL-PTP', itemName: 'PTP铝箔（冷成型）',
+        spec: 'OPA/Al/PVC三层 / 厚度0.085mm / 宽200mm',
+        unit: 'M',
+        planQty: 650, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 50, operationCode: 'OP-50',
+        wipWarehouse: 'WIP-LS-泡罩', sourceWarehouse: 'LS-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'LWO005-02', lineNo: 2,
+        itemCode: 'PKG-LABEL-PROBIO', itemName: '产品标签（益生菌胶囊）',
+        spec: '50mm×30mm / 双面印刷 / 条形码+QR码',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 50, operationCode: 'OP-50',
+        wipWarehouse: 'WIP-LS-泡罩', sourceWarehouse: 'LS-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ISU-WO005-008：溧水工厂 WO005 — 益生菌胶囊 外包装装盒（OP-60）
+  // 工单：WO-20260612-001 / 批次：TMJ-PROBIO-20260612-002
+  // 状态：PENDING（待拣货）— 等待泡罩包装完成
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ISO-WO005-008',
+    issueNo: 'ISU-20260614-008',
+    woNo: 'WO-20260612-001',
+    moNo: 'MO-20260612-001',
+    productCode: 'FG-PROBIO-CAP-250',
+    productName: '复合益生菌胶囊',
+    operationSeq: 60,
+    operationName: '外包装装盒',
+    issueMethod: 'PUSH',
+    priority: 'HIGH',
+    warehouse: 'LS-PM-包材仓',
+    wipWarehouse: 'WIP-LS-外包',
+    planDate: today,
+    status: 'PENDING',
+    createdBy: '李志远',
+    createdAt: `${today} 09:30`,
+    remark: '30粒/盒（1板/盒），冷链纸盒+保温膜，批号：TMJ-PROBIO-20260612-002',
+    lines: [
+      {
+        id: 'LWO005-03', lineNo: 1,
+        itemCode: 'PKG-CARTON-PROBIO', itemName: '包装彩盒（益生菌胶囊）',
+        spec: '单板装（30粒/盒） / 冷链专用 / 白卡纸+覆哑膜',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60',
+        wipWarehouse: 'WIP-LS-外包', sourceWarehouse: 'LS-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'LWO005-04', lineNo: 2,
+        itemCode: 'PKG-INSERT-PROBIO', itemName: '产品说明书（益生菌胶囊）',
+        spec: 'A5折页 / V15版 / 标准GMP格式 / 含储存条件冷链说明',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60',
+        wipWarehouse: 'WIP-LS-外包', sourceWarehouse: 'LS-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+      {
+        id: 'LWO005-05', lineNo: 3,
+        itemCode: 'PKG-THERMAL-WRAP', itemName: '冷链保温膜（外层）',
+        spec: '铝箔复合保温膜 / 300mm×200mm / 适用冷链运输',
+        unit: 'PCS',
+        planQty: 2000, actualQty: 0,
+        issueMethod: 'PUSH', operationSeq: 60, operationCode: 'OP-60',
+        wipWarehouse: 'WIP-LS-外包', sourceWarehouse: 'LS-PM-包材仓',
+        batchPicks: [], status: 'PENDING',
+      },
+    ],
+  },
 ];
 
 // ── 线边仓库存 Mock — 天美健双工厂 ─────────────────────────────
@@ -796,7 +1079,7 @@ export const MOCK_BACKFLUSH_LOGS: BackflushLog[] = [
 // ════════════════════════════════════════════════════════════════
 
 // ⚠️ 数据版本：每次更换产品线/重构Mock时递增，强制清除旧缓存
-const DATA_VERSION = 'TMJ-HEALTH-V3';
+const DATA_VERSION = 'TMJ-HEALTH-V4';
 const STORE_KEY_VERSION = 'bip_data_version';
 const STORE_KEY_ORDERS  = 'bip_issue_orders';
 const STORE_KEY_WIP     = 'bip_wip_inventory';
