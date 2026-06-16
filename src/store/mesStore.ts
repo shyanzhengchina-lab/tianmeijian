@@ -39,6 +39,7 @@ import {
   type SparePartRecord,
 } from '../pages/equipment/equipmentData';
 import { mockCategories, mockMaterials, mockUnitGroups } from './mockData';
+import { mockBomList } from './bomData';
 import { mockProductSeries, mockRoutingMasters } from '../pages/pro/seriesData';
 
 // ── 键名常量 ──────────────────────────────────────────────────────
@@ -249,7 +250,25 @@ function seedPocData(): void {
     ]));
   }
 
-  // ── 6. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
+  // ── 6. BOM数据：为空或含旧根管锉数据时写入天美健BOM ────────────
+  const existingBom = localStorage.getItem('bip_demo_bom');
+  let needsBomSeed = !existingBom;
+  if (!needsBomSeed && existingBom) {
+    try {
+      const parsed = JSON.parse(existingBom);
+      const flat = JSON.stringify(parsed);
+      // 旧数据含牙科器械关键词 或 数据为空数组 → 重新种入天美健BOM
+      if (flat.includes('根管锉') || flat.includes('镍钛') || flat.includes('FG-RKQ') ||
+          flat.includes('PK-BOX-SET') || !Array.isArray(parsed) || parsed.length === 0) {
+        needsBomSeed = true;
+      }
+    } catch { needsBomSeed = true; }
+  }
+  if (needsBomSeed) {
+    try { localStorage.setItem('bip_demo_bom', JSON.stringify(mockBomList)); } catch { /* ignore */ }
+  }
+
+  // ── 7. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
   if (!localStorage.getItem('bip_demo_injected')) {
     localStorage.setItem('bip_demo_injected', '1');
   }
