@@ -257,9 +257,12 @@ function seedPocData(): void {
     try {
       const parsed = JSON.parse(existingBom);
       const flat = JSON.stringify(parsed);
-      // 旧数据含牙科器械关键词 或 数据为空数组 → 重新种入天美健BOM
+      // 旧数据含牙科器械关键词 或 旧保健品编码（FG-VitC-xxx / FG-PROBIO-250-xx）→ 重新种入新BOM
       if (flat.includes('根管锉') || flat.includes('镍钛') || flat.includes('FG-RKQ') ||
-          flat.includes('PK-BOX-SET') || !Array.isArray(parsed) || parsed.length === 0) {
+          flat.includes('PK-BOX-SET') || flat.includes('BOM-TMJ-') ||
+          flat.includes('FG-VitC-500-60') || flat.includes('FG-VitC-1000-120') ||
+          flat.includes('FG-PROBIO-250-30') || flat.includes('FG-PROBIO-250-60') ||
+          !Array.isArray(parsed) || parsed.length === 0) {
         needsBomSeed = true;
       }
     } catch { needsBomSeed = true; }

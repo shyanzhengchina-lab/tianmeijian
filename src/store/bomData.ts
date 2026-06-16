@@ -61,9 +61,9 @@ export const mockBomList: BomHeader[] = [
 
   // ── BOM-1：维生素C咀嚼片 500mg×60粒/盒（主BOM，对应WO001/WO002）──
   {
-    id: 'BOM-TMJ-VITC-500-60',
-    code: 'FG-VitC-500-60',
-    name: '天美健维生素C咀嚼片（小规格）',
+    id: 'BOM-VITC-500MG-AP',
+    code: 'FG-VITC-500MG-AP',
+    name: '维生素C咀嚼片（500mg铝塑）',
     spec: '500mg/粒 × 60粒/盒',
     unit: '盒',
     version: '2.1',
@@ -204,12 +204,12 @@ export const mockBomList: BomHeader[] = [
     ],
   },
 
-  // ── BOM-2：维生素C咀嚼片 1000mg×120粒/瓶（大规格主BOM，对应WO003）──
+  // ── BOM-2：维生素C咀嚼片 250mg×100粒/瓶（瓶装主BOM，对应WO003）──
   {
-    id: 'BOM-TMJ-VITC-1000-120',
-    code: 'FG-VitC-1000-120',
-    name: '天美健维生素C咀嚼片',
-    spec: '1000mg/粒 × 120粒/瓶',
+    id: 'BOM-VITC-250MG-BTL',
+    code: 'FG-VITC-250MG-BTL',
+    name: '维生素C咀嚼片（250mg瓶装）',
+    spec: '250mg/粒 × 100粒/瓶',
     unit: '瓶',
     version: '2.0',
     bomType: '主BOM',
@@ -223,13 +223,13 @@ export const mockBomList: BomHeader[] = [
     createdAt: '2026-01-15 09:00:00',
     auditedBy: '赵质检',
     auditedAt: '2026-01-20 14:00:00',
-    remark: '大规格版本，每粒1000mg，批量500瓶/批',
+    remark: '瓶装版本，每粒250mg，每瓶100粒，批量500瓶/批',
     children: [
       {
         id: 'BC-VITC-L-01', rowNo: 10,
         childCode: 'RM-VitC-001', childName: '维生素C（抗坏血酸）',
         spec: '药用级 USP 99.0%~100.5%',
-        freeDesc: '每粒1000mg，每瓶120粒，批量500瓶', type: '主料',
+        freeDesc: '每粒250mg，每瓶100粒，批量500瓶', type: '主料',
         qty: 500, unit: '瓶', childQty: 63.0, calcUnit: 'kg',
         scrapRate: 5, issueType: '按工单', keyMaterial: true,
         consumeOp: 'OP-10',
@@ -329,9 +329,9 @@ export const mockBomList: BomHeader[] = [
 
   // ── BOM-3：复合益生菌胶囊 250mg×30粒/盒（主BOM，对应WO004）──
   {
-    id: 'BOM-TMJ-PROBIO-30',
-    code: 'FG-PROBIO-250-30',
-    name: '天美健复合益生菌胶囊',
+    id: 'BOM-PROBIO-CAP-250-30',
+    code: 'FG-PROBIO-CAP-250',
+    name: '复合益生菌胶囊',
     spec: '250mg/粒（活菌数≥1×10⁹CFU/粒）× 30粒/盒',
     unit: '盒',
     version: '1.5',
@@ -443,12 +443,12 @@ export const mockBomList: BomHeader[] = [
 
   // ── BOM-4：复合益生菌胶囊 250mg×60粒/盒（大规格主BOM，对应WO005）──
   {
-    id: 'BOM-TMJ-PROBIO-60',
-    code: 'FG-PROBIO-250-60',
-    name: '天美健复合益生菌胶囊（大规格）',
+    id: 'BOM-PROBIO-CAP-250-60',
+    code: 'FG-PROBIO-CAP-250',
+    name: '复合益生菌胶囊（60粒/盒）',
     spec: '250mg/粒 × 60粒/盒',
     unit: '盒',
-    version: '1.0',
+    version: '2.0',
     bomType: '主BOM',
     status: 'audited',
     mainQty: 600,
@@ -578,7 +578,7 @@ export const mockBomList: BomHeader[] = [
     children: [
       {
         id: 'BC-GIFT-01', rowNo: 10,
-        childCode: 'FG-VitC-500-60', childName: '天美健维生素C咀嚼片（小规格）',
+        childCode: 'FG-VITC-500MG-AP', childName: '维生素C咀嚼片（500mg铝塑）',
         spec: '500mg×60粒/盒',
         freeDesc: '套装组件1，已完成成品检验', type: '主料',
         qty: 200, unit: '套', childQty: 200, calcUnit: '盒',
@@ -586,7 +586,7 @@ export const mockBomList: BomHeader[] = [
       },
       {
         id: 'BC-GIFT-02', rowNo: 20,
-        childCode: 'FG-PROBIO-250-30', childName: '天美健复合益生菌胶囊',
+        childCode: 'FG-PROBIO-CAP-250', childName: '复合益生菌胶囊',
         spec: '250mg×30粒/盒',
         freeDesc: '套装组件2，已完成成品检验', type: '主料',
         qty: 200, unit: '套', childQty: 200, calcUnit: '盒',

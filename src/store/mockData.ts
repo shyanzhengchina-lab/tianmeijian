@@ -124,18 +124,18 @@ export const mockMaterials: Material[] = [
   },
   // ── 成品 ─────────────────────────────────────────────────────────
   {
-    id: 'FG001', code: 'FG-VitC-1000-120', name: '天美健维生素C咀嚼片',
-    categoryId: '41', spec: '1000mg×120片/瓶', unit: '瓶',
+    id: 'FG001', code: 'FG-VITC-250MG-BTL', name: '维生素C咀嚼片（250mg瓶装）',
+    categoryId: '41', spec: '250mg/粒 × 100粒/瓶', unit: '瓶',
     type: '成品', brand: '天美健', supplier: '',
-    minStock: 1000, maxStock: 50000, price: 128.0, status: 'active',
-    description: '天美健品牌维生素C咀嚼片，主力SKU', createdAt: '2026-01-15'
+    minStock: 1000, maxStock: 50000, price: 88.0, status: 'active',
+    description: '天美健瓶装维生素C咀嚼片250mg×100粒，主力SKU', createdAt: '2026-01-15'
   },
   {
-    id: 'FG002', code: 'FG-VitC-500-60', name: '天美健维生素C咀嚼片（小规格）',
-    categoryId: '41', spec: '500mg×60片/盒', unit: '盒',
+    id: 'FG002', code: 'FG-VITC-500MG-AP', name: '维生素C咀嚼片（500mg铝塑）',
+    categoryId: '41', spec: '500mg/粒 × 60粒/盒', unit: '盒',
     type: '成品', brand: '天美健', supplier: '',
     minStock: 500, maxStock: 20000, price: 48.0, status: 'active',
-    description: '小规格便携版，适合尝鲜装', createdAt: '2026-01-15'
+    description: '天美健维生素C咀嚼片500mg铝塑装，60粒/盒', createdAt: '2026-01-15'
   },
   // ── 内包材 ───────────────────────────────────────────────────────
   {
