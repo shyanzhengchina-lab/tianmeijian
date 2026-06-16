@@ -41,6 +41,7 @@ import {
 import { mockCategories, mockMaterials, mockUnitGroups } from './mockData';
 import { mockBomList } from './bomData';
 import { mockProductSeries, mockRoutingMasters } from '../pages/pro/seriesData';
+import { mockInspectionTasks, mockQualityReleases } from '../pages/inspection/qmsData';
 
 // ── 键名常量 ──────────────────────────────────────────────────────
 export const STORE_KEYS = {
@@ -67,7 +68,7 @@ export const STORE_KEYS = {
 } as const;
 
 // ── 数据版本（用于强制刷新 mock 数据） ─────────────────────────────
-const DATA_VERSION = 'v20260616_a';
+const DATA_VERSION = 'v20260616_b';
 const VERSION_KEY  = 'bip_data_version';
 
 // ── 读/写工具 ─────────────────────────────────────────────────────
@@ -112,6 +113,8 @@ function clearAllBipKeys(): void {
     'bip_routings',
     'bip_product_series',
     'bip_product_families',
+    'bip_inspection_tasks',
+    'bip_quality_releases',
   ]);
   const keys: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -314,7 +317,33 @@ function seedPocData(): void {
     try { localStorage.setItem('bip_task_orders', JSON.stringify(mockTaskOrders)); } catch { /* ignore */ }
   }
 
-  // ── 10. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
+  // ── 10. 质检任务单：为空时补种天美健Demo数据 ────────────────────────
+  const existingInspTasks = localStorage.getItem('bip_inspection_tasks');
+  let needsInspSeed = !existingInspTasks;
+  if (!needsInspSeed && existingInspTasks) {
+    try {
+      const parsed = JSON.parse(existingInspTasks);
+      if (!Array.isArray(parsed) || parsed.length === 0) needsInspSeed = true;
+    } catch { needsInspSeed = true; }
+  }
+  if (needsInspSeed) {
+    try { localStorage.setItem('bip_inspection_tasks', JSON.stringify(mockInspectionTasks)); } catch { /* ignore */ }
+  }
+
+  // ── 11. 质量放行：为空时补种天美健Demo数据 ────────────────────────
+  const existingReleases = localStorage.getItem('bip_quality_releases');
+  let needsRelSeed = !existingReleases;
+  if (!needsRelSeed && existingReleases) {
+    try {
+      const parsed = JSON.parse(existingReleases);
+      if (!Array.isArray(parsed) || parsed.length === 0) needsRelSeed = true;
+    } catch { needsRelSeed = true; }
+  }
+  if (needsRelSeed) {
+    try { localStorage.setItem('bip_quality_releases', JSON.stringify(mockQualityReleases)); } catch { /* ignore */ }
+  }
+
+  // ── 12. 标记 POC 数据已注入（与 DemoDataInjectorPage 保持兼容）─────
   if (!localStorage.getItem('bip_demo_injected')) {
     localStorage.setItem('bip_demo_injected', '1');
   }
