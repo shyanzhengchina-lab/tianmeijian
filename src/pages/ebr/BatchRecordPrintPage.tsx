@@ -27,7 +27,7 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import type { OperationExecution } from '../pad/padExecutionData';
 import { GMP_OPERATIONS } from '../pad/padExecutionData';
 import type { EbrRecord, EbrStatus } from './ebrData';
-import { EBR_STORAGE_KEY, loadEbrRecords } from './ebrData';
+import { EBR_STORAGE_KEY, EBR_DATA_VERSION, EBR_VERSION_KEY, MOCK_EBR_LIST, loadEbrRecords } from './ebrData';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -1801,6 +1801,30 @@ const BatchRecordPrintPage: React.FC = () => {
   const [activeTab,  setActiveTab]  = useState('cover');
   const [showDetail, setShowDetail] = useState(true);
   const printRef = useRef<HTMLDivElement>(null);
+
+  // ── 挂载时强制确保5条EBR全部存在 ────────────────────────────────────
+  // 防御 clearStalePadCache / 旧版本缓存导致 bip_ebr_records 只有1条的问题。
+  // 每次进入批记录打印页时：
+  //   a) 若版本不一致 → 直接重写为 MOCK_EBR_LIST（5条）
+  //   b) 若版本一致但部分条目缺失 → 按id补入缺失条目
+  React.useEffect(() => {
+    setEbrRecords(prev => {
+      const version = localStorage.getItem(EBR_VERSION_KEY);
+      // 版本不一致或无数据 → 强制重置为5条MOCK
+      if (version !== EBR_DATA_VERSION || !Array.isArray(prev) || prev.length === 0) {
+        localStorage.setItem(EBR_VERSION_KEY, EBR_DATA_VERSION);
+        return [...MOCK_EBR_LIST];
+      }
+      // 版本一致 → 按id补入缺失的MOCK条目（保护已有审批记录）
+      const existingIds = new Set(prev.map(e => e.id));
+      const missing = MOCK_EBR_LIST.filter(m => !existingIds.has(m.id));
+      if (missing.length > 0) {
+        return [...prev, ...missing];
+      }
+      return prev;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 注入打印样式
   React.useEffect(() => {
