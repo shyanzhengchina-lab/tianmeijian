@@ -69,7 +69,7 @@ export const STORE_KEYS = {
 } as const;
 
 // ── 数据版本（用于强制刷新 mock 数据） ─────────────────────────────
-const DATA_VERSION = 'v20260617_b';
+const DATA_VERSION = 'v20260617_c';
 const VERSION_KEY  = 'bip_data_version';
 
 // ── 读/写工具 ─────────────────────────────────────────────────────
@@ -383,151 +383,520 @@ function seedPocData(): void {
     }
   }
 
-  // ── 14. PAD execMap 快照预种 ──────────────────────────────────────
-  // 为 WO002/WO005 的批记录打印页预置 execMap 快照（含称量配料工序 BOM 数据），
-  // 使"BOM物料清单"在未实际执行PAD时也能显示演示数据。
+  // ── 14. PAD execMap 快照预种（全量）──────────────────────────────
+  // 为 WO001~WO005 所有批次的批记录打印页预置完整 execMap 快照（7道GMP工序），
+  // 使 §1~§7 所有章节都能显示完整的演示数据，不再出现"数据待填入"空白。
   // key: bip_pad_exec_snap_{woId}，版本键: bip_pad_exec_snap_version
-  const PAD_SNAP_VERSION = 'v20260616_snap1';
+  const PAD_SNAP_VERSION = 'v20260617_snap2';
   const existingSnapVersion = localStorage.getItem('bip_pad_exec_snap_version');
   if (existingSnapVersion !== PAD_SNAP_VERSION) {
-    const makeWeighStages = () => ({
-      PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-05 08:00', endTime: '2026-06-05 08:20', operator: '张伟', data: { env_temp: '22', env_humid: '48', clean_cert: 'QC-CLN-20260605-001' } },
-      CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-05 08:20', endTime: '2026-06-05 08:25', operator: '张伟', data: {} },
-      MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'completed', startTime: '2026-06-05 08:25', endTime: '2026-06-05 08:40', operator: '张伟', data: {} },
-      FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: '2026-06-05 08:40', endTime: '2026-06-05 09:30', operator: '张伟',
-        data: {
-          dc_table: [
-            { material_name: '维生素C（原料药）', batch_no: 'RM-VITC-20260601', plan_qty: '88.000', actual_qty: '88.012', balance_check: '复核一致', dc_operator: '张伟' },
-            { material_name: '甘露醇', batch_no: 'RM-MAN-20260601', plan_qty: '50.000', actual_qty: '49.998', balance_check: '复核一致', dc_operator: '张伟' },
-            { material_name: '柠檬酸', batch_no: 'RM-CA-20260601', plan_qty: '5.000', actual_qty: '5.001', balance_check: '复核一致', dc_operator: '张伟' },
-            { material_name: '硬脂酸镁', batch_no: 'RM-MG-20260601', plan_qty: '2.000', actual_qty: '2.000', balance_check: '复核一致', dc_operator: '张伟' },
-            { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260601', plan_qty: '15.000', actual_qty: '15.003', balance_check: '复核一致', dc_operator: '张伟' },
-          ],
-        },
-      },
-      SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      REPORT:       { code: 'REPORT',       status: 'completed', startTime: '2026-06-05 09:30', endTime: '2026-06-05 09:45', operator: '张伟',
-        data: { rpt_finish: 160014, rpt_good: 160014, rpt_bad: 0, rpt_scrap: 0, rpt_operator: '张伟' },
-      },
-      CHECK_OUT:    { code: 'CHECK_OUT',    status: 'completed', startTime: '2026-06-05 09:45', endTime: '2026-06-05 09:50', operator: '张伟', data: { out_operator: '张伟' } },
-    });
-    const makeWeighStages5 = () => ({
-      PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-12 08:00', endTime: '2026-06-12 08:20', operator: '陈明', data: { env_temp: '8', env_humid: '42', clean_cert: 'QC-CLN-20260612-001' } },
-      CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-12 08:20', endTime: '2026-06-12 08:25', operator: '陈明', data: {} },
-      MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'completed', startTime: '2026-06-12 08:25', endTime: '2026-06-12 08:40', operator: '陈明', data: {} },
-      FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: '2026-06-12 08:40', endTime: '2026-06-12 09:20', operator: '陈明',
-        data: {
-          dc_table: [
-            { material_name: '长双歧杆菌BB536（冻干粉）', batch_no: 'RM-BB536-20260610', plan_qty: '12.000', actual_qty: '12.008', balance_check: '复核一致', dc_operator: '陈明' },
-            { material_name: '嗜酸乳杆菌NCFM（冻干粉）', batch_no: 'RM-NCFM-20260610', plan_qty: '8.000', actual_qty: '8.002', balance_check: '复核一致', dc_operator: '陈明' },
-            { material_name: '低聚果糖（益生元）', batch_no: 'RM-FOS-20260610', plan_qty: '6.000', actual_qty: '5.999', balance_check: '复核一致', dc_operator: '陈明' },
-            { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260610', plan_qty: '4.000', actual_qty: '4.001', balance_check: '复核一致', dc_operator: '陈明' },
-          ],
-        },
-      },
-      SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      REPORT:       { code: 'REPORT',       status: 'completed', startTime: '2026-06-12 09:20', endTime: '2026-06-12 09:35', operator: '陈明',
-        data: { rpt_finish: 21000, rpt_good: 21000, rpt_bad: 0, rpt_scrap: 0, rpt_operator: '陈明' },
-      },
-      CHECK_OUT:    { code: 'CHECK_OUT',    status: 'completed', startTime: '2026-06-12 09:35', endTime: '2026-06-12 09:40', operator: '陈明', data: { out_operator: '陈明' } },
-    });
-
-    const makeMixStages = (startDate: string, operator: string) => ({
-      PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: `${startDate} 10:00`, endTime: `${startDate} 10:15`, operator, data: {} },
-      CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: `${startDate} 10:15`, endTime: `${startDate} 10:20`, operator, data: {} },
-      MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: `${startDate} 10:20`, endTime: `${startDate} 11:50`, operator,
-        data: { dc_table: [{ mix_speed: '15', mix_time: '30', rsd: '3.2', env_temp: '22', env_humid: '48', dc_operator: operator }] },
-      },
-      SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-      REPORT:       { code: 'REPORT',       status: 'completed', startTime: `${startDate} 11:50`, endTime: `${startDate} 12:00`, operator,
-        data: { rpt_finish: 160014, rpt_good: 160014, rpt_bad: 0, rpt_scrap: 0, rpt_operator: operator },
-      },
-      CHECK_OUT:    { code: 'CHECK_OUT',    status: 'completed', startTime: `${startDate} 12:00`, endTime: `${startDate} 12:05`, operator, data: { out_operator: operator } },
-    });
-
-    // WO002 execMap 快照：称量配料(完成)+混合(完成)+其他工序(待完成)
-    const wo2ExecMap: Record<string, any> = {
-      'OP-GMP-WEIGH': {
-        opCode: 'OP-GMP-WEIGH', status: 'completed',
-        inTime: '2026-06-05 08:00', outTime: '2026-06-05 09:50',
-        finishQty: 160014, goodQty: 160014, badQty: 0, scrapQty: 0,
-        reportRecords: [],
-        firstPiecePassed: false, preCleanDone: true,
-        stages: makeWeighStages(),
-      },
-      'OP-GMP-MIX': {
-        opCode: 'OP-GMP-MIX', status: 'completed',
-        inTime: '2026-06-05 10:00', outTime: '2026-06-05 12:05',
-        finishQty: 160014, goodQty: 160014, badQty: 0, scrapQty: 0,
-        reportRecords: [],
-        firstPiecePassed: false, preCleanDone: true,
-        stages: makeMixStages('2026-06-05', '张伟'),
-      },
-      'OP-GMP-GRANULATE': {
-        opCode: 'OP-GMP-GRANULATE', status: 'in_progress',
-        inTime: '2026-06-05 14:00', outTime: undefined,
-        finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0,
-        reportRecords: [],
-        firstPiecePassed: false, preCleanDone: true,
-        stages: {
-          PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-05 14:00', endTime: '2026-06-05 14:15', operator: '张伟', data: {} },
-          CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-05 14:15', endTime: '2026-06-05 14:20', operator: '张伟', data: {} },
-          MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          DATA_COLLECT: { code: 'DATA_COLLECT', status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          POST_CLEAN:   { code: 'POST_CLEAN',   status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          REPORT:       { code: 'REPORT',       status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          CHECK_OUT:    { code: 'CHECK_OUT',    status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-        },
-      },
-    };
-
-    // WO005 execMap 快照：称量配料(完成)+制粒干燥(进行中，冷链益生菌工序对应)
-    const wo5ExecMap: Record<string, any> = {
-      'OP-GMP-WEIGH': {
-        opCode: 'OP-GMP-WEIGH', status: 'completed',
-        inTime: '2026-06-12 08:00', outTime: '2026-06-12 09:40',
-        finishQty: 21000, goodQty: 21000, badQty: 0, scrapQty: 0,
-        reportRecords: [],
-        firstPiecePassed: false, preCleanDone: true,
-        stages: makeWeighStages5(),
-      },
-      'OP-GMP-MIX': {
-        opCode: 'OP-GMP-MIX', status: 'in_progress',
-        inTime: '2026-06-12 10:00', outTime: undefined,
-        finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0,
-        reportRecords: [],
-        firstPiecePassed: false, preCleanDone: true,
-        stages: {
-          PRE_CLEAN:    { code: 'PRE_CLEAN',    status: 'completed', startTime: '2026-06-12 10:00', endTime: '2026-06-12 10:20', operator: '陈明', data: {} },
-          CHECK_IN:     { code: 'CHECK_IN',     status: 'completed', startTime: '2026-06-12 10:20', endTime: '2026-06-12 10:25', operator: '陈明', data: {} },
-          MAT_VERIFY:   { code: 'MAT_VERIFY',   status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          FIRST_PIECE:  { code: 'FIRST_PIECE',  status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          DATA_COLLECT: { code: 'DATA_COLLECT', status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          SELF_CHECK:   { code: 'SELF_CHECK',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          POST_CLEAN:   { code: 'POST_CLEAN',   status: 'skipped',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          REPORT:       { code: 'REPORT',       status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-          CHECK_OUT:    { code: 'CHECK_OUT',    status: 'pending',   startTime: undefined, endTime: undefined, operator: undefined, data: {} },
-        },
-      },
-    };
-
     try {
-      // 仅在快照不存在时写入，避免覆盖真实PAD执行数据
-      if (!localStorage.getItem('bip_pad_exec_snap_WO002')) {
-        localStorage.setItem('bip_pad_exec_snap_WO002', JSON.stringify(wo2ExecMap));
-      }
-      if (!localStorage.getItem('bip_pad_exec_snap_WO005')) {
-        localStorage.setItem('bip_pad_exec_snap_WO005', JSON.stringify(wo5ExecMap));
-      }
+      // ── 公共阶段构建工具函数 ──────────────────────────────────────────
+      const mkStages = (pre: any, check: any, mat: any, dc: any, rpt: any, cout: any) => ({
+        PRE_CLEAN:    { code: 'PRE_CLEAN',   status: 'completed', ...pre   },
+        CHECK_IN:     { code: 'CHECK_IN',    status: 'completed', ...check },
+        MAT_VERIFY:   { code: 'MAT_VERIFY',  status: 'completed', ...mat  },
+        FIRST_PIECE:  { code: 'FIRST_PIECE', status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+        DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', ...dc  },
+        SELF_CHECK:   { code: 'SELF_CHECK',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+        POST_CLEAN:   { code: 'POST_CLEAN',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+        REPORT:       { code: 'REPORT',      status: 'completed', ...rpt  },
+        CHECK_OUT:    { code: 'CHECK_OUT',   status: 'completed', ...cout },
+      });
+      const mkPreClean = (date: string, op: string, certNo: string, temp: string, humid: string) => ({
+        startTime: `${date} 08:00`, endTime: `${date} 08:20`, operator: op,
+        data: { env_temp: temp, env_humid: humid, clean_cert: certNo,
+          pc_wo: true, pc_bom: true, pc_cert: true, pc_material: true, pc_equip: true,
+          pc_ppe: true, pc_env: true, pc_record: true, pc_qapprove: true,
+          cert_no: certNo, cert_time: `${date} 08:00`, cert_expire: `${date} 20:00`,
+        },
+      });
+      const mkReport = (st: string, et: string, op: string, fin: number, good: number, bad: number) => ({
+        startTime: st, endTime: et, operator: op,
+        data: { rpt_finish: fin, rpt_good: good, rpt_bad: bad, rpt_scrap: 0, rpt_operator: op },
+      });
+      const mkCheckOut = (t: string, op: string) => ({ startTime: t, endTime: t, operator: op, data: { out_operator: op } });
+      const mkCheckIn  = (st: string, et: string, op: string) => ({ startTime: st, endTime: et, operator: op, data: {} });
+      const mkMatVerify = (st: string, et: string, op: string, extra?: any) => ({ startTime: st, endTime: et, operator: op, data: extra ?? {} });
+
+      // 9项生产前再确认默认全通过
+      const preConfirm9 = {
+        pc_wo: true, pc_bom: true, pc_cert: true, pc_material: true, pc_equip: true,
+        pc_ppe: true, pc_env: true, pc_record: true, pc_qapprove: true,
+      };
+
+      // ── WO001: VitC咀嚼片 500mg×60粒/瓶 × 100,000瓶 全部完成 ─────────────
+      const wo1Map: Record<string, any> = {
+        'OP-GMP-WEIGH': {
+          opCode: 'OP-GMP-WEIGH', status: 'completed',
+          inTime: '2026-06-01 08:00', outTime: '2026-06-01 09:40',
+          finishQty: 100000, goodQty: 100000, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-01', '李建国', 'QC-CLN-20260601-001', '22', '48'),
+            mkCheckIn('2026-06-01 08:20', '2026-06-01 08:25', '李建国'),
+            mkMatVerify('2026-06-01 08:25', '2026-06-01 08:40', '李建国'),
+            { startTime: '2026-06-01 08:40', endTime: '2026-06-01 09:30', operator: '李建国',
+              data: { dc_table: [
+                { material_name: '维生素C（原料药）', batch_no: 'RM-VITC-20260601-001', plan_qty: '44.000', actual_qty: '44.006', balance_check: '复核一致', dc_operator: '李建国' },
+                { material_name: '甘露醇', batch_no: 'RM-MAN-20260601-001', plan_qty: '25.000', actual_qty: '24.998', balance_check: '复核一致', dc_operator: '李建国' },
+                { material_name: '柠檬酸', batch_no: 'RM-CA-20260601-001', plan_qty: '2.500', actual_qty: '2.500', balance_check: '复核一致', dc_operator: '李建国' },
+                { material_name: '硬脂酸镁', batch_no: 'RM-MG-20260601-001', plan_qty: '1.000', actual_qty: '1.000', balance_check: '复核一致', dc_operator: '李建国' },
+                { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260601-001', plan_qty: '7.500', actual_qty: '7.502', balance_check: '复核一致', dc_operator: '李建国' },
+              ]},
+            },
+            mkReport('2026-06-01 09:30', '2026-06-01 09:40', '李建国', 100000, 100000, 0),
+            mkCheckOut('2026-06-01 09:40', '李建国'),
+          ),
+        },
+        'OP-GMP-MIX': {
+          opCode: 'OP-GMP-MIX', status: 'completed',
+          inTime: '2026-06-01 10:00', outTime: '2026-06-01 12:05',
+          finishQty: 100000, goodQty: 100000, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-01', '李建国', 'QC-CLN-20260601-002', '22', '47'),
+            mkCheckIn('2026-06-01 10:00', '2026-06-01 10:05', '李建国'),
+            mkMatVerify('2026-06-01 10:05', '2026-06-01 10:10', '李建国'),
+            { startTime: '2026-06-01 10:10', endTime: '2026-06-01 11:50', operator: '李建国',
+              data: { dc_table: [{ mix_speed: '15', mix_time: '30', rsd: '2.8', env_temp: '22', env_humid: '47', dc_operator: '李建国' }] },
+            },
+            mkReport('2026-06-01 11:50', '2026-06-01 12:05', '李建国', 100000, 100000, 0),
+            mkCheckOut('2026-06-01 12:05', '李建国'),
+          ),
+        },
+        'OP-GMP-GRANULATE': {
+          opCode: 'OP-GMP-GRANULATE', status: 'completed',
+          inTime: '2026-06-01 14:00', outTime: '2026-06-02 08:30',
+          finishQty: 100000, goodQty: 99800, badQty: 0, scrapQty: 200, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-01', '李建国', 'QC-CLN-20260601-003', '23', '50'),
+            mkCheckIn('2026-06-01 14:00', '2026-06-01 14:05', '李建国'),
+            mkMatVerify('2026-06-01 14:05', '2026-06-01 14:15', '李建国'),
+            { startTime: '2026-06-01 14:15', endTime: '2026-06-02 08:00', operator: '李建国',
+              data: { dc_table: [{ granulate_speed: '200', dry_time: '120', moisture: '1.9', inlet_temp: '65', outlet_temp: '42', dc_operator: '李建国' }] },
+            },
+            mkReport('2026-06-02 08:00', '2026-06-02 08:30', '李建国', 99800, 99800, 0),
+            mkCheckOut('2026-06-02 08:30', '李建国'),
+          ),
+        },
+        'OP-GMP-COATING': {
+          opCode: 'OP-GMP-COATING', status: 'completed',
+          inTime: '2026-06-02 09:00', outTime: '2026-06-02 17:00',
+          finishQty: 99800, goodQty: 99800, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-02', '王芳', 'QC-CLN-20260602-001', '22', '46'),
+            mkCheckIn('2026-06-02 09:00', '2026-06-02 09:05', '王芳'),
+            mkMatVerify('2026-06-02 09:05', '2026-06-02 09:15', '王芳'),
+            { startTime: '2026-06-02 09:15', endTime: '2026-06-02 16:30', operator: '王芳',
+              data: { dc_table: [{ coating_material: '欧巴代OY-LS-28920', coat_gain: '3.0', inlet_temp: '55', air_volume: '1200', coat_time: '200', appearance: '白色均匀无龟裂', dc_operator: '王芳' }] },
+            },
+            mkReport('2026-06-02 16:30', '2026-06-02 17:00', '王芳', 99800, 99800, 0),
+            mkCheckOut('2026-06-02 17:00', '王芳'),
+          ),
+        },
+        'OP-GMP-INNERPACK': {
+          opCode: 'OP-GMP-INNERPACK', status: 'completed',
+          inTime: '2026-06-03 08:00', outTime: '2026-06-03 17:30',
+          finishQty: 99800, goodQty: 99800, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            { startTime: '2026-06-03 07:30', endTime: '2026-06-03 08:00', operator: '刘晓梅',
+              data: { ...preConfirm9, env_temp: '22', env_humid: '46', cert_no: 'QC-CLN-20260603-001', cert_time: '2026-06-03 08:00', cert_expire: '2026-06-03 20:00' },
+            },
+            mkCheckIn('2026-06-03 08:00', '2026-06-03 08:05', '刘晓梅'),
+            mkMatVerify('2026-06-03 08:05', '2026-06-03 08:20', '刘晓梅', { mat_qty: '52.400' }),
+            { startTime: '2026-06-03 08:20', endTime: '2026-06-03 17:00', operator: '刘晓梅',
+              data: { dc_table: [
+                { check_time: '2026-06-03 09:00', fill_qty: '60', fill_weight: '31.5', seal_check: '合格', label_check: '合格', temp: '22', humidity: '46', dc_operator: '刘晓梅' },
+                { check_time: '2026-06-03 10:00', fill_qty: '60', fill_weight: '31.5', seal_check: '合格', label_check: '合格', temp: '22', humidity: '46', dc_operator: '刘晓梅' },
+                { check_time: '2026-06-03 11:00', fill_qty: '60', fill_weight: '31.6', seal_check: '合格', label_check: '合格', temp: '22', humidity: '47', dc_operator: '刘晓梅' },
+                { check_time: '2026-06-03 14:00', fill_qty: '60', fill_weight: '31.5', seal_check: '合格', label_check: '合格', temp: '23', humidity: '47', dc_operator: '刘晓梅' },
+                { check_time: '2026-06-03 16:00', fill_qty: '60', fill_weight: '31.5', seal_check: '合格', label_check: '合格', temp: '23', humidity: '47', dc_operator: '刘晓梅' },
+              ]},
+            },
+            mkReport('2026-06-03 17:00', '2026-06-03 17:30', '刘晓梅', 1663, 1663, 0),
+            mkCheckOut('2026-06-03 17:30', '刘晓梅'),
+          ),
+        },
+        'OP-GMP-INNERCLEAN': {
+          opCode: 'OP-GMP-INNERCLEAN', status: 'completed',
+          inTime: '2026-06-03 17:30', outTime: '2026-06-03 18:15',
+          finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: {
+            PRE_CLEAN:    { code: 'PRE_CLEAN',   status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            CHECK_IN:     { code: 'CHECK_IN',    status: 'completed', startTime: '2026-06-03 17:30', endTime: '2026-06-03 17:35', operator: '刘晓梅', data: {} },
+            MAT_VERIFY:   { code: 'MAT_VERIFY',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            FIRST_PIECE:  { code: 'FIRST_PIECE', status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: '2026-06-03 17:35', endTime: '2026-06-03 18:10', operator: '刘晓梅', data: { dc_table: [] } },
+            SELF_CHECK:   { code: 'SELF_CHECK',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            POST_CLEAN:   { code: 'POST_CLEAN',  status: 'completed', startTime: '2026-06-03 18:00', endTime: '2026-06-03 18:10', operator: '刘晓梅',
+              data: { clean_start: '2026-06-03 17:35', clean_end: '2026-06-03 18:10', clean_operator: '刘晓梅', cert_no: 'CLN-INNER-20260603-001' },
+            },
+            REPORT:       { code: 'REPORT',      status: 'completed', startTime: '2026-06-03 18:10', endTime: '2026-06-03 18:15', operator: '刘晓梅', data: { rpt_finish: 0, rpt_good: 0, rpt_bad: 0, rpt_scrap: 0, rpt_operator: '刘晓梅' } },
+            CHECK_OUT:    { code: 'CHECK_OUT',   status: 'completed', startTime: '2026-06-03 18:15', endTime: '2026-06-03 18:15', operator: '刘晓梅', data: { out_operator: '刘晓梅' } },
+          },
+        },
+        'OP-GMP-OUTERPACK': {
+          opCode: 'OP-GMP-OUTERPACK', status: 'completed',
+          inTime: '2026-06-03 09:00', outTime: '2026-06-03 17:00',
+          finishQty: 1663, goodQty: 1663, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            { startTime: '2026-06-03 08:30', endTime: '2026-06-03 09:00', operator: '赵磊',
+              data: { ...preConfirm9, env_temp: '22', env_humid: '46', cert_no: 'QC-CLN-20260603-002', cert_time: '2026-06-03 08:30', cert_expire: '2026-06-03 20:00' },
+            },
+            mkCheckIn('2026-06-03 09:00', '2026-06-03 09:05', '赵磊'),
+            mkMatVerify('2026-06-03 09:05', '2026-06-03 09:15', '赵磊', { mat_version: 'PK-V20260501', batch_no: 'PK-BOX-20260601-001' }),
+            { startTime: '2026-06-03 09:15', endTime: '2026-06-03 16:30', operator: '赵磊',
+              data: { dc_table: [
+                { check_time: '2026-06-03 10:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '赵磊' },
+                { check_time: '2026-06-03 12:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '赵磊' },
+                { check_time: '2026-06-03 14:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '赵磊' },
+                { check_time: '2026-06-03 16:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '赵磊' },
+              ]},
+            },
+            mkReport('2026-06-03 16:30', '2026-06-03 17:00', '赵磊', 1663, 1663, 0),
+            mkCheckOut('2026-06-03 17:00', '赵磊'),
+          ),
+        },
+      };
+
+      // ── WO002: VitC咀嚼片 500mg×60粒/瓶 × 200,000粒 生产中（内包装进行中）────
+      const wo2Map: Record<string, any> = {
+        'OP-GMP-WEIGH': {
+          opCode: 'OP-GMP-WEIGH', status: 'completed',
+          inTime: '2026-06-05 08:00', outTime: '2026-06-05 09:50',
+          finishQty: 160014, goodQty: 160014, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-05', '张伟', 'QC-CLN-20260605-001', '22', '48'),
+            mkCheckIn('2026-06-05 08:20', '2026-06-05 08:25', '张伟'),
+            mkMatVerify('2026-06-05 08:25', '2026-06-05 08:40', '张伟'),
+            { startTime: '2026-06-05 08:40', endTime: '2026-06-05 09:30', operator: '张伟',
+              data: { dc_table: [
+                { material_name: '维生素C（原料药）', batch_no: 'RM-VITC-20260601', plan_qty: '88.000', actual_qty: '88.012', balance_check: '复核一致', dc_operator: '张伟' },
+                { material_name: '甘露醇', batch_no: 'RM-MAN-20260601', plan_qty: '50.000', actual_qty: '49.998', balance_check: '复核一致', dc_operator: '张伟' },
+                { material_name: '柠檬酸', batch_no: 'RM-CA-20260601', plan_qty: '5.000', actual_qty: '5.001', balance_check: '复核一致', dc_operator: '张伟' },
+                { material_name: '硬脂酸镁', batch_no: 'RM-MG-20260601', plan_qty: '2.000', actual_qty: '2.000', balance_check: '复核一致', dc_operator: '张伟' },
+                { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260601', plan_qty: '15.000', actual_qty: '15.003', balance_check: '复核一致', dc_operator: '张伟' },
+              ]},
+            },
+            mkReport('2026-06-05 09:30', '2026-06-05 09:50', '张伟', 160014, 160014, 0),
+            mkCheckOut('2026-06-05 09:50', '张伟'),
+          ),
+        },
+        'OP-GMP-MIX': {
+          opCode: 'OP-GMP-MIX', status: 'completed',
+          inTime: '2026-06-05 10:00', outTime: '2026-06-05 12:05',
+          finishQty: 160014, goodQty: 160014, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-05', '张伟', 'QC-CLN-20260605-002', '22', '48'),
+            mkCheckIn('2026-06-05 10:00', '2026-06-05 10:05', '张伟'),
+            mkMatVerify('2026-06-05 10:05', '2026-06-05 10:10', '张伟'),
+            { startTime: '2026-06-05 10:10', endTime: '2026-06-05 11:50', operator: '张伟',
+              data: { dc_table: [{ mix_speed: '15', mix_time: '30', rsd: '3.2', env_temp: '22', env_humid: '48', dc_operator: '张伟' }] },
+            },
+            mkReport('2026-06-05 11:50', '2026-06-05 12:05', '张伟', 160014, 160014, 0),
+            mkCheckOut('2026-06-05 12:05', '张伟'),
+          ),
+        },
+        'OP-GMP-GRANULATE': {
+          opCode: 'OP-GMP-GRANULATE', status: 'completed',
+          inTime: '2026-06-05 14:00', outTime: '2026-06-06 08:30',
+          finishQty: 159800, goodQty: 159800, badQty: 0, scrapQty: 214, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-05', '张伟', 'QC-CLN-20260605-003', '23', '50'),
+            mkCheckIn('2026-06-05 14:00', '2026-06-05 14:05', '张伟'),
+            mkMatVerify('2026-06-05 14:05', '2026-06-05 14:15', '张伟'),
+            { startTime: '2026-06-05 14:15', endTime: '2026-06-06 08:00', operator: '张伟',
+              data: { dc_table: [{ granulate_speed: '200', dry_time: '120', moisture: '2.0', inlet_temp: '65', outlet_temp: '43', dc_operator: '张伟' }] },
+            },
+            mkReport('2026-06-06 08:00', '2026-06-06 08:30', '张伟', 159800, 159800, 0),
+            mkCheckOut('2026-06-06 08:30', '张伟'),
+          ),
+        },
+        'OP-GMP-COATING': {
+          opCode: 'OP-GMP-COATING', status: 'completed',
+          inTime: '2026-06-06 09:00', outTime: '2026-06-06 17:30',
+          finishQty: 159800, goodQty: 159800, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-06', '王芳', 'QC-CLN-20260606-001', '22', '47'),
+            mkCheckIn('2026-06-06 09:00', '2026-06-06 09:05', '王芳'),
+            mkMatVerify('2026-06-06 09:05', '2026-06-06 09:15', '王芳'),
+            { startTime: '2026-06-06 09:15', endTime: '2026-06-06 16:30', operator: '王芳',
+              data: { dc_table: [{ coating_material: '欧巴代OY-LS-28920', coat_gain: '3.1', inlet_temp: '55', air_volume: '1200', coat_time: '210', appearance: '白色均匀无龟裂', dc_operator: '王芳' }] },
+            },
+            mkReport('2026-06-06 16:30', '2026-06-06 17:30', '王芳', 159800, 159800, 0),
+            mkCheckOut('2026-06-06 17:30', '王芳'),
+          ),
+        },
+        'OP-GMP-INNERPACK': {
+          opCode: 'OP-GMP-INNERPACK', status: 'in_progress',
+          inTime: '2026-06-09 08:00', outTime: undefined,
+          finishQty: 1250, goodQty: 1250, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            { startTime: '2026-06-09 07:30', endTime: '2026-06-09 08:00', operator: '刘晓梅',
+              data: { ...preConfirm9, env_temp: '22', env_humid: '46', cert_no: 'QC-CLN-20260609-001', cert_time: '2026-06-09 08:00', cert_expire: '2026-06-09 20:00' },
+            },
+            mkCheckIn('2026-06-09 08:00', '2026-06-09 08:05', '刘晓梅'),
+            mkMatVerify('2026-06-09 08:05', '2026-06-09 08:20', '刘晓梅', { mat_qty: '83.900' }),
+            { startTime: '2026-06-09 08:20', endTime: '2026-06-09 12:00', operator: '刘晓梅',
+              data: { dc_table: [
+                { check_time: '2026-06-09 09:00', fill_qty: '60', fill_weight: '31.5', seal_check: '合格', label_check: '合格', temp: '22', humidity: '46', dc_operator: '刘晓梅' },
+                { check_time: '2026-06-09 10:00', fill_qty: '60', fill_weight: '31.5', seal_check: '合格', label_check: '合格', temp: '22', humidity: '47', dc_operator: '刘晓梅' },
+                { check_time: '2026-06-09 11:00', fill_qty: '60', fill_weight: '31.6', seal_check: '合格', label_check: '合格', temp: '23', humidity: '47', dc_operator: '刘晓梅' },
+              ]},
+            },
+            mkReport('2026-06-09 12:00', '2026-06-09 12:00', '刘晓梅', 1250, 1250, 0),
+            mkCheckOut('2026-06-09 12:00', '刘晓梅'),
+          ),
+        },
+        'OP-GMP-INNERCLEAN': {
+          opCode: 'OP-GMP-INNERCLEAN', status: 'pending',
+          inTime: undefined, outTime: undefined,
+          finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: {
+            PRE_CLEAN:    { code: 'PRE_CLEAN',   status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            CHECK_IN:     { code: 'CHECK_IN',    status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            MAT_VERIFY:   { code: 'MAT_VERIFY',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            FIRST_PIECE:  { code: 'FIRST_PIECE', status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            DATA_COLLECT: { code: 'DATA_COLLECT', status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            SELF_CHECK:   { code: 'SELF_CHECK',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            POST_CLEAN:   { code: 'POST_CLEAN',  status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            REPORT:       { code: 'REPORT',      status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            CHECK_OUT:    { code: 'CHECK_OUT',   status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          },
+        },
+        'OP-GMP-OUTERPACK': {
+          opCode: 'OP-GMP-OUTERPACK', status: 'pending',
+          inTime: undefined, outTime: undefined,
+          finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: {
+            PRE_CLEAN:    { code: 'PRE_CLEAN',   status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            CHECK_IN:     { code: 'CHECK_IN',    status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            MAT_VERIFY:   { code: 'MAT_VERIFY',  status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            FIRST_PIECE:  { code: 'FIRST_PIECE', status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            DATA_COLLECT: { code: 'DATA_COLLECT', status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            SELF_CHECK:   { code: 'SELF_CHECK',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            POST_CLEAN:   { code: 'POST_CLEAN',  status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            REPORT:       { code: 'REPORT',      status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            CHECK_OUT:    { code: 'CHECK_OUT',   status: 'pending', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+          },
+        },
+      };
+
+      // ── WO003: VitC咀嚼片 250mg×100粒/瓶 × 50,000粒 已下发待开工 ──────────
+      const wo3Map: Record<string, any> = {
+        'OP-GMP-WEIGH': {
+          opCode: 'OP-GMP-WEIGH', status: 'completed',
+          inTime: '2026-06-13 08:00', outTime: '2026-06-13 09:30',
+          finishQty: 50000, goodQty: 50000, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-13', '孙志远', 'QC-CLN-20260613-001', '22', '47'),
+            mkCheckIn('2026-06-13 08:20', '2026-06-13 08:25', '孙志远'),
+            mkMatVerify('2026-06-13 08:25', '2026-06-13 08:35', '孙志远'),
+            { startTime: '2026-06-13 08:35', endTime: '2026-06-13 09:20', operator: '孙志远',
+              data: { dc_table: [
+                { material_name: '维生素C（原料药）', batch_no: 'RM-VITC-20260610-003', plan_qty: '22.000', actual_qty: '22.002', balance_check: '复核一致', dc_operator: '孙志远' },
+                { material_name: '甘露醇', batch_no: 'RM-MAN-20260610-003', plan_qty: '12.500', actual_qty: '12.498', balance_check: '复核一致', dc_operator: '孙志远' },
+                { material_name: '柠檬酸', batch_no: 'RM-CA-20260610-003', plan_qty: '1.250', actual_qty: '1.250', balance_check: '复核一致', dc_operator: '孙志远' },
+                { material_name: '硬脂酸镁', batch_no: 'RM-MG-20260610-003', plan_qty: '0.500', actual_qty: '0.500', balance_check: '复核一致', dc_operator: '孙志远' },
+                { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260610-003', plan_qty: '3.750', actual_qty: '3.752', balance_check: '复核一致', dc_operator: '孙志远' },
+              ]},
+            },
+            mkReport('2026-06-13 09:20', '2026-06-13 09:30', '孙志远', 50000, 50000, 0),
+            mkCheckOut('2026-06-13 09:30', '孙志远'),
+          ),
+        },
+        'OP-GMP-MIX': {
+          opCode: 'OP-GMP-MIX', status: 'in_progress',
+          inTime: '2026-06-13 10:00', outTime: undefined,
+          finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-13', '孙志远', 'QC-CLN-20260613-002', '22', '47'),
+            mkCheckIn('2026-06-13 10:00', '2026-06-13 10:05', '孙志远'),
+            mkMatVerify('2026-06-13 10:05', '2026-06-13 10:10', '孙志远'),
+            { startTime: '2026-06-13 10:10', endTime: undefined, operator: '孙志远',
+              data: { dc_table: [] },
+            },
+            mkReport('2026-06-13 10:10', '2026-06-13 10:10', '孙志远', 0, 0, 0),
+            mkCheckOut('2026-06-13 10:10', '孙志远'),
+          ),
+        },
+      };
+
+      // ── WO004: 复合益生菌胶囊 250mg×30粒 × 30,000粒 全部完成 ───────────────
+      const wo4Map: Record<string, any> = {
+        'OP-GMP-WEIGH': {
+          opCode: 'OP-GMP-WEIGH', status: 'completed',
+          inTime: '2026-06-01 08:00', outTime: '2026-06-01 09:30',
+          finishQty: 30000, goodQty: 30000, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-01', '钱文华', 'QC-CLN-20260601-W4-001', '8', '45'),
+            mkCheckIn('2026-06-01 08:20', '2026-06-01 08:25', '钱文华'),
+            mkMatVerify('2026-06-01 08:25', '2026-06-01 08:40', '钱文华'),
+            { startTime: '2026-06-01 08:40', endTime: '2026-06-01 09:20', operator: '钱文华',
+              data: { dc_table: [
+                { material_name: '长双歧杆菌BB536（冻干粉）', batch_no: 'RM-BB536-20260528', plan_qty: '6.000', actual_qty: '6.004', balance_check: '复核一致', dc_operator: '钱文华' },
+                { material_name: '嗜酸乳杆菌NCFM（冻干粉）', batch_no: 'RM-NCFM-20260528', plan_qty: '4.000', actual_qty: '4.001', balance_check: '复核一致', dc_operator: '钱文华' },
+                { material_name: '低聚果糖（益生元）', batch_no: 'RM-FOS-20260528', plan_qty: '3.000', actual_qty: '2.999', balance_check: '复核一致', dc_operator: '钱文华' },
+                { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260528', plan_qty: '2.000', actual_qty: '2.000', balance_check: '复核一致', dc_operator: '钱文华' },
+              ]},
+            },
+            mkReport('2026-06-01 09:20', '2026-06-01 09:30', '钱文华', 30000, 30000, 0),
+            mkCheckOut('2026-06-01 09:30', '钱文华'),
+          ),
+        },
+        'OP-GMP-MIX': {
+          opCode: 'OP-GMP-MIX', status: 'completed',
+          inTime: '2026-06-01 10:00', outTime: '2026-06-01 12:00',
+          finishQty: 30000, goodQty: 30000, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-01', '钱文华', 'QC-CLN-20260601-W4-002', '8', '45'),
+            mkCheckIn('2026-06-01 10:00', '2026-06-01 10:05', '钱文华'),
+            mkMatVerify('2026-06-01 10:05', '2026-06-01 10:10', '钱文华'),
+            { startTime: '2026-06-01 10:10', endTime: '2026-06-01 11:40', operator: '钱文华',
+              data: { dc_table: [{ mix_speed: '60', mix_time: '90', rsd: '2.1', env_temp: '8', env_humid: '42', dc_operator: '钱文华' }] },
+            },
+            mkReport('2026-06-01 11:40', '2026-06-01 12:00', '钱文华', 30000, 30000, 0),
+            mkCheckOut('2026-06-01 12:00', '钱文华'),
+          ),
+        },
+        'OP-GMP-GRANULATE': {
+          opCode: 'OP-GMP-GRANULATE', status: 'completed',
+          inTime: '2026-06-02 08:00', outTime: '2026-06-02 15:00',
+          finishQty: 30000, goodQty: 29950, badQty: 0, scrapQty: 50, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-02', '钱文华', 'QC-CLN-20260602-W4-001', '8', '43'),
+            mkCheckIn('2026-06-02 08:00', '2026-06-02 08:05', '钱文华'),
+            mkMatVerify('2026-06-02 08:05', '2026-06-02 08:15', '钱文华'),
+            { startTime: '2026-06-02 08:15', endTime: '2026-06-02 14:30', operator: '钱文华',
+              data: { dc_table: [{ granulate_speed: '150', dry_time: '90', moisture: '3.1', inlet_temp: '50', outlet_temp: '35', dc_operator: '钱文华' }] },
+            },
+            mkReport('2026-06-02 14:30', '2026-06-02 15:00', '钱文华', 29950, 29950, 0),
+            mkCheckOut('2026-06-02 15:00', '钱文华'),
+          ),
+        },
+        'OP-GMP-COATING': {
+          opCode: 'OP-GMP-COATING', status: 'completed',
+          inTime: '2026-06-03 08:00', outTime: '2026-06-03 14:00',
+          finishQty: 29950, goodQty: 29950, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-03', '陈明', 'QC-CLN-20260603-W4-001', '8', '43'),
+            mkCheckIn('2026-06-03 08:00', '2026-06-03 08:05', '陈明'),
+            mkMatVerify('2026-06-03 08:05', '2026-06-03 08:15', '陈明'),
+            { startTime: '2026-06-03 08:15', endTime: '2026-06-03 13:30', operator: '陈明',
+              data: { dc_table: [{ coating_material: '肠溶包衣液HPMC-AS', coat_gain: '4.0', inlet_temp: '45', air_volume: '800', coat_time: '150', appearance: '淡黄色均匀无龟裂', dc_operator: '陈明' }] },
+            },
+            mkReport('2026-06-03 13:30', '2026-06-03 14:00', '陈明', 29950, 29950, 0),
+            mkCheckOut('2026-06-03 14:00', '陈明'),
+          ),
+        },
+        'OP-GMP-INNERPACK': {
+          opCode: 'OP-GMP-INNERPACK', status: 'completed',
+          inTime: '2026-06-04 08:00', outTime: '2026-06-04 17:00',
+          finishQty: 998, goodQty: 998, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            { startTime: '2026-06-04 07:30', endTime: '2026-06-04 08:00', operator: '周虹',
+              data: { ...preConfirm9, env_temp: '8', env_humid: '42', cert_no: 'QC-CLN-20260604-W4-001', cert_time: '2026-06-04 08:00', cert_expire: '2026-06-04 20:00' },
+            },
+            mkCheckIn('2026-06-04 08:00', '2026-06-04 08:05', '周虹'),
+            mkMatVerify('2026-06-04 08:05', '2026-06-04 08:20', '周虹', { mat_qty: '15.000' }),
+            { startTime: '2026-06-04 08:20', endTime: '2026-06-04 16:30', operator: '周虹',
+              data: { dc_table: [
+                { check_time: '2026-06-04 09:00', fill_qty: '30', fill_weight: '7.5', seal_check: '合格', label_check: '合格', temp: '8', humidity: '42', dc_operator: '周虹' },
+                { check_time: '2026-06-04 11:00', fill_qty: '30', fill_weight: '7.5', seal_check: '合格', label_check: '合格', temp: '8', humidity: '42', dc_operator: '周虹' },
+                { check_time: '2026-06-04 14:00', fill_qty: '30', fill_weight: '7.5', seal_check: '合格', label_check: '合格', temp: '8', humidity: '43', dc_operator: '周虹' },
+                { check_time: '2026-06-04 16:00', fill_qty: '30', fill_weight: '7.5', seal_check: '合格', label_check: '合格', temp: '8', humidity: '43', dc_operator: '周虹' },
+              ]},
+            },
+            mkReport('2026-06-04 16:30', '2026-06-04 17:00', '周虹', 998, 998, 0),
+            mkCheckOut('2026-06-04 17:00', '周虹'),
+          ),
+        },
+        'OP-GMP-INNERCLEAN': {
+          opCode: 'OP-GMP-INNERCLEAN', status: 'completed',
+          inTime: '2026-06-04 17:00', outTime: '2026-06-04 18:00',
+          finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: {
+            PRE_CLEAN:    { code: 'PRE_CLEAN',   status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            CHECK_IN:     { code: 'CHECK_IN',    status: 'completed', startTime: '2026-06-04 17:00', endTime: '2026-06-04 17:05', operator: '周虹', data: {} },
+            MAT_VERIFY:   { code: 'MAT_VERIFY',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            FIRST_PIECE:  { code: 'FIRST_PIECE', status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            DATA_COLLECT: { code: 'DATA_COLLECT', status: 'completed', startTime: '2026-06-04 17:05', endTime: '2026-06-04 17:50', operator: '周虹', data: { dc_table: [] } },
+            SELF_CHECK:   { code: 'SELF_CHECK',  status: 'skipped', startTime: undefined, endTime: undefined, operator: undefined, data: {} },
+            POST_CLEAN:   { code: 'POST_CLEAN',  status: 'completed', startTime: '2026-06-04 17:05', endTime: '2026-06-04 17:50', operator: '周虹',
+              data: { clean_start: '2026-06-04 17:05', clean_end: '2026-06-04 17:50', clean_operator: '周虹', cert_no: 'CLN-INNER-20260604-W4-001' },
+            },
+            REPORT:       { code: 'REPORT',      status: 'completed', startTime: '2026-06-04 17:50', endTime: '2026-06-04 18:00', operator: '周虹', data: { rpt_finish: 0, rpt_good: 0, rpt_bad: 0, rpt_scrap: 0, rpt_operator: '周虹' } },
+            CHECK_OUT:    { code: 'CHECK_OUT',   status: 'completed', startTime: '2026-06-04 18:00', endTime: '2026-06-04 18:00', operator: '周虹', data: { out_operator: '周虹' } },
+          },
+        },
+        'OP-GMP-OUTERPACK': {
+          opCode: 'OP-GMP-OUTERPACK', status: 'completed',
+          inTime: '2026-06-05 08:00', outTime: '2026-06-05 16:00',
+          finishQty: 998, goodQty: 998, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            { startTime: '2026-06-05 07:30', endTime: '2026-06-05 08:00', operator: '李振宇',
+              data: { ...preConfirm9, env_temp: '8', env_humid: '42', cert_no: 'QC-CLN-20260605-W4-001', cert_time: '2026-06-05 08:00', cert_expire: '2026-06-05 20:00' },
+            },
+            mkCheckIn('2026-06-05 08:00', '2026-06-05 08:05', '李振宇'),
+            mkMatVerify('2026-06-05 08:05', '2026-06-05 08:15', '李振宇', { mat_version: 'PK-PROBIO-V15', batch_no: 'PK-BOX-20260601-W4-001' }),
+            { startTime: '2026-06-05 08:15', endTime: '2026-06-05 15:30', operator: '李振宇',
+              data: { dc_table: [
+                { check_time: '2026-06-05 09:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '李振宇' },
+                { check_time: '2026-06-05 11:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '李振宇' },
+                { check_time: '2026-06-05 13:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '李振宇' },
+                { check_time: '2026-06-05 15:00', bottles_per_box: '1', insert_check: '合格', batch_print: '清晰正确', seal_check: '合格', code_verify: '一致', dc_operator: '李振宇' },
+              ]},
+            },
+            mkReport('2026-06-05 15:30', '2026-06-05 16:00', '李振宇', 998, 998, 0),
+            mkCheckOut('2026-06-05 16:00', '李振宇'),
+          ),
+        },
+      };
+
+      // ── WO005: 复合益生菌胶囊 250mg×30粒 × 60,000粒 生产中（混合中）─────────
+      const wo5Map: Record<string, any> = {
+        'OP-GMP-WEIGH': {
+          opCode: 'OP-GMP-WEIGH', status: 'completed',
+          inTime: '2026-06-12 08:00', outTime: '2026-06-12 09:40',
+          finishQty: 21000, goodQty: 21000, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-12', '陈明', 'QC-CLN-20260612-001', '8', '42'),
+            mkCheckIn('2026-06-12 08:20', '2026-06-12 08:25', '陈明'),
+            mkMatVerify('2026-06-12 08:25', '2026-06-12 08:40', '陈明'),
+            { startTime: '2026-06-12 08:40', endTime: '2026-06-12 09:20', operator: '陈明',
+              data: { dc_table: [
+                { material_name: '长双歧杆菌BB536（冻干粉）', batch_no: 'RM-BB536-20260610', plan_qty: '12.000', actual_qty: '12.008', balance_check: '复核一致', dc_operator: '陈明' },
+                { material_name: '嗜酸乳杆菌NCFM（冻干粉）', batch_no: 'RM-NCFM-20260610', plan_qty: '8.000', actual_qty: '8.002', balance_check: '复核一致', dc_operator: '陈明' },
+                { material_name: '低聚果糖（益生元）', batch_no: 'RM-FOS-20260610', plan_qty: '6.000', actual_qty: '5.999', balance_check: '复核一致', dc_operator: '陈明' },
+                { material_name: '微晶纤维素', batch_no: 'RM-MCC-20260610', plan_qty: '4.000', actual_qty: '4.001', balance_check: '复核一致', dc_operator: '陈明' },
+              ]},
+            },
+            mkReport('2026-06-12 09:20', '2026-06-12 09:40', '陈明', 21000, 21000, 0),
+            mkCheckOut('2026-06-12 09:40', '陈明'),
+          ),
+        },
+        'OP-GMP-MIX': {
+          opCode: 'OP-GMP-MIX', status: 'in_progress',
+          inTime: '2026-06-12 10:00', outTime: undefined,
+          finishQty: 0, goodQty: 0, badQty: 0, scrapQty: 0, reportRecords: [],
+          stages: mkStages(
+            mkPreClean('2026-06-12', '陈明', 'QC-CLN-20260612-002', '8', '42'),
+            mkCheckIn('2026-06-12 10:00', '2026-06-12 10:05', '陈明'),
+            mkMatVerify('2026-06-12 10:05', '2026-06-12 10:10', '陈明'),
+            { startTime: '2026-06-12 10:10', endTime: undefined, operator: '陈明',
+              data: { dc_table: [] },
+            },
+            mkReport('2026-06-12 10:10', '2026-06-12 10:10', '陈明', 0, 0, 0),
+            mkCheckOut('2026-06-12 10:10', '陈明'),
+          ),
+        },
+      };
+
+      // 写入所有5个WO的快照（版本升级时强制覆盖，确保数据是最新格式）
+      localStorage.setItem('bip_pad_exec_snap_WO001', JSON.stringify(wo1Map));
+      localStorage.setItem('bip_pad_exec_snap_WO002', JSON.stringify(wo2Map));
+      localStorage.setItem('bip_pad_exec_snap_WO003', JSON.stringify(wo3Map));
+      localStorage.setItem('bip_pad_exec_snap_WO004', JSON.stringify(wo4Map));
+      localStorage.setItem('bip_pad_exec_snap_WO005', JSON.stringify(wo5Map));
       localStorage.setItem('bip_pad_exec_snap_version', PAD_SNAP_VERSION);
     } catch { /* ignore */ }
   }
