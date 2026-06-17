@@ -466,13 +466,38 @@ interface CoverProps {
 }
 
 const RecordCover: React.FC<CoverProps> = ({ ebr, execMap }) => {
-  const weighReport = getReport(execMap, 'OP-GMP-WEIGH');
-  const outerReport = getReport(execMap, 'OP-GMP-OUTERPACK');
+  const weighReport   = getReport(execMap, 'OP-GMP-WEIGH');
+  const outerReport   = getReport(execMap, 'OP-GMP-OUTERPACK');
   const productionDate = weighReport?.inTime ? fmtDate(weighReport.inTime) : '　　　年　　月　　日';
-  const productName = ebr?.productName ?? '　　　　　　　';
-  const batchNo     = ebr?.batchNo     ?? '　　　　　　　';
-  const planQty     = ebr?.planQtyTotal ?? 0;
-  const productSpec = ebr?.productSpec  ?? '';
+  const productName   = ebr?.productName ?? '　　　　　　　';
+  const batchNo       = ebr?.batchNo     ?? '　　　　　　　';
+  const planQty       = ebr?.planQtyTotal ?? 0;
+  const productSpec   = ebr?.productSpec  ?? '';
+
+  // 封面签署人映射
+  // 起草人：称量配料操作员（EBR生产起草者）
+  const drafter     = weighReport?.operator ?? execMap['OP-GMP-WEIGH']?.stages?.['CHECK_IN']?.operator ?? null;
+  const draftDate   = weighReport?.inTime   ?? null;
+  // 审核人1：生产部进站主管（称量工序 CHECK_IN operator）
+  const checker1    = (execMap['OP-GMP-WEIGH']?.stages?.['CHECK_IN'] as any)?.operator ?? null;
+  const check1Date  = (execMap['OP-GMP-WEIGH']?.stages?.['CHECK_IN'] as any)?.endTime  ?? null;
+  // 审核人2：QA审核员
+  const checker2    = ebr?.reviewedBy ?? null;
+  const check2Date  = ebr?.reviewedAt ?? null;
+  // 批准人：质量负责人
+  const approver    = ebr?.approvedBy ?? null;
+  const approveDate = ebr?.approvedAt ?? null;
+
+  /** 渲染签名单元格：有数据→彩色加粗；无数据→空白横线 */
+  const sigCell = (name: string | null, color: string) =>
+    name
+      ? <span style={{ fontWeight: 'bold', color }}>{name}</span>
+      : <span style={{ borderBottom: '1px solid #000', display: 'inline-block', minWidth: 100 }}>&nbsp;</span>;
+
+  const dateCell = (d: string | null, color: string) =>
+    d
+      ? <span style={{ fontWeight: 'bold', color }}>{fmtDate(d)}</span>
+      : <span>　　年　月　日</span>;
 
   return (
     <div className="print-page" style={{ padding: '24px 32px', fontFamily: '宋体, SimSun, serif' }}>
@@ -504,7 +529,12 @@ const RecordCover: React.FC<CoverProps> = ({ ebr, execMap }) => {
           </tr>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>保质期至：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>　　　年　　月　　日</td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>
+              {ebr?.expiryDate
+                ? <span style={{ fontWeight: 'bold' }}>{fmtDate(ebr.expiryDate)}</span>
+                : '　　　年　　月　　日'
+              }
+            </td>
           </tr>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>包装规格：</td>
@@ -524,27 +554,27 @@ const RecordCover: React.FC<CoverProps> = ({ ebr, execMap }) => {
         <tbody>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px', width: '25%' }}>起　草　人：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px', width: '25%' }}></td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px', width: '25%' }}>{sigCell(drafter, '#1677ff')}</td>
             <td style={{ border: '1px solid #000', padding: '8px 16px', width: '25%' }}>起草日期：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px', width: '25%' }}>　　年　月　日</td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px', width: '25%' }}>{dateCell(draftDate, '#1677ff')}</td>
           </tr>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>审　核　人：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}></td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{sigCell(checker1, '#722ed1')}</td>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>审核日期：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>　　年　月　日</td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{dateCell(check1Date, '#722ed1')}</td>
           </tr>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>审　核　人：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}></td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{sigCell(checker2, '#fa8c16')}</td>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>审核日期：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>　　年　月　日</td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{dateCell(check2Date, '#fa8c16')}</td>
           </tr>
           <tr>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>批　准　人：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}></td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{sigCell(approver, '#389e0d')}</td>
             <td style={{ border: '1px solid #000', padding: '8px 16px' }}>批准日期：</td>
-            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>　　年　月　日</td>
+            <td style={{ border: '1px solid #000', padding: '8px 16px' }}>{dateCell(approveDate, '#389e0d')}</td>
           </tr>
         </tbody>
       </table>

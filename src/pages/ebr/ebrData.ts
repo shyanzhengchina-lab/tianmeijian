@@ -153,6 +153,7 @@ export interface EbrRecord {
   planQty: number;
   customer?: string;
   deliveryDate?: string;
+  expiryDate?: string;        // 产品有效期至（保质期截止日）
   priority: string;
 
   // ── 任务/浮票层 ────────────────────────────────────────
@@ -1254,7 +1255,7 @@ const EBR_PRESET_WO001: EbrRecord = {
   batchNo: 'TMJ-VITC-20260601-001',
   productCode: 'FG-VITC-500MG-AP', productName: '维生素C咀嚼片',
   productSpec: '500mg/粒 × 60粒/瓶',
-  planQtyTotal: 100000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-15', priority: 'HIGH',
+  planQtyTotal: 100000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-15', expiryDate: '2028-06-01', priority: 'HIGH',
   materialLotNo: 'RM-VITC-20260601-001', iqcResult: 'PASS',
   ..._emptyArrays,
   startTime: '2026-06-01 08:30', endTime: '2026-06-03 18:45',
@@ -1377,7 +1378,7 @@ const EBR_PRESET_WO004: EbrRecord = {
   batchNo: 'TMJ-PROBIO-20260601-001',
   productCode: 'FG-PROBIO-CAP-250', productName: '复合益生菌胶囊',
   productSpec: '250mg/粒（活菌数≥1×10⁹CFU/粒）× 30粒/盒',
-  planQtyTotal: 30000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-10', priority: 'URGENT',
+  planQtyTotal: 30000, ..._emptyQty, customer: undefined, deliveryDate: '2026-06-10', expiryDate: '2027-06-01', priority: 'URGENT',
   materialLotNo: 'RM-PROBIO-20260601-001', iqcResult: 'PASS',
   ..._emptyArrays,
   startTime: '2026-06-01 08:00', endTime: '2026-06-05 16:30',
@@ -1476,7 +1477,7 @@ export const MOCK_EBR_LIST: EbrRecord[] = [
 export const EBR_STORAGE_KEY = 'bip_ebr_records';
 
 /** 数据版本号 — 每次更新 Mock 数据时递增，强制刷新旧缓存 */
-export const EBR_DATA_VERSION = 'v20260617_sign1';
+export const EBR_DATA_VERSION = 'v20260617_sign2';
 export const EBR_VERSION_KEY  = 'bip_ebr_version';
 
 /**
