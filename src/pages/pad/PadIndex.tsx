@@ -10,7 +10,7 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import PadOperationListPage from './PadOperationListPage';
 import PadExecutionPage from './PadExecutionPage';
 import type { EbrRecord } from '../ebr/ebrData';
-import { buildEbrFromExecMap, updateEbr, EBR_STORAGE_KEY, EBR_DATA_VERSION, EBR_VERSION_KEY } from '../ebr/ebrData';
+import { buildEbrFromExecMap, updateEbr, EBR_STORAGE_KEY, EBR_DATA_VERSION, EBR_VERSION_KEY, MOCK_EBR_LIST } from '../ebr/ebrData';
 import { getWorkOrderList } from '../../api/workOrders';
 import { getFloatTicketList } from '../../api/floatTickets';
 import { saveWorkOrders, saveFloatTickets, isUserCleared } from '../../store/mesStore';
@@ -42,8 +42,11 @@ function clearStalePadCache(): void {
       localStorage.removeItem('bip_pad_selected_wo');
       localStorage.removeItem('bip_pad_view');
       localStorage.removeItem('bip_pad_current_op_code');
-      // 清空旧EBR数据（与新PAD工单批号不匹配的历史记录全部清除）
-      localStorage.removeItem(EBR_STORAGE_KEY);
+      // 重置EBR数据：版本升级时用MOCK_EBR_LIST（全部5条）重新填充，
+      // 保留所有批次的基础信息（品名/批号/规格），不再留空等PAD逐条动态创建。
+      // 注意：清空旧的 exec_snap 快照（旧批号不再有效），EBR内容由 buildEbrFromExecMap 在
+      // 工单选择时动态更新，不影响已存在的MOCK_EBR_LIST骨架。
+      localStorage.setItem(EBR_STORAGE_KEY, JSON.stringify(MOCK_EBR_LIST));
       // 清空旧的按工单分存的 execMap 快照
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const k = localStorage.key(i);

@@ -69,7 +69,7 @@ export const STORE_KEYS = {
 } as const;
 
 // ── 数据版本（用于强制刷新 mock 数据） ─────────────────────────────
-const DATA_VERSION = 'v20260616_e';
+const DATA_VERSION = 'v20260617_a';
 const VERSION_KEY  = 'bip_data_version';
 
 // ── 读/写工具 ─────────────────────────────────────────────────────
@@ -350,17 +350,24 @@ function seedPocData(): void {
     localStorage.setItem('bip_demo_injected', '1');
   }
 
-  // ── 13. EBR批记录：版本不一致或为空时补种MOCK_EBR_LIST ─────────────
+  // ── 13. EBR批记录：版本不一致或记录不全时补种/合并 MOCK_EBR_LIST ───────
+  // 策略：用 MOCK_EBR_LIST 的 id 为 key，若 localStorage 中缺少该条目则补入；
+  // 已存在的条目（用户可能做了审批/驳回）保留不覆盖。这样既保证5条全有，
+  // 又不会丢失用户的审批操作记录。
   const existingEbrVersion = localStorage.getItem('bip_ebr_version');
   const existingEbr = localStorage.getItem('bip_ebr_records');
-  let needsEbrSeed = !existingEbr || existingEbrVersion !== EBR_DATA_VERSION;
-  if (!needsEbrSeed && existingEbr) {
-    try {
-      const parsed = JSON.parse(existingEbr);
-      if (!Array.isArray(parsed) || parsed.length === 0) needsEbrSeed = true;
-    } catch { needsEbrSeed = true; }
-  }
-  if (needsEbrSeed) {
+  try {
+    const parsed: any[] = existingEbr ? JSON.parse(existingEbr) : [];
+    const existingIds = new Set(Array.isArray(parsed) ? parsed.map((e: any) => e.id) : []);
+    // 找出 MOCK_EBR_LIST 中缺失的条目
+    const missing = MOCK_EBR_LIST.filter(m => !existingIds.has(m.id));
+    if (existingEbrVersion !== EBR_DATA_VERSION || missing.length > 0 || !Array.isArray(parsed)) {
+      // 合并：现有记录 + 缺失的 MOCK 条目
+      const merged = Array.isArray(parsed) ? [...parsed, ...missing] : [...MOCK_EBR_LIST];
+      localStorage.setItem('bip_ebr_records', JSON.stringify(merged));
+      localStorage.setItem('bip_ebr_version', EBR_DATA_VERSION);
+    }
+  } catch {
     try {
       localStorage.setItem('bip_ebr_records', JSON.stringify(MOCK_EBR_LIST));
       localStorage.setItem('bip_ebr_version', EBR_DATA_VERSION);
