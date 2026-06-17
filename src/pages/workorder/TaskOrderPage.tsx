@@ -106,13 +106,15 @@ const TaskCard: React.FC<{
           )}
         </div>
 
-        {/* 行2：产品名称 + 工单状态 */}
+        {/* 行2：产品名称 + 母工单状态 */}
         <div className="wo-row2">
           <span className="wo-product">
             {wo ? `${wo.productName} — ${wo.productSpec}` : '—'}
           </span>
           {ws && (
-            <span style={{ fontSize: 11, color: ws.color, marginLeft: 8 }}>[工单: {ws.label}]</span>
+            <span style={{ fontSize: 11, color: ws.color, marginLeft: 8, background: ws.bg, padding: '1px 6px', borderRadius: 4, border: `1px solid ${ws.color}30` }}>
+              母工单: {ws.label}
+            </span>
           )}
         </div>
 
