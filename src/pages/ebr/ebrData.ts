@@ -1259,7 +1259,10 @@ const EBR_PRESET_WO001: EbrRecord = {
   ..._emptyArrays,
   startTime: '2026-06-01 08:30', endTime: '2026-06-03 18:45',
   createdAt: '2026-06-01 08:30', updatedAt: '2026-06-03 18:45',
-  approvedBy: '赵雪梅', approvedAt: '2026-06-03 20:00',
+  reviewedBy: '冯小丽（QC001）', reviewedAt: '2026-06-03 16:30',
+  reviewRemark: '批次记录完整，全线工序操作员均已签名；关键工序工艺参数在规格范围内；VitC含量符合标准；微生物限度检验通过。',
+  approvedBy: '赵雪梅（QA经理）', approvedAt: '2026-06-03 20:00',
+  approveRemark: '本批次维生素C咀嚼片（批号：TMJ-VITC-20260601-001）全项检验合格，物料平衡率符合GMP要求，批准放行。',
 };
 
 // WO002 — VitC 500mg×60粒 生产中批次（进度62%，当前OP-50铝塑内包）
@@ -1379,7 +1382,10 @@ const EBR_PRESET_WO004: EbrRecord = {
   ..._emptyArrays,
   startTime: '2026-06-01 08:00', endTime: '2026-06-05 16:30',
   createdAt: '2026-06-01 08:00', updatedAt: '2026-06-05 17:00',
-  approvedBy: '赵雪梅', approvedAt: '2026-06-05 18:00',
+  reviewedBy: '王小芳（QC002）', reviewedAt: '2026-06-05 16:00',
+  reviewRemark: '溧水工厂益生菌胶囊批次记录完整，冷链全程温度监控合规（≤8℃），活菌数符合标准；各关键工序GMP签名完整。',
+  approvedBy: '赵雪梅（QA经理，溧水）', approvedAt: '2026-06-05 18:00',
+  approveRemark: '本批次复合益生菌胶囊（批号：TMJ-PROBIO-20260601-001）全项检验合格，冷链工艺参数符合GMP要求，批准放行。',
 };
 
 // WO005 — 复合益生菌胶囊 250mg×30粒 生产中批次（进度35%，当前OP-40胶囊充填）
@@ -1470,7 +1476,7 @@ export const MOCK_EBR_LIST: EbrRecord[] = [
 export const EBR_STORAGE_KEY = 'bip_ebr_records';
 
 /** 数据版本号 — 每次更新 Mock 数据时递增，强制刷新旧缓存 */
-export const EBR_DATA_VERSION = 'v20260616_full_ops';
+export const EBR_DATA_VERSION = 'v20260617_sign1';
 export const EBR_VERSION_KEY  = 'bip_ebr_version';
 
 /**

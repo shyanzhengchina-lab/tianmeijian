@@ -69,7 +69,7 @@ export const STORE_KEYS = {
 } as const;
 
 // ── 数据版本（用于强制刷新 mock 数据） ─────────────────────────────
-const DATA_VERSION = 'v20260617_c';
+const DATA_VERSION = 'v20260617_d';
 const VERSION_KEY  = 'bip_data_version';
 
 // ── 读/写工具 ─────────────────────────────────────────────────────

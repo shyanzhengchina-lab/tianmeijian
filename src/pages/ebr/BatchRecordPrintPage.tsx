@@ -1626,19 +1626,36 @@ const Section7Release: React.FC<{ ebr: EbrRecord | null; execMap: Record<string,
             </td>
             <th style={{ width: '25%', background: '#f6ffed' }}>QA审核</th>
             <td style={{ width: '25%' }}>
-              <div>签名：_____________</div>
-              <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>日期：　　年　月　日</div>
+              <div>
+                签名：{ebr?.reviewedBy
+                  ? <span style={{ fontWeight: 'bold', color: '#1677ff', marginLeft: 4 }}>{ebr.reviewedBy}</span>
+                  : <span>_____________</span>
+                }
+              </div>
+              <div style={{ fontSize: 11, marginTop: 4, color: ebr?.reviewedAt ? '#1677ff' : '#999' }}>
+                日期：{ebr?.reviewedAt ? fmtDate(ebr.reviewedAt) : '　　年　月　日'}
+              </div>
             </td>
           </tr>
           <tr>
             <th style={{ background: '#fff7e6' }}>质量负责人批准放行</th>
             <td>
-              <div>签名：_____________</div>
-              <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>日期：　　年　月　日</div>
+              <div>
+                签名：{ebr?.approvedBy
+                  ? <span style={{ fontWeight: 'bold', color: '#389e0d', marginLeft: 4 }}>{ebr.approvedBy}</span>
+                  : <span>_____________</span>
+                }
+              </div>
+              <div style={{ fontSize: 11, marginTop: 4, color: ebr?.approvedAt ? '#389e0d' : '#999' }}>
+                日期：{ebr?.approvedAt ? fmtDate(ebr.approvedAt) : '　　年　月　日'}
+              </div>
             </td>
             <th>放行结论</th>
             <td style={{ fontWeight: 'bold', fontSize: 14 }}>
-              □ 准予放行　　□ 拒绝放行
+              {ebr?.status === 'APPROVED'
+                ? <span style={{ color: '#389e0d' }}>✓ 准予放行</span>
+                : <span>□ 准予放行　　□ 拒绝放行</span>
+              }
             </td>
           </tr>
         </tbody>
@@ -1647,7 +1664,10 @@ const Section7Release: React.FC<{ ebr: EbrRecord | null; execMap: Record<string,
       {/* 备注 */}
       <div style={{ marginTop: 16, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 4, minHeight: 60 }}>
         <div style={{ fontWeight: 'bold', fontSize: 12, marginBottom: 4 }}>审核意见：</div>
-        <div style={{ color: '#aaa', fontSize: 12 }}>（质量负责人填写）</div>
+        {ebr?.approveRemark
+          ? <div style={{ fontSize: 12, color: '#389e0d' }}>{ebr.approveRemark}</div>
+          : <div style={{ color: '#aaa', fontSize: 12 }}>（质量负责人填写）</div>
+        }
       </div>
     </div>
   );
@@ -1774,15 +1794,35 @@ const ProductionRecordSection: React.FC<{ ebr: EbrRecord | null; execMap: Record
         <tbody>
           <tr>
             <th style={{ width: '25%' }}>批记录审核</th>
-            <td style={{ width: '25%' }}>_____________</td>
+            <td style={{ width: '25%' }}>
+              {ebr?.reviewedBy
+                ? <span style={{ fontWeight: 'bold', color: '#1677ff' }}>{ebr.reviewedBy}</span>
+                : <span style={{ borderBottom: '1px solid #000', display: 'inline-block', width: 120 }}>&nbsp;</span>
+              }
+            </td>
             <th style={{ width: '25%' }}>审核日期</th>
-            <td>　　年　月　日</td>
+            <td>
+              {ebr?.reviewedAt
+                ? <span style={{ fontWeight: 'bold', color: '#1677ff' }}>{fmtDate(ebr.reviewedAt)}</span>
+                : <span>　　年　月　日</span>
+              }
+            </td>
           </tr>
           <tr>
             <th>质量部批准</th>
-            <td>_____________</td>
+            <td>
+              {ebr?.approvedBy
+                ? <span style={{ fontWeight: 'bold', color: '#389e0d' }}>{ebr.approvedBy}</span>
+                : <span style={{ borderBottom: '1px solid #000', display: 'inline-block', width: 120 }}>&nbsp;</span>
+              }
+            </td>
             <th>批准日期</th>
-            <td>　　年　月　日</td>
+            <td>
+              {ebr?.approvedAt
+                ? <span style={{ fontWeight: 'bold', color: '#389e0d' }}>{fmtDate(ebr.approvedAt)}</span>
+                : <span>　　年　月　日</span>
+              }
+            </td>
           </tr>
         </tbody>
       </table>
